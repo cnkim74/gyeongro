@@ -226,7 +226,7 @@ function PlannerContent() {
                       -
                     </button>
                     <span className="text-2xl font-bold text-gray-900 w-16 text-center">
-                      {days}박 {days + (days >= 1 ? 0 : 0)}{days}일
+                      {days}박 {days + 1}일
                     </span>
                     <button
                       onClick={() => setDays(Math.min(14, days + 1))}
