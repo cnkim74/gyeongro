@@ -19,11 +19,14 @@ export async function POST(req: NextRequest) {
   };
   const styleText = styleMap[travelStyle] || "균형 잡힌 여행";
 
+  const nights = days;
+  const totalDays = days + 1;
+
   const prompt = `당신은 전문 여행 플래너입니다. 아래 조건에 맞는 상세한 여행 일정을 만들어주세요.
 
 여행 조건:
 - 목적지: ${destination}
-- 기간: ${days}일
+- 기간: ${nights}박 ${totalDays}일 (총 ${totalDays}일, 일정은 Day 1부터 Day ${totalDays}까지)
 - 인원: ${people}명
 - 총 예산: ${budget.toLocaleString()}원 (1인 기준 ${Math.round(budget / people).toLocaleString()}원)
 - 여행 스타일: ${styleText}
@@ -32,7 +35,7 @@ export async function POST(req: NextRequest) {
 다음 JSON 형식으로 정확하게 응답해주세요. JSON 외에 다른 텍스트나 마크다운 코드블록은 포함하지 마세요:
 
 {
-  "title": "여행 제목 (ex: 제주도 3박 4일 힐링 여행)",
+  "title": "여행 제목. 반드시 '박'이 '일'보다 앞에 와야 합니다 (ex: 제주도 3박 4일 힐링 여행)",
   "summary": "이 여행의 특징과 매력을 2-3문장으로 설명",
   "highlights": ["이 여행의 주요 하이라이트 1", "하이라이트 2", "하이라이트 3"],
   "totalBudget": {
