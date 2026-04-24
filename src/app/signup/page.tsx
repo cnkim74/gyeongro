@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { signIn, auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { MapPin, ArrowLeft } from "lucide-react";
+import { MapPin, ArrowLeft, Sparkles } from "lucide-react";
 
 export const metadata = {
-  title: "로그인 - 경로",
+  title: "회원가입 - 경로",
 };
 
-export default async function LoginPage({
+export default async function SignupPage({
   searchParams,
 }: {
   searchParams: Promise<{ callbackUrl?: string }>;
@@ -37,10 +37,24 @@ export default async function LoginPage({
                 <MapPin className="w-6 h-6 text-white" />
               </div>
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">경로에 오신 것을 환영해요</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              경로 시작하기
+            </h1>
             <p className="text-gray-500 text-sm">
-              로그인하고 나만의 여행 계획을 저장하세요
+              3초 만에 가입하고 AI 여행 플래너를 무료로 이용하세요
             </p>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-5 flex items-start gap-3">
+            <Sparkles className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-blue-900 mb-0.5">
+                별도 가입 절차 없이 3초 만에 시작
+              </p>
+              <p className="text-xs text-blue-700/80">
+                아래 계정으로 바로 가입됩니다. 비밀번호 관리 필요 없어요.
+              </p>
+            </div>
           </div>
 
           <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-3">
@@ -69,7 +83,7 @@ export default async function LoginPage({
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                Google로 계속하기
+                Google로 가입하기
               </button>
             </form>
 
@@ -81,7 +95,7 @@ export default async function LoginPage({
             >
               <button className="w-full flex items-center justify-center gap-3 py-3.5 rounded-2xl bg-[#03C75A] text-white hover:bg-[#02b351] transition-all font-semibold">
                 <span className="font-black text-lg">N</span>
-                네이버로 계속하기
+                네이버로 가입하기
               </button>
             </form>
 
@@ -95,23 +109,23 @@ export default async function LoginPage({
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 3C6.48 3 2 6.58 2 11c0 2.85 1.85 5.36 4.66 6.8L5.5 22l4.38-2.84c.69.1 1.4.15 2.12.15 5.52 0 10-3.58 10-8s-4.48-8-10-8z" />
                 </svg>
-                카카오로 계속하기
+                카카오로 가입하기
               </button>
             </form>
           </div>
 
           <p className="text-center text-sm text-gray-500 mt-6">
-            처음이신가요?{" "}
+            이미 계정이 있으신가요?{" "}
             <Link
-              href="/signup"
+              href="/login"
               className="font-semibold text-blue-600 hover:text-blue-700"
             >
-              회원가입
+              로그인
             </Link>
           </p>
 
           <p className="text-center text-xs text-gray-400 mt-6 leading-relaxed">
-            로그인하면 경로의{" "}
+            회원가입 시 경로의{" "}
             <a href="#" className="underline hover:text-gray-600">
               이용약관
             </a>

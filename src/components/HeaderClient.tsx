@@ -78,6 +78,14 @@ export default function HeaderClient({ user }: HeaderClientProps) {
                   로그인
                 </Link>
                 <Link
+                  href="/signup"
+                  className={`text-sm font-medium transition-colors ${
+                    scrolled ? "text-gray-600 hover:text-blue-500" : "text-white/80 hover:text-white"
+                  }`}
+                >
+                  회원가입
+                </Link>
+                <Link
                   href="/planner"
                   className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-sm font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all hover:-translate-y-0.5"
                 >
@@ -140,6 +148,13 @@ export default function HeaderClient({ user }: HeaderClientProps) {
                   onClick={() => setMenuOpen(false)}
                 >
                   로그인
+                </Link>
+                <Link
+                  href="/signup"
+                  className="block text-sm font-medium text-gray-600 py-2"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  회원가입
                 </Link>
                 <Link
                   href="/planner"
