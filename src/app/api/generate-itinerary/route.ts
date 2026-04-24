@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
     async start(controller) {
       try {
         const model = genAI.getGenerativeModel({
-          model: "gemini-1.5-flash",
+          model: "gemini-2.0-flash-lite",
           systemInstruction:
             "당신은 한국의 전문 여행 플래너입니다. 실제 존재하는 장소, 음식점, 숙소를 기반으로 현실적이고 상세한 여행 일정을 JSON 형식으로 제공합니다. 항상 유효한 JSON만 반환하세요. 마크다운 코드블록(```)을 절대 사용하지 마세요.",
         });
