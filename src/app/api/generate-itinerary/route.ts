@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     async start(controller) {
       try {
         const completion = await groq.chat.completions.create({
-          model: "deepseek-r1-distill-llama-70b",
+          model: "openai/gpt-oss-120b",
           messages: [
             {
               role: "system",
