@@ -225,7 +225,7 @@ function PlannerContent() {
                     >
                       -
                     </button>
-                    <span className="text-2xl font-bold text-gray-900 w-16 text-center">
+                    <span className="text-2xl font-bold text-gray-900 min-w-[6rem] text-center whitespace-nowrap">
                       {days}박 {days + 1}일
                     </span>
                     <button
