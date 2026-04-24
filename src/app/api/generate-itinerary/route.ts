@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
             },
             { role: "user", content: prompt },
           ],
-          max_tokens: 8000,
+          max_tokens: 6000,
           stream: true,
         });
 
