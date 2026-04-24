@@ -1,9 +1,11 @@
 import { NextRequest } from "next/server";
 import Groq from "groq-sdk";
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   const body = await req.json();
   const { destination, days, people, budget, travelStyle, themes } = body;
 
@@ -80,12 +82,12 @@ export async function POST(req: NextRequest) {
     async start(controller) {
       try {
         const completion = await groq.chat.completions.create({
-          model: "llama-3.3-70b-versatile",
+          model: "deepseek-r1-distill-llama-70b",
           messages: [
             {
               role: "system",
               content:
-                "당신은 한국의 전문 여행 플래너입니다. 실제 존재하는 장소, 음식점, 숙소를 기반으로 현실적이고 상세한 여행 일정을 JSON 형식으로 제공합니다.\n\n【엄격한 언어 규칙】\n- 모든 텍스트는 반드시 한국어(한글)로만 작성하세요.\n- 일본어 히라가나/카타카나(あいう, アイウ 등), 중국어 한자, 영어 단어를 한국어 문장 중간에 섞지 마세요.\n- 해외 지명/음식/인명은 한글로 음차 표기하세요 (예: Eiffel Tower → 에펠탑, sushi → 스시).\n- JSON 구조(키, 숫자)는 예외이지만, 문자열 값은 모두 한글로 작성하세요.\n\n【JSON 규칙】\n- 유효한 JSON만 반환하세요.\n- 마크다운 코드블록(```)을 절대 사용하지 마세요.",
+                "당신은 한국의 전문 여행 플래너입니다. 실제 존재하는 장소, 음식점, 숙소를 기반으로 현실적이고 상세한 여행 일정을 JSON 형식으로 제공합니다.\n\n【엄격한 언어 규칙】\n- 모든 텍스트는 반드시 한국어(한글)로만 작성하세요.\n- 러시아어(Cyrillic: абв), 일본어 히라가나/카타카나(あいう, アイウ), 중국어 한자를 한국어 문장에 섞지 마세요.\n- 해외 고유명사(지명/음식/브랜드)는 한글 음차 + 괄호 안 영문만 허용합니다. 예: 에펠탑(Eiffel Tower), 스시(sushi).\n- JSON 구조(키, 숫자)는 예외이지만, 문자열 값은 모두 한글 또는 한글(영문) 형식으로만 작성하세요.\n\n【JSON 규칙】\n- 유효한 JSON만 반환하세요.\n- 마크다운 코드블록(```)을 절대 사용하지 마세요.\n- <think> 태그나 추론 과정을 출력하지 마세요. 바로 JSON으로 시작하세요.",
             },
             { role: "user", content: prompt },
           ],
@@ -93,14 +95,22 @@ export async function POST(req: NextRequest) {
           stream: true,
         });
 
+        let fullContent = "";
         for await (const chunk of completion) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) {
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ chunk: text })}\n\n`)
-            );
-          }
+          const raw = chunk.choices[0]?.delta?.content ?? "";
+          if (raw) fullContent += raw;
         }
+
+        // <think>...</think> 블록 제거 (DeepSeek R1 추론 출력)
+        fullContent = fullContent.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+        // 마크다운 코드블록 제거
+        fullContent = fullContent.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+        // 금지 문자 제거: 키릴(U+0400-04FF), 히라가나(U+3040-309F), 카타카나(U+30A0-30FF)
+        fullContent = fullContent.replace(/[Ѐ-ӿ぀-ゟ゠-ヿ]/g, "");
+
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({ chunk: fullContent })}\n\n`)
+        );
 
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`)
