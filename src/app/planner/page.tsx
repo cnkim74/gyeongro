@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useRef, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ItineraryView, { type Itinerary } from "@/components/ItineraryView";
 import {
   Sparkles,
   MapPin,
@@ -14,48 +16,10 @@ import {
   ArrowRight,
   ArrowLeft,
   Loader2,
-  Clock,
-  Utensils,
-  Home,
-  CheckCircle,
   AlertCircle,
-  ChevronDown,
-  ChevronUp,
+  Bookmark,
+  CheckCircle,
 } from "lucide-react";
-
-interface ScheduleItem {
-  time: string;
-  place: string;
-  activity: string;
-  duration: string;
-  cost: number;
-  tip: string;
-}
-
-interface DayPlan {
-  day: number;
-  title: string;
-  theme: string;
-  schedule: ScheduleItem[];
-  meal: { breakfast: string; lunch: string; dinner: string };
-  accommodation: string;
-  dayBudget: number;
-}
-
-interface Itinerary {
-  title: string;
-  summary: string;
-  highlights: string[];
-  totalBudget: {
-    accommodation: number;
-    food: number;
-    transport: number;
-    activities: number;
-  };
-  days: DayPlan[];
-  tips: string[];
-  bestSeason: string;
-}
 
 const themes = [
   { id: "food", label: "미식", emoji: "🍜" },
@@ -79,6 +43,8 @@ function formatCurrency(n: number) {
 
 function PlannerContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { data: session } = useSession();
   const initialDestination = searchParams.get("destination") ?? "";
 
   const [step, setStep] = useState(1);
@@ -91,7 +57,8 @@ function PlannerContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [itinerary, setItinerary] = useState<Itinerary | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [expandedDay, setExpandedDay] = useState<number | null>(0);
+  const [saving, setSaving] = useState(false);
+  const [savedId, setSavedId] = useState<string | null>(null);
   const rawBuffer = useRef("");
 
   const toggleTheme = (id: string) => {
@@ -417,7 +384,6 @@ function PlannerContent() {
         {/* Step 3: Result */}
         {step === 3 && itinerary && (
           <div className="max-w-4xl mx-auto px-4 py-10">
-            {/* Back button */}
             <button
               onClick={() => setStep(1)}
               className="flex items-center gap-2 text-gray-500 hover:text-gray-800 transition-colors mb-6 text-sm"
@@ -426,189 +392,70 @@ function PlannerContent() {
               다시 계획하기
             </button>
 
-            {/* Header card */}
-            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-8 text-white mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <MapPin className="w-5 h-5 text-blue-200" />
-                <span className="text-blue-200 text-sm">{destination}</span>
-              </div>
-              <h1 className="text-3xl font-bold mb-3">{itinerary.title}</h1>
-              <p className="text-blue-100 text-sm leading-relaxed mb-5">{itinerary.summary}</p>
+            <ItineraryView itinerary={itinerary} destination={destination} />
 
-              <div className="flex flex-wrap gap-2 mb-6">
-                {itinerary.highlights?.map((h, i) => (
-                  <div key={i} className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1.5 text-xs">
-                    <CheckCircle className="w-3.5 h-3.5 text-green-300" />
-                    {h}
-                  </div>
-                ))}
-              </div>
-
-              {/* Budget summary */}
-              {itinerary.totalBudget && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {[
-                    { label: "숙박", value: itinerary.totalBudget.accommodation, icon: "🏨" },
-                    { label: "식비", value: itinerary.totalBudget.food, icon: "🍽️" },
-                    { label: "교통", value: itinerary.totalBudget.transport, icon: "🚌" },
-                    { label: "액티비티", value: itinerary.totalBudget.activities, icon: "🎯" },
-                  ].map((item) => (
-                    <div key={item.label} className="bg-white/10 rounded-2xl p-3 text-center backdrop-blur-sm">
-                      <div className="text-xl mb-1">{item.icon}</div>
-                      <div className="text-xs text-blue-200 mb-1">{item.label}</div>
-                      <div className="text-sm font-bold">{formatCurrency(item.value)}원</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Day plans */}
-            <div className="space-y-4 mb-6">
-              {itinerary.days?.map((day, idx) => (
-                <div key={day.day} className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-                  <button
-                    onClick={() => setExpandedDay(expandedDay === idx ? null : idx)}
-                    className="w-full flex items-center justify-between p-5 hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shrink-0">
-                        D{day.day}
-                      </div>
-                      <div className="text-left">
-                        <p className="font-bold text-gray-900">{day.title}</p>
-                        <p className="text-sm text-gray-400">{day.theme}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold text-blue-600 hidden sm:block">
-                        {formatCurrency(day.dayBudget)}원
-                      </span>
-                      {expandedDay === idx ? (
-                        <ChevronUp className="w-5 h-5 text-gray-400" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5 text-gray-400" />
-                      )}
-                    </div>
-                  </button>
-
-                  {expandedDay === idx && (
-                    <div className="border-t border-gray-100 p-5 space-y-6">
-                      {/* Schedule */}
-                      <div>
-                        <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-blue-500" />
-                          시간별 일정
-                        </h4>
-                        <div className="space-y-3">
-                          {day.schedule?.map((item, i) => (
-                            <div key={i} className="flex gap-4">
-                              <div className="text-sm font-mono text-blue-500 font-semibold w-14 shrink-0 pt-0.5">
-                                {item.time}
-                              </div>
-                              <div className="flex-1 pb-3 border-b border-gray-50 last:border-0">
-                                <p className="font-semibold text-gray-900 text-sm">{item.place}</p>
-                                <p className="text-gray-500 text-sm mt-0.5">{item.activity}</p>
-                                <div className="flex items-center gap-3 mt-1.5">
-                                  <span className="text-xs text-gray-400 flex items-center gap-1">
-                                    <Clock className="w-3 h-3" /> {item.duration}
-                                  </span>
-                                  {item.cost > 0 && (
-                                    <span className="text-xs text-emerald-600 font-medium">
-                                      {formatCurrency(item.cost)}원
-                                    </span>
-                                  )}
-                                </div>
-                                {item.tip && (
-                                  <div className="mt-2 px-3 py-2 bg-amber-50 rounded-lg text-xs text-amber-700">
-                                    💡 {item.tip}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Meals */}
-                      {day.meal && (
-                        <div>
-                          <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                            <Utensils className="w-4 h-4 text-orange-500" />
-                            식사 추천
-                          </h4>
-                          <div className="grid grid-cols-3 gap-3">
-                            {[
-                              { label: "아침", value: day.meal.breakfast, emoji: "🌅" },
-                              { label: "점심", value: day.meal.lunch, emoji: "☀️" },
-                              { label: "저녁", value: day.meal.dinner, emoji: "🌙" },
-                            ].map((m) => (
-                              <div key={m.label} className="bg-orange-50 rounded-xl p-3">
-                                <p className="text-xs text-orange-400 font-medium mb-1">{m.emoji} {m.label}</p>
-                                <p className="text-xs text-gray-700 font-medium">{m.value}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Accommodation */}
-                      {day.accommodation && (
-                        <div className="flex items-start gap-3 bg-blue-50 rounded-xl p-4">
-                          <Home className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-                          <div>
-                            <p className="text-xs font-bold text-blue-600 mb-0.5">숙소 추천</p>
-                            <p className="text-sm text-gray-700">{day.accommodation}</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Tips */}
-            {itinerary.tips?.length > 0 && (
-              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 mb-6 border border-amber-100">
-                <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="text-xl">💡</span>
-                  여행 꿀팁
-                </h3>
-                <ul className="space-y-2">
-                  {itinerary.tips.map((tip, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                      <CheckCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                      {tip}
-                    </li>
-                  ))}
-                </ul>
-                {itinerary.bestSeason && (
-                  <p className="text-sm text-amber-700 mt-4 pt-4 border-t border-amber-200">
-                    🗓️ <span className="font-semibold">최적 여행 시기:</span> {itinerary.bestSeason}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Action buttons */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 mt-6">
               <button
                 onClick={() => {
                   setStep(1);
                   setItinerary(null);
+                  setSavedId(null);
                 }}
                 className="flex-1 py-4 rounded-2xl border-2 border-gray-200 text-gray-700 font-semibold hover:border-blue-300 hover:text-blue-600 transition-all"
               >
                 다시 계획하기
               </button>
-              <button
-                onClick={() => window.print()}
-                className="flex-1 py-4 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold flex items-center justify-center gap-2 hover:shadow-xl hover:shadow-blue-500/25 transition-all"
-              >
-                <Sparkles className="w-5 h-5" />
-                일정 저장하기
-              </button>
+              {savedId ? (
+                <button
+                  onClick={() => router.push("/my-trips")}
+                  className="flex-1 py-4 rounded-2xl bg-emerald-500 text-white font-bold flex items-center justify-center gap-2 hover:bg-emerald-600 transition-all"
+                >
+                  <CheckCircle className="w-5 h-5" />
+                  저장됨 · 내 여행 보기
+                </button>
+              ) : (
+                <button
+                  onClick={async () => {
+                    if (!session?.user) {
+                      router.push(`/login?callbackUrl=${encodeURIComponent("/planner")}`);
+                      return;
+                    }
+                    setSaving(true);
+                    try {
+                      const res = await fetch("/api/trips", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          title: itinerary.title,
+                          destination,
+                          days,
+                          people,
+                          budget: budget * people,
+                          travelStyle,
+                          themes: selectedThemes,
+                          itinerary,
+                        }),
+                      });
+                      if (!res.ok) throw new Error();
+                      const { id } = await res.json();
+                      setSavedId(id);
+                    } catch {
+                      alert("저장 중 오류가 발생했어요. 다시 시도해주세요.");
+                    } finally {
+                      setSaving(false);
+                    }
+                  }}
+                  disabled={saving}
+                  className="flex-1 py-4 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold flex items-center justify-center gap-2 hover:shadow-xl hover:shadow-blue-500/25 transition-all disabled:opacity-50"
+                >
+                  {saving ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Bookmark className="w-5 h-5" />
+                  )}
+                  {session?.user ? "내 여행에 저장" : "로그인하고 저장"}
+                </button>
+              )}
             </div>
           </div>
         )}
