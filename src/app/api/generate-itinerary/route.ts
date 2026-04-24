@@ -1,9 +1,7 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest } from "next/server";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -31,7 +29,7 @@ export async function POST(req: NextRequest) {
 - 여행 스타일: ${styleText}
 - 관심 테마: ${themeText}
 
-다음 JSON 형식으로 정확하게 응답해주세요. JSON 외에 다른 텍스트는 포함하지 마세요:
+다음 JSON 형식으로 정확하게 응답해주세요. JSON 외에 다른 텍스트나 마크다운 코드블록은 포함하지 마세요:
 
 {
   "title": "여행 제목 (ex: 제주도 3박 4일 힐링 여행)",
@@ -78,26 +76,25 @@ export async function POST(req: NextRequest) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        const response = await client.messages.create({
-          model: "claude-sonnet-4-6",
-          max_tokens: 8000,
-          stream: true,
-          system:
-            "당신은 한국의 전문 여행 플래너입니다. 실제 존재하는 장소, 음식점, 숙소를 기반으로 현실적이고 상세한 여행 일정을 JSON 형식으로 제공합니다. 항상 유효한 JSON만 반환하세요.",
-          messages: [{ role: "user", content: prompt }],
+        const model = genAI.getGenerativeModel({
+          model: "gemini-2.0-flash",
+          systemInstruction:
+            "당신은 한국의 전문 여행 플래너입니다. 실제 존재하는 장소, 음식점, 숙소를 기반으로 현실적이고 상세한 여행 일정을 JSON 형식으로 제공합니다. 항상 유효한 JSON만 반환하세요. 마크다운 코드블록(```)을 절대 사용하지 마세요.",
         });
 
-        for await (const event of response) {
-          if (
-            event.type === "content_block_delta" &&
-            event.delta.type === "text_delta"
-          ) {
-            const data = JSON.stringify({ chunk: event.delta.text });
+        const result = await model.generateContentStream(prompt);
+
+        for await (const chunk of result.stream) {
+          const text = chunk.text();
+          if (text) {
+            const data = JSON.stringify({ chunk: text });
             controller.enqueue(encoder.encode(`data: ${data}\n\n`));
           }
         }
 
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`));
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`)
+        );
         controller.close();
       } catch (err) {
         const message = err instanceof Error ? err.message : "오류가 발생했습니다.";
