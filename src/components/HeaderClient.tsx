@@ -10,6 +10,7 @@ interface HeaderClientProps {
     name?: string | null;
     email?: string | null;
     image?: string | null;
+    isAdmin?: boolean;
   } | null;
 }
 
@@ -48,9 +49,9 @@ export default function HeaderClient({ user }: HeaderClientProps) {
 
           <nav className="hidden md:flex items-center gap-8">
             {[
-              { label: "서비스 소개", href: "/#features" },
+              { label: "AI 플래너", href: "/planner" },
+              { label: "커뮤니티", href: "/board" },
               { label: "이용 방법", href: "/#how-it-works" },
-              { label: "후기", href: "/#testimonials" },
             ].map((item) => (
               <a
                 key={item.href}
@@ -66,7 +67,11 @@ export default function HeaderClient({ user }: HeaderClientProps) {
 
           <div className="hidden md:flex items-center gap-3">
             {user ? (
-              <UserMenu user={user} isScrolled={scrolled} />
+              <UserMenu
+                user={user}
+                isScrolled={scrolled}
+                isAdmin={user.isAdmin ?? false}
+              />
             ) : (
               <>
                 <Link

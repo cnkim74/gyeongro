@@ -32,11 +32,26 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-4 text-sm">서비스</h4>
             <ul className="space-y-3 text-sm">
-              {["AI 여행 플래너", "여행 일정 저장", "커뮤니티", "후기"].map((item) => (
-                <li key={item}>
-                  <a href="#" className="hover:text-white transition-colors">{item}</a>
-                </li>
-              ))}
+              <li>
+                <Link href="/planner" className="hover:text-white transition-colors">
+                  AI 여행 플래너
+                </Link>
+              </li>
+              <li>
+                <Link href="/my-trips" className="hover:text-white transition-colors">
+                  여행 일정 저장
+                </Link>
+              </li>
+              <li>
+                <Link href="/board" className="hover:text-white transition-colors">
+                  커뮤니티
+                </Link>
+              </li>
+              <li>
+                <Link href="/board?category=review" className="hover:text-white transition-colors">
+                  여행 후기
+                </Link>
+              </li>
             </ul>
           </div>
 

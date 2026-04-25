@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { getSupabaseServiceClient } from "@/lib/supabase";
+import { isAdmin } from "@/lib/admin";
 import HeaderClient from "./HeaderClient";
 
 export default async function Header() {
@@ -8,6 +9,7 @@ export default async function Header() {
     name?: string | null;
     email?: string | null;
     image?: string | null;
+    isAdmin?: boolean;
   } | null = null;
 
   if (session?.user?.id) {
@@ -19,16 +21,19 @@ export default async function Header() {
         .select("name, email, image, custom_image")
         .eq("id", session.user.id)
         .single();
+      const adminFlag = await isAdmin(session.user.id);
       user = {
         name: data?.name ?? session.user.name ?? null,
         email: data?.email ?? session.user.email ?? null,
         image: data?.custom_image ?? data?.image ?? session.user.image ?? null,
+        isAdmin: adminFlag,
       };
     } catch {
       user = {
         name: session.user.name ?? null,
         email: session.user.email ?? null,
         image: session.user.image ?? null,
+        isAdmin: false,
       };
     }
   }

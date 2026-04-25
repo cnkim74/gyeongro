@@ -3,14 +3,15 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
-import { LogOut, Bookmark, User } from "lucide-react";
+import { LogOut, Bookmark, User, Shield } from "lucide-react";
 
 interface UserMenuProps {
   user: { name?: string | null; email?: string | null; image?: string | null };
   isScrolled: boolean;
+  isAdmin?: boolean;
 }
 
-export default function UserMenu({ user, isScrolled }: UserMenuProps) {
+export default function UserMenu({ user, isScrolled, isAdmin }: UserMenuProps) {
   const displayName = user.name ?? user.email?.split("@")[0] ?? "사용자";
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -81,6 +82,16 @@ export default function UserMenu({ user, isScrolled }: UserMenuProps) {
               <User className="w-4 h-4 text-gray-400" />
               프로필
             </Link>
+            {isAdmin && (
+              <Link
+                href="/admin"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-purple-700 bg-purple-50/50 hover:bg-purple-50 transition-colors"
+              >
+                <Shield className="w-4 h-4 text-purple-500" />
+                관리자
+              </Link>
+            )}
           </div>
 
           <div className="p-1 border-t border-gray-100">
