@@ -4,6 +4,24 @@ import Groq from "groq-sdk";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+function tryRepairJson(text: string): string {
+  let t = text.trim();
+  // 코드블록 제거
+  t = t.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+  // <think> 블록 제거
+  t = t.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+  // 키릴/히라가나/카타카나 제거
+  t = t.replace(/[Ѐ-ӿ぀-ゟ゠-ヿ]/g, "");
+
+  // 첫 { 와 마지막 } 사이만 추출
+  const firstBrace = t.indexOf("{");
+  const lastBrace = t.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    t = t.slice(firstBrace, lastBrace + 1);
+  }
+  return t;
+}
+
 export async function POST(req: NextRequest) {
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   const body = await req.json();
@@ -34,47 +52,36 @@ export async function POST(req: NextRequest) {
 - 여행 스타일: ${styleText}
 - 관심 테마: ${themeText}
 
-다음 JSON 형식으로 정확하게 응답해주세요. JSON 외에 다른 텍스트나 마크다운 코드블록은 포함하지 마세요:
+다음 JSON 구조로 응답하세요:
 
 {
-  "title": "여행 제목. 반드시 '박'이 '일'보다 앞에 와야 합니다 (ex: 제주도 3박 4일 힐링 여행)",
-  "summary": "이 여행의 특징과 매력을 2-3문장으로 설명",
-  "highlights": ["이 여행의 주요 하이라이트 1", "하이라이트 2", "하이라이트 3"],
+  "title": "여행 제목 (반드시 '박'이 '일'보다 앞)",
+  "summary": "여행 특징을 2-3문장으로",
+  "highlights": ["하이라이트 1", "하이라이트 2", "하이라이트 3"],
   "totalBudget": {
-    "accommodation": 숙박_총비용_숫자,
-    "food": 식비_총비용_숫자,
-    "transport": 교통_총비용_숫자,
-    "activities": 액티비티_총비용_숫자
+    "accommodation": 숫자,
+    "food": 숫자,
+    "transport": 숫자,
+    "activities": 숫자
   },
   "days": [
     {
       "day": 1,
-      "title": "Day 1 제목 (ex: 도착 & 첫 탐험)",
+      "title": "Day 1 제목",
       "theme": "이 날의 테마",
       "schedule": [
-        {
-          "time": "09:00",
-          "place": "장소명",
-          "activity": "활동 설명 (1-2문장)",
-          "duration": "소요시간 (ex: 2시간)",
-          "cost": 비용_숫자,
-          "tip": "현지 팁 또는 추천 포인트"
-        }
+        { "time": "09:00", "place": "장소명", "activity": "활동 설명", "duration": "2시간", "cost": 숫자, "tip": "팁" }
       ],
-      "meal": {
-        "breakfast": "아침 식사 추천",
-        "lunch": "점심 식사 추천 (장소명 포함)",
-        "dinner": "저녁 식사 추천 (장소명 포함)"
-      },
-      "accommodation": "숙소 추천 (지역과 유형)",
-      "dayBudget": 오늘_예상_총비용_숫자
+      "meal": { "breakfast": "아침", "lunch": "점심 (장소명)", "dinner": "저녁 (장소명)" },
+      "accommodation": "숙소 추천",
+      "dayBudget": 숫자
     }
   ],
-  "tips": ["여행 전체 팁 1", "팁 2", "팁 3"],
-  "bestSeason": "최적 여행 시기 안내"
+  "tips": ["팁1", "팁2", "팁3"],
+  "bestSeason": "최적 여행 시기"
 }
 
-각 날의 일정은 최소 4개 이상의 schedule 항목을 포함하고, 실제 존재하는 장소와 음식점을 추천해주세요.`;
+각 날의 schedule은 최소 4개 항목, 실제 존재하는 장소/음식점만 추천하세요.`;
 
   const encoder = new TextEncoder();
 
@@ -87,31 +94,55 @@ export async function POST(req: NextRequest) {
             {
               role: "system",
               content:
-                "당신은 한국의 전문 여행 플래너입니다. 실제 존재하는 장소, 음식점, 숙소를 기반으로 현실적이고 상세한 여행 일정을 JSON 형식으로 제공합니다.\n\n【엄격한 언어 규칙】\n- 모든 텍스트는 반드시 한국어(한글)로만 작성하세요.\n- 러시아어(Cyrillic: абв), 일본어 히라가나/카타카나(あいう, アイウ), 중국어 한자를 한국어 문장에 섞지 마세요.\n- 해외 고유명사(지명/음식/브랜드)는 한글 음차 + 괄호 안 영문만 허용합니다. 예: 에펠탑(Eiffel Tower), 스시(sushi).\n- JSON 구조(키, 숫자)는 예외이지만, 문자열 값은 모두 한글 또는 한글(영문) 형식으로만 작성하세요.\n\n【JSON 규칙】\n- 유효한 JSON만 반환하세요.\n- 마크다운 코드블록(```)을 절대 사용하지 마세요.\n- <think> 태그나 추론 과정을 출력하지 마세요. 바로 JSON으로 시작하세요.",
+                "당신은 한국의 전문 여행 플래너입니다. 실제 존재하는 장소, 음식점, 숙소를 기반으로 현실적이고 상세한 여행 일정을 제공합니다.\n\n【언어 규칙】\n- 모든 텍스트 값은 반드시 한국어(한글)로만 작성. 러시아어/일본어 히라가나·카타카나/중국어 한자 금지.\n- 해외 고유명사는 한글 음차 + 괄호 안 영문만 허용. 예: 에펠탑(Eiffel Tower), 스시(sushi).\n\n【JSON 규칙 - 매우 중요】\n- 출력은 반드시 valid JSON object 만 반환 (단 하나의 { ... } 객체).\n- 모든 문자열 값은 \"...\" 큰따옴표로 감싸야 함. 절대 따옴표를 빼먹지 말 것.\n- 문자열 안에서 큰따옴표를 사용해야 할 때는 반드시 \\\" 로 이스케이프.\n- 숫자 값은 따옴표 없이 숫자만 (예: 50000).\n- 마크다운, 설명, 코드블록 ``` 절대 금지. JSON 만 출력.",
             },
             { role: "user", content: prompt },
           ],
           max_tokens: 6000,
-          stream: true,
+          response_format: { type: "json_object" },
         });
 
-        let fullContent = "";
-        for await (const chunk of completion) {
-          const raw = chunk.choices[0]?.delta?.content ?? "";
-          if (raw) fullContent += raw;
+        const raw = completion.choices[0]?.message?.content ?? "";
+        const cleaned = tryRepairJson(raw);
+
+        // 검증: 진짜 valid JSON인지 서버에서 미리 파싱 시도
+        try {
+          JSON.parse(cleaned);
+        } catch {
+          // 한 번 더 시도: AI에게 수정 요청
+          const repair = await groq.chat.completions.create({
+            model: "openai/gpt-oss-120b",
+            messages: [
+              {
+                role: "system",
+                content:
+                  "다음 JSON 문자열에 문법 오류가 있습니다. 오류를 수정해서 valid JSON 만 반환하세요. 다른 텍스트 절대 추가하지 마세요.",
+              },
+              { role: "user", content: cleaned },
+            ],
+            max_tokens: 6000,
+            response_format: { type: "json_object" },
+          });
+          const repaired = tryRepairJson(repair.choices[0]?.message?.content ?? "");
+          // 재파싱 시도 (실패하면 그대로 보내고 클라이언트 에러 처리)
+          try {
+            JSON.parse(repaired);
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify({ chunk: repaired })}\n\n`)
+            );
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`)
+            );
+            controller.close();
+            return;
+          } catch {
+            // fall through - 원본 cleaned 보냄 (클라이언트가 에러 처리)
+          }
         }
 
-        // <think>...</think> 블록 제거 (DeepSeek R1 추론 출력)
-        fullContent = fullContent.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
-        // 마크다운 코드블록 제거
-        fullContent = fullContent.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-        // 금지 문자 제거: 키릴(U+0400-04FF), 히라가나(U+3040-309F), 카타카나(U+30A0-30FF)
-        fullContent = fullContent.replace(/[Ѐ-ӿ぀-ゟ゠-ヿ]/g, "");
-
         controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ chunk: fullContent })}\n\n`)
+          encoder.encode(`data: ${JSON.stringify({ chunk: cleaned })}\n\n`)
         );
-
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`)
         );
