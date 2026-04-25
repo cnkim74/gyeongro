@@ -25,7 +25,11 @@ export default async function Header() {
         image: data?.custom_image ?? data?.image ?? session.user.image ?? null,
       };
     } catch {
-      user = session.user;
+      user = {
+        name: session.user.name ?? null,
+        email: session.user.email ?? null,
+        image: session.user.image ?? null,
+      };
     }
   }
 

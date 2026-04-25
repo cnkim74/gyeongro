@@ -19,7 +19,7 @@ export default async function ProfilePage() {
   const { data: user } = await supabase
     .schema("next_auth")
     .from("users")
-    .select("id, name, email, image, custom_image")
+    .select("id, name, email, image, custom_image, phone")
     .eq("id", session.user.id)
     .single();
 
@@ -41,6 +41,7 @@ export default async function ProfilePage() {
               userId={session.user.id}
               name={user?.name ?? null}
               email={user?.email ?? null}
+              phone={user?.phone ?? null}
               currentImage={displayImage}
               hasCustomImage={!!user?.custom_image}
             />

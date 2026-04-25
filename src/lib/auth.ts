@@ -75,6 +75,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const userId = user?.id ?? (token?.sub as string | undefined);
       if (session.user && userId) {
         session.user.id = userId;
+
+        const userRecord = user as
+          | (typeof user & { phone?: string | null; custom_image?: string | null })
+          | undefined;
+        if (userRecord?.phone !== undefined) {
+          (session.user as { phone?: string | null }).phone = userRecord.phone;
+        }
+
         if (signingSecret) {
           const payload = {
             aud: "authenticated",

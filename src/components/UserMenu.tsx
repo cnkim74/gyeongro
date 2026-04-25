@@ -11,6 +11,7 @@ interface UserMenuProps {
 }
 
 export default function UserMenu({ user, isScrolled }: UserMenuProps) {
+  const displayName = user.name ?? user.email?.split("@")[0] ?? "사용자";
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -28,20 +29,29 @@ export default function UserMenu({ user, isScrolled }: UserMenuProps) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 p-1 rounded-full hover:bg-white/10 transition-colors"
+        className={`flex items-center gap-2 pl-1 pr-3 py-1 rounded-full transition-colors ${
+          isScrolled ? "hover:bg-gray-100" : "hover:bg-white/10"
+        }`}
       >
         {user.image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={user.image}
-            alt={user.name ?? "사용자"}
-            className="w-8 h-8 rounded-full border-2 border-white/20"
+            alt={displayName}
+            className="w-8 h-8 rounded-full border-2 border-white/20 object-cover"
           />
         ) : (
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-sm font-bold">
             {initial.toUpperCase()}
           </div>
         )}
+        <span
+          className={`text-sm font-semibold max-w-[8rem] truncate hidden sm:block ${
+            isScrolled ? "text-gray-900" : "text-white"
+          }`}
+        >
+          {displayName}
+        </span>
       </button>
 
       {open && (

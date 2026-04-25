@@ -5,6 +5,7 @@ declare module "next-auth" {
     supabaseAccessToken?: string;
     user: {
       id: string;
+      phone?: string | null;
     } & DefaultSession["user"];
   }
 }

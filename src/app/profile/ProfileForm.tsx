@@ -8,13 +8,24 @@ interface Props {
   userId: string;
   name: string | null;
   email: string | null;
+  phone: string | null;
   currentImage: string | null;
   hasCustomImage: boolean;
+}
+
+function formatPhone(input: string): string {
+  const digits = input.replace(/[^\d]/g, "").slice(0, 11);
+  if (digits.length < 4) return digits;
+  if (digits.length < 8) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  if (digits.length === 10)
+    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
 }
 
 export default function ProfileForm({
   name,
   email,
+  phone,
   currentImage,
   hasCustomImage,
 }: Props) {
@@ -26,6 +37,34 @@ export default function ProfileForm({
     { type: "success" | "error"; text: string } | null
   >(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImage);
+  const [phoneInput, setPhoneInput] = useState(phone ?? "");
+  const [phoneSaving, setPhoneSaving] = useState(false);
+  const [phoneEdit, setPhoneEdit] = useState(false);
+
+  const handlePhoneSave = async () => {
+    setPhoneSaving(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/profile/phone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phoneInput }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "저장 실패");
+      setPhoneInput(data.phone);
+      setPhoneEdit(false);
+      setMessage({ type: "success", text: "휴대전화 번호가 변경됐어요." });
+      router.refresh();
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text: err instanceof Error ? err.message : "오류가 발생했어요.",
+      });
+    } finally {
+      setPhoneSaving(false);
+    }
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -193,6 +232,55 @@ export default function ProfileForm({
             이메일
           </label>
           <p className="text-base text-gray-900 mt-1">{email ?? "이메일 없음"}</p>
+        </div>
+
+        <div>
+          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            휴대전화 번호
+          </label>
+          {phoneEdit ? (
+            <div className="flex gap-2 mt-1">
+              <input
+                type="tel"
+                inputMode="numeric"
+                value={phoneInput}
+                onChange={(e) => setPhoneInput(formatPhone(e.target.value))}
+                placeholder="010-1234-5678"
+                className="flex-1 px-3 py-2 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none text-gray-900"
+              />
+              <button
+                onClick={handlePhoneSave}
+                disabled={
+                  phoneSaving || phoneInput.replace(/[^\d]/g, "").length < 10
+                }
+                className="px-4 py-2 rounded-xl bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 disabled:opacity-50"
+              >
+                {phoneSaving ? "저장 중..." : "저장"}
+              </button>
+              <button
+                onClick={() => {
+                  setPhoneEdit(false);
+                  setPhoneInput(phone ?? "");
+                }}
+                disabled={phoneSaving}
+                className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium hover:bg-gray-50"
+              >
+                취소
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-base text-gray-900">
+                {phone ?? <span className="text-gray-400">미입력</span>}
+              </p>
+              <button
+                onClick={() => setPhoneEdit(true)}
+                className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+              >
+                {phone ? "변경" : "입력"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
