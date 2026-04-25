@@ -48,7 +48,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/board?category=review" className="hover:text-white transition-colors">
+                <Link href="/reviews" className="hover:text-white transition-colors">
                   여행 후기
                 </Link>
               </li>

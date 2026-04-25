@@ -50,8 +50,8 @@ export default function HeaderClient({ user }: HeaderClientProps) {
           <nav className="hidden md:flex items-center gap-8">
             {[
               { label: "AI 플래너", href: "/planner" },
+              { label: "후기", href: "/reviews" },
               { label: "커뮤니티", href: "/board" },
-              { label: "이용 방법", href: "/#how-it-works" },
             ].map((item) => (
               <a
                 key={item.href}
@@ -115,9 +115,9 @@ export default function HeaderClient({ user }: HeaderClientProps) {
         <div className="md:hidden bg-white border-t border-gray-100 shadow-lg">
           <div className="px-4 py-4 space-y-3">
             {[
-              { label: "서비스 소개", href: "/#features" },
-              { label: "이용 방법", href: "/#how-it-works" },
-              { label: "후기", href: "/#testimonials" },
+              { label: "AI 플래너", href: "/planner" },
+              { label: "후기", href: "/reviews" },
+              { label: "커뮤니티", href: "/board" },
             ].map((item) => (
               <a
                 key={item.href}

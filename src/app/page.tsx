@@ -1,19 +1,56 @@
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import StarRating from "@/components/StarRating";
+import { getSupabaseServiceClient } from "@/lib/supabase";
 import {
   Sparkles,
   MapPin,
   Clock,
   Wallet,
   Users,
-  Star,
   ArrowRight,
   CheckCircle,
   Zap,
   Globe,
   Heart,
 } from "lucide-react";
+
+export const dynamic = "force-dynamic";
+
+async function getLandingReviews() {
+  try {
+    const supabase = getSupabaseServiceClient();
+    const { data: reviews } = await supabase
+      .from("reviews")
+      .select("id, title, content, rating, destination, created_at, user_id")
+      .eq("is_deleted", false)
+      .order("rating", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(6);
+
+    if (!reviews || reviews.length === 0) return [];
+
+    const userIds = [...new Set(reviews.map((r) => r.user_id))];
+    const { data: users } = await supabase
+      .schema("next_auth")
+      .from("users")
+      .select("id, name, image, custom_image")
+      .in("id", userIds);
+
+    const usersMap: Record<string, { name: string | null; image: string | null }> = {};
+    for (const u of users ?? []) {
+      usersMap[u.id] = { name: u.name, image: u.custom_image ?? u.image };
+    }
+
+    return reviews.map((r) => ({
+      ...r,
+      author: usersMap[r.user_id] ?? { name: null, image: null },
+    }));
+  } catch {
+    return [];
+  }
+}
 
 const features = [
   {
@@ -83,30 +120,6 @@ const howItWorks = [
   },
 ];
 
-const testimonials = [
-  {
-    name: "김지수",
-    role: "30대 직장인",
-    avatar: "김",
-    rating: 5,
-    text: "혼자 유럽 여행 계획을 세우는 게 너무 막막했는데, 경로 덕분에 1시간 만에 2주 일정을 완성했어요. AI가 제 취향을 정확히 파악해서 완벽한 코스를 짜줬어요!",
-  },
-  {
-    name: "박민준",
-    role: "20대 대학생",
-    avatar: "박",
-    rating: 5,
-    text: "친구들이랑 제주도 여행 계획할 때 썼는데 정말 편했어요. 예산도 딱 맞게 조절해줘서 만족스러운 여행이 됐습니다.",
-  },
-  {
-    name: "이소영",
-    role: "40대 주부",
-    avatar: "이",
-    rating: 5,
-    text: "가족 여행 계획을 세울 때 늘 힘들었는데, 경로가 아이들 눈높이에 맞는 코스부터 부모님이 좋아하실 만한 곳까지 알아서 넣어줘서 너무 좋았어요.",
-  },
-];
-
 const destinations = [
   { name: "제주도", emoji: "🌊", tag: "국내 인기 1위" },
   { name: "도쿄", emoji: "🗼", tag: "해외 인기 1위" },
@@ -116,7 +129,8 @@ const destinations = [
   { name: "강릉", emoji: "🌿", tag: "자연 힐링" },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const reviews = await getLandingReviews();
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -273,34 +287,88 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* Reviews */}
       <section id="testimonials" className="py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">여행자들의 이야기</h2>
             <p className="text-gray-500 text-lg">경로와 함께한 실제 여행 후기</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((t) => (
-              <div key={t.name} className="bg-white rounded-2xl p-7 shadow-sm border border-gray-100">
-                <div className="flex items-center gap-1 mb-4">
-                  {Array.from({ length: t.rating }).map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-                <p className="text-gray-600 text-sm leading-relaxed mb-6">&quot;{t.text}&quot;</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
-                    {t.avatar}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm">{t.name}</p>
-                    <p className="text-xs text-gray-400">{t.role}</p>
-                  </div>
-                </div>
+
+          {reviews.length === 0 ? (
+            <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center max-w-xl mx-auto">
+              <p className="text-gray-500 mb-4">
+                곧 첫 후기가 올라올 거예요. 경로와 함께한 여행 이야기를 들려주세요!
+              </p>
+              <Link
+                href="/reviews/new"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600"
+              >
+                <Sparkles className="w-4 h-4" />첫 후기 남기기
+              </Link>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {reviews.map((r) => {
+                  const initial = (r.author?.name ?? "익").charAt(0).toUpperCase();
+                  return (
+                    <Link
+                      key={r.id}
+                      href={`/reviews/${r.id}`}
+                      className="group bg-white rounded-2xl p-7 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <StarRating value={r.rating} readonly size="sm" />
+                        {r.destination && (
+                          <span className="inline-flex items-center gap-1 text-xs text-blue-500 font-medium bg-blue-50 px-2 py-0.5 rounded-full">
+                            <MapPin className="w-3 h-3" />
+                            {r.destination}
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="font-bold text-gray-900 text-base mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                        {r.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm leading-relaxed mb-5 line-clamp-3">
+                        {r.content}
+                      </p>
+                      <div className="flex items-center gap-3 pt-4 border-t border-gray-50">
+                        {r.author?.image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={r.author.image}
+                            alt={r.author.name ?? ""}
+                            className="w-9 h-9 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
+                            {initial}
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-semibold text-gray-900 text-sm">
+                            {r.author?.name ?? "익명"}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {new Date(r.created_at).toLocaleDateString("ko-KR")}
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
-            ))}
-          </div>
+              <div className="text-center mt-10">
+                <Link
+                  href="/reviews"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white border border-gray-200 text-gray-700 font-semibold hover:border-blue-300 hover:text-blue-600 transition-all"
+                >
+                  모든 후기 보기 <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       </section>
 
