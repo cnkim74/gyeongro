@@ -18,7 +18,7 @@ export default async function MyTripsPage() {
   if (!session?.user?.id) redirect("/login?callbackUrl=/my-trips");
 
   const supabase = getSupabaseServiceClient();
-  const { data: trips } = await supabase
+  const { data: trips, error } = await supabase
     .from("travel_plans")
     .select("id, title, destination, days, people, budget, created_at")
     .eq("user_id", session.user.id)
@@ -48,7 +48,15 @@ export default async function MyTripsPage() {
             </Link>
           </div>
 
-          {!trips || trips.length === 0 ? (
+          {error ? (
+            <div className="bg-red-50 border border-red-100 rounded-2xl p-6 mb-4">
+              <h3 className="font-bold text-red-700 mb-2">데이터를 불러오는 중 오류가 발생했어요</h3>
+              <p className="text-sm text-red-600 break-all">{error.message}</p>
+              {error.hint && <p className="text-xs text-red-500 mt-2">힌트: {error.hint}</p>}
+            </div>
+          ) : null}
+
+          {!error && (!trips || trips.length === 0) ? (
             <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center">
               <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mx-auto mb-4">
                 <MapPin className="w-8 h-8 text-blue-500" />
@@ -68,7 +76,7 @@ export default async function MyTripsPage() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
-          ) : (
+          ) : !error && trips && trips.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {trips.map((trip) => (
                 <div
@@ -106,7 +114,7 @@ export default async function MyTripsPage() {
                 </div>
               ))}
             </div>
-          )}
+          ) : null}
         </div>
       </main>
 
