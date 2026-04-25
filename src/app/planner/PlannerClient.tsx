@@ -27,6 +27,10 @@ const themes = [
   { id: "shopping", label: "쇼핑", emoji: "🛍️" },
   { id: "nightlife", label: "나이트라이프", emoji: "🌃" },
   { id: "photo", label: "인스타 명소", emoji: "📸" },
+  { id: "movie_drama", label: "영화·드라마 촬영지", emoji: "🎬" },
+  { id: "anime", label: "애니메이션 성지", emoji: "🌸" },
+  { id: "bbang", label: "빵지순례", emoji: "🥐" },
+  { id: "local_food", label: "로컬 푸드", emoji: "🍱" },
 ];
 
 const popularDestinations = [

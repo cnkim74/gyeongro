@@ -32,6 +32,24 @@ export async function POST(req: NextRequest) {
   }
 
   const themeText = themes?.length > 0 ? themes.join(", ") : "일반 관광";
+  const themeHints: Record<string, string> = {
+    food: "현지 미식, 노포, 로컬 맛집, 미슐랭 등",
+    nature: "산, 바다, 호수, 공원, 트레킹, 풍경 명소",
+    culture: "박물관, 사찰, 궁궐, 유적지, 전통 공연",
+    activity: "스노클링, 서핑, 스키, 카약, 자전거 등 체험",
+    healing: "스파, 온천, 요가, 명상, 한적한 휴양지",
+    shopping: "쇼핑몰, 아울렛, 시장, 명품거리",
+    nightlife: "야경, 야시장, 바, 클럽, 루프탑",
+    photo: "포토존, 인스타그램 핫플레이스, 인생샷 명소",
+    movie_drama: "영화·드라마 촬영지 (예: '미드나잇 인 파리'의 알렉상드르3세 다리, '로마의 휴일' 트레비분수, K-드라마 촬영지). 작품명과 장면을 명시하세요.",
+    anime: "애니메이션 성지순례 (예: '너의 이름은' 스가신사 계단, '슬램덩크' 가마쿠라코코마에역, '귀멸의 칼날' 로케지). 작품명과 명장면을 명시하세요.",
+    bbang: "빵지순례 코스. 지역 유명 베이커리/제과점 위주. 시그니처 메뉴와 줄서기 팁 포함.",
+    local_food: "현지 시장, 노포, 로컬 음식점, 골목 맛집 위주. 관광객이 잘 모르는 숨은 맛집 우선.",
+  };
+  const themeDetail = (themes ?? [])
+    .map((t: string) => themeHints[t])
+    .filter(Boolean)
+    .join("\n  - ");
   const styleMap: Record<string, string> = {
     relaxed: "여유롭고 느린 여행 (관광지보다 힐링 중심)",
     balanced: "관광과 휴식의 균형 잡힌 여행",
@@ -50,7 +68,7 @@ export async function POST(req: NextRequest) {
 - 인원: ${people}명
 - 총 예산: ${budget.toLocaleString()}원 (1인 기준 ${Math.round(budget / people).toLocaleString()}원)
 - 여행 스타일: ${styleText}
-- 관심 테마: ${themeText}
+- 관심 테마: ${themeText}${themeDetail ? `\n  - ${themeDetail}` : ""}
 
 다음 JSON 구조로 응답하세요:
 

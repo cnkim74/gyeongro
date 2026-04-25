@@ -38,18 +38,23 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/my-trips" className="hover:text-white transition-colors">
-                  여행 일정 저장
+                <Link href="/themes" className="hover:text-white transition-colors">
+                  테마 여행
                 </Link>
               </li>
               <li>
-                <Link href="/board" className="hover:text-white transition-colors">
-                  커뮤니티
+                <Link href="/preparations" className="hover:text-white transition-colors">
+                  여행 준비물
                 </Link>
               </li>
               <li>
                 <Link href="/reviews" className="hover:text-white transition-colors">
                   여행 후기
+                </Link>
+              </li>
+              <li>
+                <Link href="/board" className="hover:text-white transition-colors">
+                  커뮤니티
                 </Link>
               </li>
             </ul>

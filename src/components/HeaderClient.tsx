@@ -47,9 +47,10 @@ export default function HeaderClient({ user }: HeaderClientProps) {
             </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-7">
             {[
               { label: "AI 플래너", href: "/planner" },
+              { label: "테마 여행", href: "/themes" },
               { label: "후기", href: "/reviews" },
               { label: "커뮤니티", href: "/board" },
             ].map((item) => (
@@ -116,6 +117,7 @@ export default function HeaderClient({ user }: HeaderClientProps) {
           <div className="px-4 py-4 space-y-3">
             {[
               { label: "AI 플래너", href: "/planner" },
+              { label: "테마 여행", href: "/themes" },
               { label: "후기", href: "/reviews" },
               { label: "커뮤니티", href: "/board" },
             ].map((item) => (

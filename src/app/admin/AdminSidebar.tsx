@@ -10,6 +10,7 @@ import {
   Shield,
   ChevronRight,
   Home,
+  ShoppingBag,
 } from "lucide-react";
 
 const MENU = [
@@ -17,6 +18,7 @@ const MENU = [
   { href: "/admin/users", label: "사용자 관리", icon: Users },
   { href: "/admin/posts", label: "게시글 관리", icon: MessageSquare },
   { href: "/admin/trips", label: "여행 계획", icon: Map },
+  { href: "/admin/affiliates", label: "쿠팡 파트너스", icon: ShoppingBag },
 ];
 
 export default function AdminSidebar() {

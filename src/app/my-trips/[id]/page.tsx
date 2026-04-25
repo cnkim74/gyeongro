@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import Header from "@/components/Header";
 import ItineraryView from "@/components/ItineraryView";
+import TravelEssentials from "@/components/TravelEssentials";
 import { ArrowLeft } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -39,6 +40,7 @@ export default async function TripDetailPage({
             <ArrowLeft className="w-4 h-4" />내 여행 목록으로
           </Link>
           <ItineraryView itinerary={trip.itinerary} destination={trip.destination} />
+          <TravelEssentials />
         </div>
       </main>
     </div>
