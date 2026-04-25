@@ -1,9 +1,6 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/admin";
 import { getSupabaseServiceClient } from "@/lib/supabase";
-import Header from "@/components/Header";
-import { ArrowLeft, MapPin, Calendar, Users } from "lucide-react";
+import { MapPin, Calendar, Users } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -12,8 +9,7 @@ export const metadata = {
 };
 
 export default async function AdminTripsPage() {
-  const session = await requireAdmin();
-  if (!session) redirect("/");
+  await requireAdmin();
 
   const supabase = getSupabaseServiceClient();
   const { data: trips } = await supabase
@@ -36,69 +32,54 @@ export default async function AdminTripsPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <Header />
-      <main className="flex-1 pt-24 pb-16">
-        <div className="max-w-6xl mx-auto px-4">
-          <Link
-            href="/admin"
-            className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 mb-6"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            대시보드로
-          </Link>
+    <div className="p-6 lg:p-10">
+      <h1 className="text-2xl font-bold text-gray-900 mb-1">여행 계획 관리</h1>
+      <p className="text-sm text-gray-500 mb-6">
+        전체 {trips?.length ?? 0}개 (최근 100개)
+      </p>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">여행 계획 관리</h1>
-          <p className="text-gray-500 text-sm mb-6">
-            전체 {trips?.length ?? 0}개 (최근 100개)
-          </p>
-
-          {!trips || trips.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center">
-              <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">아직 저장된 여행 계획이 없어요.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {trips.map((t) => (
-                <div
-                  key={t.id}
-                  className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition-all"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <span className="inline-flex items-center gap-1 text-xs text-blue-500 font-medium bg-blue-50 px-2.5 py-1 rounded-full">
-                      <MapPin className="w-3 h-3" />
-                      {t.destination}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {new Date(t.created_at).toLocaleDateString("ko-KR")}
-                    </span>
-                  </div>
-                  <h3 className="font-bold text-gray-900 mb-2 line-clamp-2">
-                    {t.title}
-                  </h3>
-                  <p className="text-xs text-gray-500 mb-3">
-                    by {usersMap[t.user_id] ?? "알 수 없음"}
-                  </p>
-                  <div className="flex items-center gap-3 text-xs text-gray-500">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {t.days}박 {t.days + 1}일
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users className="w-3 h-3" />
-                      {t.people}명
-                    </span>
-                    <span className="text-emerald-600 font-semibold">
-                      {t.budget.toLocaleString()}원
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+      {!trips || trips.length === 0 ? (
+        <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center">
+          <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-500">아직 저장된 여행 계획이 없어요.</p>
         </div>
-      </main>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {trips.map((t) => (
+            <div
+              key={t.id}
+              className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition-all"
+            >
+              <div className="flex items-start justify-between mb-2">
+                <span className="inline-flex items-center gap-1 text-xs text-blue-500 font-medium bg-blue-50 px-2.5 py-1 rounded-full">
+                  <MapPin className="w-3 h-3" />
+                  {t.destination}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {new Date(t.created_at).toLocaleDateString("ko-KR")}
+                </span>
+              </div>
+              <h3 className="font-bold text-gray-900 mb-2 line-clamp-2">{t.title}</h3>
+              <p className="text-xs text-gray-500 mb-3">
+                by {usersMap[t.user_id] ?? "알 수 없음"}
+              </p>
+              <div className="flex items-center gap-3 text-xs text-gray-500">
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  {t.days}박 {t.days + 1}일
+                </span>
+                <span className="flex items-center gap-1">
+                  <Users className="w-3 h-3" />
+                  {t.people}명
+                </span>
+                <span className="text-emerald-600 font-semibold">
+                  {t.budget.toLocaleString()}원
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
