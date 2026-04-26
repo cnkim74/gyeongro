@@ -87,15 +87,22 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="text-white font-semibold mb-4 text-sm">회사</h4>
+            <h4 className="text-white font-semibold mb-4 text-sm">Pothos</h4>
             <ul className="space-y-3 text-sm">
-              {["회사 소개", "채용", "이용약관", "개인정보처리방침"].map((item) => (
-                <li key={item}>
-                  <a href="#" className="hover:text-white transition-colors">
-                    {item}
-                  </a>
-                </li>
-              ))}
+              <li>
+                <Link href="/about" className="hover:text-white transition-colors">
+                  브랜드 스토리
+                </Link>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white transition-colors">채용</a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white transition-colors">이용약관</a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white transition-colors">개인정보처리방침</a>
+              </li>
             </ul>
           </div>
         </div>
