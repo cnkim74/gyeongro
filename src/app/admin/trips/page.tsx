@@ -5,7 +5,7 @@ import { MapPin, Calendar, Users } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "여행 계획 관리 - 경로",
+  title: "여행 계획 관리 - Pothos",
 };
 
 export default async function AdminTripsPage() {

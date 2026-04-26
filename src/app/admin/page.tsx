@@ -12,7 +12,7 @@ import {
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "관리자 대시보드 - 경로",
+  title: "관리자 대시보드 - Pothos",
 };
 
 export default async function AdminDashboardPage() {

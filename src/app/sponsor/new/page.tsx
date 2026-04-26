@@ -8,7 +8,7 @@ import SponsorshipForm from "./SponsorshipForm";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "홍보 등록 - 경로",
+  title: "홍보 등록 - Pothos",
 };
 
 export default async function NewSponsorshipPage() {

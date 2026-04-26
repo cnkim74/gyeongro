@@ -10,7 +10,7 @@ import MyTripsActions from "./MyTripsActions";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "내 여행 계획 - 경로",
+  title: "내 여행 계획 - Pothos",
 };
 
 export default async function MyTripsPage() {

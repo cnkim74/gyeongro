@@ -6,7 +6,7 @@ import StoryForm from "./StoryForm";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "스토리 작성 - 경로",
+  title: "스토리 작성 - Pothos",
 };
 
 export default async function NewStoryPage() {

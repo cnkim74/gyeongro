@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { MapPin, ArrowLeft } from "lucide-react";
 
 export const metadata = {
-  title: "로그인 - 경로",
+  title: "로그인 - Pothos",
 };
 
 export default async function LoginPage({
@@ -37,7 +37,7 @@ export default async function LoginPage({
                 <MapPin className="w-6 h-6 text-white" />
               </div>
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">경로에 오신 것을 환영해요</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Pothos에 오신 것을 환영해요</h1>
             <p className="text-gray-500 text-sm">
               로그인하고 나만의 여행 계획을 저장하세요
             </p>
@@ -111,7 +111,7 @@ export default async function LoginPage({
           </p>
 
           <p className="text-center text-xs text-gray-400 mt-6 leading-relaxed">
-            로그인하면 경로의{" "}
+            로그인하면 Pothos의{" "}
             <a href="#" className="underline hover:text-gray-600">
               이용약관
             </a>

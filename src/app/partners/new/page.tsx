@@ -6,7 +6,7 @@ import PartnerForm from "./PartnerForm";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "동료 모집 - 경로",
+  title: "동료 모집 - Pothos",
 };
 
 export default async function NewPartnerPage() {

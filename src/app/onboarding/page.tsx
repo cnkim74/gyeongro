@@ -7,7 +7,7 @@ import { MapPin } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "환영합니다 - 경로",
+  title: "환영합니다 - Pothos",
 };
 
 export default async function OnboardingPage({

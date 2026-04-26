@@ -9,7 +9,7 @@ import type { UserRole } from "@/lib/admin";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "여행 스토리 - 경로",
+  title: "여행 스토리 - Pothos",
 };
 
 interface StoryRow {

@@ -5,7 +5,7 @@ import BoardManager from "./BoardManager";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "게시판 관리 - 경로",
+  title: "게시판 관리 - Pothos",
 };
 
 export default async function AdminBoardsPage() {

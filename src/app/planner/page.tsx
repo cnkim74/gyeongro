@@ -3,7 +3,7 @@ import Footer from "@/components/Footer";
 import PlannerClient from "./PlannerClient";
 
 export const metadata = {
-  title: "AI 여행 플래너 - 경로",
+  title: "AI 여행 플래너 - Pothos",
 };
 
 export default function PlannerPage() {

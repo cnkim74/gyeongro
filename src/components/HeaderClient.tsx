@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { MapPin, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import { LogoMark } from "./Logo";
 import UserMenu from "./UserMenu";
 
 import type { UserRole } from "@/lib/admin";
@@ -44,15 +45,22 @@ export default function HeaderClient({ user }: HeaderClientProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
-              <MapPin className="w-4 h-4 text-white" />
+            <div
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all group-hover:scale-105 ${
+                useDarkBg
+                  ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-md"
+                  : "bg-white/10 backdrop-blur-md border border-white/20 text-white"
+              }`}
+            >
+              <LogoMark size={18} />
             </div>
             <span
               className={`text-xl font-bold tracking-tight transition-colors ${
-                useDarkBg ? "text-gray-900" : "text-white"
+                useDarkBg ? "text-slate-900" : "text-white"
               }`}
+              style={{ letterSpacing: "-0.02em" }}
             >
-              경로
+              Pothos
             </span>
           </Link>
 

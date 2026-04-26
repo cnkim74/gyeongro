@@ -528,7 +528,7 @@ export default async function HomePage() {
             이번 여행은,
             <br />
             <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              경로와 함께
+              Pothos와 함께
             </span>
           </h2>
           <p className="text-lg text-slate-500 mb-10">

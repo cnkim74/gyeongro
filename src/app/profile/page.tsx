@@ -8,7 +8,7 @@ import ProfileForm from "./ProfileForm";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "프로필 - 경로",
+  title: "프로필 - Pothos",
 };
 
 export default async function ProfilePage() {

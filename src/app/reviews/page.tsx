@@ -10,7 +10,7 @@ import type { UserRole } from "@/lib/admin";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "여행 후기 - 경로",
+  title: "여행 후기 - Pothos",
 };
 
 export default async function ReviewsPage({

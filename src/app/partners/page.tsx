@@ -15,7 +15,7 @@ import type { UserRole } from "@/lib/admin";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "여행 동료 찾기 - 경로",
+  title: "여행 동료 찾기 - Pothos",
 };
 
 interface PartnerRow {

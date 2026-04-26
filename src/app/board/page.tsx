@@ -9,7 +9,7 @@ import { MessageSquare, ArrowRight, Settings } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "커뮤니티 - 경로",
+  title: "커뮤니티 - Pothos",
 };
 
 export default async function BoardListPage() {

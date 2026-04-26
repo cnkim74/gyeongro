@@ -5,7 +5,7 @@ import RoleSelect from "./RoleSelect";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "사용자 관리 - 경로",
+  title: "사용자 관리 - Pothos",
 };
 
 export default async function AdminUsersPage() {

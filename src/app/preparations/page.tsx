@@ -6,7 +6,7 @@ import { ShoppingBag } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "여행 준비물 - 경로",
+  title: "여행 준비물 - Pothos",
 };
 
 export default function PreparationsPage() {

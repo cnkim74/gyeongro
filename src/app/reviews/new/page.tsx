@@ -7,7 +7,7 @@ import ReviewForm from "../ReviewForm";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "후기 작성 - 경로",
+  title: "후기 작성 - Pothos",
 };
 
 export default async function NewReviewPage() {

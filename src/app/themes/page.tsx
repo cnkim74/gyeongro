@@ -7,7 +7,7 @@ import { Sparkles, ArrowRight, MapPin } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "테마 여행 - 경로",
+  title: "테마 여행 - Pothos",
 };
 
 const CATEGORY_LABELS: Record<string, string> = {

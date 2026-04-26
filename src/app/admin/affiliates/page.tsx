@@ -5,7 +5,7 @@ import AffiliateManager from "./AffiliateManager";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "쿠팡 파트너스 관리 - 경로",
+  title: "쿠팡 파트너스 관리 - Pothos",
 };
 
 export default async function AdminAffiliatesPage() {

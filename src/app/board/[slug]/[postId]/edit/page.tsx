@@ -8,7 +8,7 @@ import PostForm from "@/app/board/PostForm";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "글 수정 - 경로",
+  title: "글 수정 - Pothos",
 };
 
 export default async function EditPostPage({

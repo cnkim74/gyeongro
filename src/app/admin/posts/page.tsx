@@ -7,7 +7,7 @@ import AdminPostActions from "./AdminPostActions";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "게시글 관리 - 경로",
+  title: "게시글 관리 - Pothos",
 };
 
 const CATEGORIES: Record<string, string> = {

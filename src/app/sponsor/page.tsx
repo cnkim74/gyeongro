@@ -11,7 +11,7 @@ import SponsorshipActions from "./SponsorshipActions";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "스폰서 / 홍보 관리 - 경로",
+  title: "스폰서 / 홍보 관리 - Pothos",
 };
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {

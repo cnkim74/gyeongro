@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { MapPin, ArrowLeft, Sparkles } from "lucide-react";
 
 export const metadata = {
-  title: "회원가입 - 경로",
+  title: "회원가입 - Pothos",
 };
 
 export default async function SignupPage({
@@ -38,7 +38,7 @@ export default async function SignupPage({
               </div>
             </Link>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              경로 시작하기
+              Pothos 시작하기
             </h1>
             <p className="text-gray-500 text-sm">
               3초 만에 가입하고 AI 여행 플래너를 무료로 이용하세요
@@ -125,7 +125,7 @@ export default async function SignupPage({
           </p>
 
           <p className="text-center text-xs text-gray-400 mt-6 leading-relaxed">
-            회원가입 시 경로의{" "}
+            회원가입 시 Pothos의{" "}
             <a href="#" className="underline hover:text-gray-600">
               이용약관
             </a>
