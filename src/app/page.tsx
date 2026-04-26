@@ -19,6 +19,11 @@ import {
   BookOpen,
   HandshakeIcon,
   ChevronRight,
+  Anchor,
+  Castle,
+  Landmark,
+  TreePalm,
+  Building2,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -106,12 +111,48 @@ const themes = [
 ];
 
 const destinations = [
-  { name: "제주", subtitle: "Jeju Island", tag: "국내 인기" },
-  { name: "도쿄", subtitle: "Tokyo", tag: "해외 인기" },
-  { name: "부산", subtitle: "Busan", tag: "주말 추천" },
-  { name: "오사카", subtitle: "Osaka", tag: "미식" },
-  { name: "파리", subtitle: "Paris", tag: "유럽" },
-  { name: "방콕", subtitle: "Bangkok", tag: "동남아" },
+  {
+    name: "제주",
+    subtitle: "Jeju Island",
+    tag: "국내 인기",
+    icon: Mountain,
+    desc: "한라산 · 바다",
+  },
+  {
+    name: "도쿄",
+    subtitle: "Tokyo",
+    tag: "해외 인기",
+    icon: Building2,
+    desc: "메가시티 · 미식",
+  },
+  {
+    name: "부산",
+    subtitle: "Busan",
+    tag: "주말 추천",
+    icon: Anchor,
+    desc: "항구 · 야경",
+  },
+  {
+    name: "오사카",
+    subtitle: "Osaka",
+    tag: "미식",
+    icon: Castle,
+    desc: "성 · 도톤보리",
+  },
+  {
+    name: "파리",
+    subtitle: "Paris",
+    tag: "유럽",
+    icon: Landmark,
+    desc: "에펠탑 · 예술",
+  },
+  {
+    name: "방콕",
+    subtitle: "Bangkok",
+    tag: "동남아",
+    icon: TreePalm,
+    desc: "사원 · 야시장",
+  },
 ];
 
 const howItWorks = [
@@ -242,31 +283,51 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {destinations.map((d) => (
-              <Link
-                key={d.name}
-                href={`/planner?destination=${d.name}`}
-                className="group relative aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-slate-700 to-slate-900 hover:shadow-xl transition-all"
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <div
-                  className="absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity"
-                  style={{
-                    backgroundImage:
-                      "radial-gradient(circle at center, rgba(99,102,241,0.4), transparent 70%)",
-                  }}
-                />
-                <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
-                  <p className="text-[10px] font-semibold tracking-wider text-white/60 mb-1">
+            {destinations.map((d) => {
+              const Icon = d.icon;
+              return (
+                <Link
+                  key={d.name}
+                  href={`/planner?destination=${d.name}`}
+                  className="group relative aspect-[3/4] rounded-3xl overflow-hidden bg-slate-900 hover:bg-slate-800 hover:shadow-2xl transition-all hover:-translate-y-1"
+                >
+                  {/* Subtle gradient overlay for depth */}
+                  <div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    style={{
+                      backgroundImage:
+                        "radial-gradient(circle at top right, rgba(99,102,241,0.25), transparent 60%)",
+                    }}
+                  />
+
+                  {/* Tag at top */}
+                  <span className="absolute top-4 left-4 z-10 inline-flex text-[10px] font-bold tracking-wider text-white/50 uppercase">
                     {d.tag}
-                  </p>
-                  <h3 className="text-2xl font-bold mb-0.5 group-hover:translate-x-1 transition-transform">
-                    {d.name}
-                  </h3>
-                  <p className="text-xs text-white/50">{d.subtitle}</p>
-                </div>
-              </Link>
-            ))}
+                  </span>
+
+                  {/* Big icon centered */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Icon
+                      className="w-16 h-16 sm:w-20 sm:h-20 text-white stroke-[1.25] group-hover:scale-110 transition-transform duration-500"
+                    />
+                  </div>
+
+                  {/* Bottom info */}
+                  <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                    <h3 className="text-xl font-bold leading-tight">{d.name}</h3>
+                    <p className="text-[11px] text-white/40 font-medium tracking-wide">
+                      {d.subtitle}
+                    </p>
+                    <p className="text-[10px] text-white/60 mt-1.5">{d.desc}</p>
+                  </div>
+
+                  {/* Hover arrow */}
+                  <div className="absolute top-4 right-4 w-7 h-7 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-0 translate-x-2">
+                    <ArrowRight className="w-3.5 h-3.5 text-white" />
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
