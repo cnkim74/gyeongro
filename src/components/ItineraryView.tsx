@@ -9,7 +9,14 @@ import {
   CheckCircle,
   ChevronDown,
   ChevronUp,
+  Map as MapIcon,
+  Navigation,
 } from "lucide-react";
+import {
+  getPlaceSearchUrl,
+  getDirectionsUrl,
+  getDirectionsEmbedUrl,
+} from "@/lib/maps";
 
 export interface ScheduleItem {
   time: string;
@@ -57,6 +64,7 @@ export default function ItineraryView({
   destination: string;
 }) {
   const [expandedDay, setExpandedDay] = useState<number | null>(0);
+  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   return (
     <>
@@ -135,6 +143,61 @@ export default function ItineraryView({
 
             {expandedDay === idx && (
               <div className="border-t border-gray-100 p-5 space-y-6">
+                {/* 일자별 동선 - 임베드 지도 (B) + 전체 경로 보기 버튼 (A) */}
+                {(() => {
+                  const places = (day.schedule ?? [])
+                    .map((s) => s.place)
+                    .filter(Boolean);
+                  if (places.length < 2) return null;
+
+                  const dirsUrl = getDirectionsUrl(places, destination, "driving");
+                  const embedUrl = getDirectionsEmbedUrl(
+                    places,
+                    destination,
+                    googleMapsApiKey,
+                    "driving"
+                  );
+
+                  return (
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                          <Navigation className="w-4 h-4 text-blue-500" />
+                          오늘의 동선 ({places.length}곳)
+                        </h4>
+                        {dirsUrl && (
+                          <a
+                            href={dirsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1"
+                          >
+                            구글맵에서 열기 →
+                          </a>
+                        )}
+                      </div>
+                      {embedUrl ? (
+                        <div className="rounded-2xl overflow-hidden border border-gray-100 mb-2">
+                          <iframe
+                            src={embedUrl}
+                            width="100%"
+                            height="280"
+                            style={{ border: 0 }}
+                            loading="lazy"
+                            allowFullScreen
+                            referrerPolicy="no-referrer-when-downgrade"
+                            title={`Day ${day.day} 경로`}
+                          />
+                        </div>
+                      ) : (
+                        <div className="bg-blue-50 rounded-2xl p-4 text-xs text-blue-700">
+                          💡 임베드 지도를 보려면 관리자가 <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> 환경변수를 설정해야 합니다. 아래 일정의 [지도] 링크는 즉시 작동합니다.
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
                 <div>
                   <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
                     <Clock className="w-4 h-4 text-blue-500" />
@@ -147,7 +210,19 @@ export default function ItineraryView({
                           {item.time}
                         </div>
                         <div className="flex-1 pb-3 border-b border-gray-50 last:border-0">
-                          <p className="font-semibold text-gray-900 text-sm">{item.place}</p>
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="font-semibold text-gray-900 text-sm">{item.place}</p>
+                            <a
+                              href={getPlaceSearchUrl(item.place, destination)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="shrink-0 inline-flex items-center gap-0.5 text-[11px] text-blue-500 hover:text-blue-700 font-medium px-2 py-0.5 rounded-full bg-blue-50 hover:bg-blue-100"
+                              title="구글맵에서 보기"
+                            >
+                              <MapIcon className="w-3 h-3" />
+                              지도
+                            </a>
+                          </div>
                           <p className="text-gray-500 text-sm mt-0.5">{item.activity}</p>
                           <div className="flex items-center gap-3 mt-1.5">
                             <span className="text-xs text-gray-400 flex items-center gap-1">
