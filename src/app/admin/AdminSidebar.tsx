@@ -11,11 +11,13 @@ import {
   ChevronRight,
   Home,
   ShoppingBag,
+  Layers,
 } from "lucide-react";
 
 const MENU = [
   { href: "/admin", label: "대시보드", icon: LayoutDashboard },
   { href: "/admin/users", label: "사용자 관리", icon: Users },
+  { href: "/admin/boards", label: "게시판 관리", icon: Layers },
   { href: "/admin/posts", label: "게시글 관리", icon: MessageSquare },
   { href: "/admin/trips", label: "여행 계획", icon: Map },
   { href: "/admin/affiliates", label: "쿠팡 파트너스", icon: ShoppingBag },

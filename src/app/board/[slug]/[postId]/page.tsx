@@ -12,44 +12,43 @@ import type { UserRole } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
-const CATEGORIES: Record<string, string> = {
-  free: "💬 자유",
-  tip: "💡 여행 팁",
-  question: "❓ 질문",
-  review: "⭐ 후기",
-};
-
 export default async function PostDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string; postId: string }>;
 }) {
-  const { id } = await params;
+  const { slug, postId } = await params;
   const supabase = getSupabaseServiceClient();
 
-  await supabase.rpc("increment_view_count", { post_id: id }).then(() => {});
-  // 위 RPC가 없으면 무시. 아래 update로 대체:
+  const { data: board } = await supabase
+    .from("boards")
+    .select("id, slug, name, icon")
+    .eq("slug", slug)
+    .single();
+  if (!board) notFound();
+
   await supabase
     .from("posts")
     .select("view_count")
-    .eq("id", id)
+    .eq("id", postId)
     .single()
     .then(async ({ data }) => {
       if (data) {
         await supabase
           .from("posts")
           .update({ view_count: data.view_count + 1 })
-          .eq("id", id);
+          .eq("id", postId);
       }
     });
 
   const { data: post } = await supabase
     .from("posts")
-    .select("id, title, content, category, view_count, created_at, user_id, is_deleted")
-    .eq("id", id)
+    .select("id, title, content, board_id, view_count, created_at, user_id, is_deleted")
+    .eq("id", postId)
     .single();
 
   if (!post || post.is_deleted) notFound();
+  if (post.board_id !== board.id) notFound();
 
   const { data: author } = await supabase
     .schema("next_auth")
@@ -61,7 +60,7 @@ export default async function PostDetailPage({
   const { data: comments } = await supabase
     .from("comments")
     .select("id, content, created_at, user_id, is_deleted")
-    .eq("post_id", id)
+    .eq("post_id", postId)
     .eq("is_deleted", false)
     .order("created_at", { ascending: true });
 
@@ -112,19 +111,14 @@ export default async function PostDetailPage({
       <main className="flex-1 pt-24 pb-16">
         <div className="max-w-3xl mx-auto px-4">
           <Link
-            href="/board"
+            href={`/board/${board.slug}`}
             className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 mb-6"
           >
             <ArrowLeft className="w-4 h-4" />
-            목록으로
+            {board.icon ?? "📋"} {board.name}
           </Link>
 
           <article className="bg-white rounded-3xl border border-gray-100 p-8 mb-6">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-xs px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 font-medium">
-                {CATEGORIES[post.category] ?? post.category}
-              </span>
-            </div>
 
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 break-words">
               {post.title}
@@ -159,7 +153,7 @@ export default async function PostDetailPage({
               </div>
 
               {canEdit && (
-                <PostActions postId={post.id} canEdit={canEdit} />
+                <PostActions postId={post.id} boardSlug={board.slug} canEdit={canEdit} />
               )}
             </div>
 

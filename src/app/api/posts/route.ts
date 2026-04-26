@@ -1,82 +1,10 @@
 import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
+import { isAdmin } from "@/lib/admin";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const VALID_CATEGORIES = ["free", "tip", "question", "review"];
-
-export async function GET(req: NextRequest) {
-  const url = new URL(req.url);
-  const category = url.searchParams.get("category");
-  const page = parseInt(url.searchParams.get("page") ?? "1", 10);
-  const limit = 20;
-  const offset = (page - 1) * limit;
-
-  const supabase = getSupabaseServiceClient();
-  let query = supabase
-    .from("posts")
-    .select(
-      "id, title, category, view_count, is_pinned, created_at, user_id",
-      { count: "exact" }
-    )
-    .eq("is_deleted", false)
-    .order("is_pinned", { ascending: false })
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
-
-  if (category && VALID_CATEGORIES.includes(category)) {
-    query = query.eq("category", category);
-  }
-
-  const { data: posts, error, count } = await query;
-  if (error) return Response.json({ error: error.message }, { status: 500 });
-
-  // 작성자 정보 일괄 조회
-  const userIds = [...new Set((posts ?? []).map((p) => p.user_id))];
-  const usersMap: Record<string, { name: string | null; image: string | null }> = {};
-  if (userIds.length > 0) {
-    const { data: users } = await supabase
-      .schema("next_auth")
-      .from("users")
-      .select("id, name, image, custom_image")
-      .in("id", userIds);
-    for (const u of users ?? []) {
-      usersMap[u.id] = {
-        name: u.name,
-        image: u.custom_image ?? u.image,
-      };
-    }
-  }
-
-  // 댓글 수 일괄 조회
-  const postIds = (posts ?? []).map((p) => p.id);
-  const commentCounts: Record<string, number> = {};
-  if (postIds.length > 0) {
-    const { data: comments } = await supabase
-      .from("comments")
-      .select("post_id")
-      .in("post_id", postIds)
-      .eq("is_deleted", false);
-    for (const c of comments ?? []) {
-      commentCounts[c.post_id] = (commentCounts[c.post_id] ?? 0) + 1;
-    }
-  }
-
-  const enriched = (posts ?? []).map((p) => ({
-    ...p,
-    author: usersMap[p.user_id] ?? { name: null, image: null },
-    comment_count: commentCounts[p.id] ?? 0,
-  }));
-
-  return Response.json({
-    posts: enriched,
-    total: count ?? 0,
-    page,
-    totalPages: Math.ceil((count ?? 0) / limit),
-  });
-}
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -85,32 +13,66 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { title, content, category } = body;
+  const { title, content, board_id } = body;
 
   if (!title?.trim() || !content?.trim()) {
-    return Response.json(
-      { error: "제목과 내용을 입력해주세요." },
-      { status: 400 }
-    );
+    return Response.json({ error: "제목과 내용을 입력해주세요." }, { status: 400 });
+  }
+  if (!board_id) {
+    return Response.json({ error: "게시판이 지정되지 않았어요." }, { status: 400 });
   }
   if (title.length > 200) {
     return Response.json({ error: "제목은 200자 이하로 입력해주세요." }, { status: 400 });
   }
 
-  const cat = VALID_CATEGORIES.includes(category) ? category : "free";
-
   const supabase = getSupabaseServiceClient();
+
+  const { data: board } = await supabase
+    .from("boards")
+    .select("id, is_admin_only, is_published")
+    .eq("id", board_id)
+    .single();
+
+  if (!board || !board.is_published) {
+    return Response.json({ error: "유효하지 않은 게시판입니다." }, { status: 400 });
+  }
+
+  if (board.is_admin_only) {
+    const adminFlag = await isAdmin(session.user.id);
+    if (!adminFlag) {
+      return Response.json(
+        { error: "이 게시판은 관리자만 작성할 수 있어요." },
+        { status: 403 }
+      );
+    }
+  }
+
   const { data, error } = await supabase
     .from("posts")
     .insert({
       user_id: session.user.id,
       title: title.trim(),
       content: content.trim(),
-      category: cat,
+      board_id,
     })
     .select("id")
     .single();
 
   if (error) return Response.json({ error: error.message }, { status: 500 });
+
+  // post_count 증가
+  await supabase.rpc("increment_board_post_count", { board_uuid: board_id }).then(
+    () => {},
+    async () => {
+      // RPC 없을 수 있음 - 폴백: 직접 업데이트
+      const { count } = await supabase
+        .from("posts")
+        .select("id", { count: "exact", head: true })
+        .eq("board_id", board_id)
+        .eq("is_deleted", false);
+      await supabase.from("boards").update({ post_count: count ?? 0 }).eq("id", board_id);
+    }
+  );
+
   return Response.json({ id: data.id });
 }

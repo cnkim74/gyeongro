@@ -7,9 +7,11 @@ import { Edit2, Trash2, Loader2 } from "lucide-react";
 
 export default function PostActions({
   postId,
+  boardSlug,
   canEdit,
 }: {
   postId: string;
+  boardSlug: string;
   canEdit: boolean;
 }) {
   const router = useRouter();
@@ -23,7 +25,7 @@ export default function PostActions({
     try {
       const res = await fetch(`/api/posts/${postId}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
-      router.push("/board");
+      router.push(`/board/${boardSlug}`);
       router.refresh();
     } catch {
       alert("삭제 실패");
@@ -34,7 +36,7 @@ export default function PostActions({
   return (
     <div className="flex items-center gap-2">
       <Link
-        href={`/board/${postId}/edit`}
+        href={`/board/${boardSlug}/${postId}/edit`}
         className="p-2 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"
         aria-label="수정"
       >

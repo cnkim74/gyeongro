@@ -23,7 +23,9 @@ export default async function AdminPostsPage() {
   const supabase = getSupabaseServiceClient();
   const { data: posts } = await supabase
     .from("posts")
-    .select("id, title, category, view_count, is_pinned, is_deleted, created_at, user_id")
+    .select(
+      "id, title, category, board_id, view_count, is_pinned, is_deleted, created_at, user_id"
+    )
     .order("created_at", { ascending: false })
     .limit(100);
 
@@ -37,6 +39,18 @@ export default async function AdminPostsPage() {
       .in("id", userIds);
     for (const u of users ?? []) {
       usersMap[u.id] = u.name ?? u.email ?? "익명";
+    }
+  }
+
+  const boardIds = [...new Set((posts ?? []).map((p) => p.board_id).filter(Boolean))];
+  const boardsMap: Record<string, { name: string; icon: string | null; slug: string }> = {};
+  if (boardIds.length > 0) {
+    const { data: boards } = await supabase
+      .from("boards")
+      .select("id, name, icon, slug")
+      .in("id", boardIds);
+    for (const b of boards ?? []) {
+      boardsMap[b.id] = { name: b.name, icon: b.icon, slug: b.slug };
     }
   }
 
@@ -82,15 +96,25 @@ export default async function AdminPostsPage() {
                     )}
                   </td>
                   <td className="px-5 py-3">
-                    <Link
-                      href={`/board/${p.id}`}
-                      className="font-medium text-gray-900 hover:text-blue-600 transition-colors"
-                    >
-                      {p.title}
-                    </Link>
+                    {(() => {
+                      const boardInfo = p.board_id ? boardsMap[p.board_id] : null;
+                      const url = boardInfo
+                        ? `/board/${boardInfo.slug}/${p.id}`
+                        : `/board`;
+                      return (
+                        <Link
+                          href={url}
+                          className="font-medium text-gray-900 hover:text-blue-600 transition-colors"
+                        >
+                          {p.title}
+                        </Link>
+                      );
+                    })()}
                   </td>
                   <td className="px-5 py-3 text-gray-600">
-                    {CATEGORIES[p.category] ?? p.category}
+                    {p.board_id && boardsMap[p.board_id]
+                      ? `${boardsMap[p.board_id].icon ?? ""} ${boardsMap[p.board_id].name}`
+                      : CATEGORIES[p.category] ?? p.category ?? "-"}
                   </td>
                   <td className="px-5 py-3 text-gray-600">
                     {usersMap[p.user_id] ?? "-"}

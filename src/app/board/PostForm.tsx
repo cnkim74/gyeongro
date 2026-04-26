@@ -4,30 +4,24 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, AlertCircle, ArrowLeft } from "lucide-react";
 
-const CATEGORIES = [
-  { id: "free", label: "💬 자유" },
-  { id: "tip", label: "💡 여행 팁" },
-  { id: "question", label: "❓ 질문" },
-  { id: "review", label: "⭐ 후기" },
-];
-
 interface Props {
+  boardId: string;
+  boardSlug: string;
   postId?: string;
   initialTitle?: string;
   initialContent?: string;
-  initialCategory?: string;
 }
 
 export default function PostForm({
+  boardId,
+  boardSlug,
   postId,
   initialTitle = "",
   initialContent = "",
-  initialCategory = "free",
 }: Props) {
   const router = useRouter();
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
-  const [category, setCategory] = useState(initialCategory);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,12 +38,12 @@ export default function PostForm({
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, content, category }),
+        body: JSON.stringify({ title, content, board_id: boardId }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "저장 실패");
 
-      router.push(`/board/${isEdit ? postId : data.id}`);
+      router.push(`/board/${boardSlug}/${isEdit ? postId : data.id}`);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "오류가 발생했어요.");
@@ -59,28 +53,6 @@ export default function PostForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <div>
-        <label className="text-sm font-semibold text-gray-700 mb-2 block">
-          카테고리
-        </label>
-        <div className="flex gap-2 flex-wrap">
-          {CATEGORIES.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => setCategory(c.id)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                category === c.id
-                  ? "bg-blue-500 text-white shadow-md"
-                  : "bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600"
-              }`}
-            >
-              {c.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
       <div>
         <label className="text-sm font-semibold text-gray-700 mb-2 block">
           제목
