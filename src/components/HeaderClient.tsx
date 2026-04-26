@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { MapPin, Menu, X } from "lucide-react";
 import UserMenu from "./UserMenu";
 
@@ -18,8 +19,13 @@ interface HeaderClientProps {
 }
 
 export default function HeaderClient({ user }: HeaderClientProps) {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // 메인 페이지(/)는 어두운 hero가 있어 투명 헤더 + 흰 글씨, 그 외는 항상 밝은 헤더
+  const isLanding = pathname === "/";
+  const useDarkBg = !isLanding || scrolled;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -30,7 +36,7 @@ export default function HeaderClient({ user }: HeaderClientProps) {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
+        useDarkBg
           ? "bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-100"
           : "bg-transparent"
       }`}
@@ -43,7 +49,7 @@ export default function HeaderClient({ user }: HeaderClientProps) {
             </div>
             <span
               className={`text-xl font-bold tracking-tight transition-colors ${
-                scrolled ? "text-gray-900" : "text-white"
+                useDarkBg ? "text-gray-900" : "text-white"
               }`}
             >
               경로
@@ -61,7 +67,7 @@ export default function HeaderClient({ user }: HeaderClientProps) {
                 key={item.href}
                 href={item.href}
                 className={`text-sm font-medium transition-colors hover:text-blue-400 ${
-                  scrolled ? "text-gray-600" : "text-white/80"
+                  useDarkBg ? "text-gray-600" : "text-white/80"
                 }`}
               >
                 {item.label}
@@ -71,13 +77,13 @@ export default function HeaderClient({ user }: HeaderClientProps) {
 
           <div className="hidden md:flex items-center gap-3">
             {user ? (
-              <UserMenu user={user} isScrolled={scrolled} />
+              <UserMenu user={user} isScrolled={useDarkBg} />
             ) : (
               <>
                 <Link
                   href="/login"
                   className={`text-sm font-medium transition-colors ${
-                    scrolled ? "text-gray-600 hover:text-blue-500" : "text-white/80 hover:text-white"
+                    useDarkBg ? "text-gray-600 hover:text-blue-500" : "text-white/80 hover:text-white"
                   }`}
                 >
                   로그인
@@ -85,7 +91,7 @@ export default function HeaderClient({ user }: HeaderClientProps) {
                 <Link
                   href="/signup"
                   className={`text-sm font-medium transition-colors ${
-                    scrolled ? "text-gray-600 hover:text-blue-500" : "text-white/80 hover:text-white"
+                    useDarkBg ? "text-gray-600 hover:text-blue-500" : "text-white/80 hover:text-white"
                   }`}
                 >
                   회원가입
@@ -102,7 +108,7 @@ export default function HeaderClient({ user }: HeaderClientProps) {
 
           <button
             className={`md:hidden p-2 rounded-lg transition-colors ${
-              scrolled ? "text-gray-700" : "text-white"
+              useDarkBg ? "text-gray-700" : "text-white"
             }`}
             onClick={() => setMenuOpen(!menuOpen)}
           >
