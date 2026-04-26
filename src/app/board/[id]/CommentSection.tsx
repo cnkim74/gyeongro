@@ -4,13 +4,15 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Send, Loader2, MessageCircle, Trash2 } from "lucide-react";
+import RoleBadge from "@/components/RoleBadge";
+import type { UserRole } from "@/lib/admin";
 
 interface CommentItem {
   id: string;
   content: string;
   created_at: string;
   user_id: string;
-  author: { name: string | null; image: string | null };
+  author: { name: string | null; image: string | null; role?: UserRole };
 }
 
 interface Props {
@@ -133,10 +135,11 @@ export default function CommentSection({
                 )}
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm font-semibold text-gray-900">
                         {c.author.name ?? "익명"}
                       </span>
+                      <RoleBadge role={c.author.role} size="xs" />
                       <span className="text-xs text-gray-400">
                         {new Date(c.created_at).toLocaleString("ko-KR")}
                       </span>

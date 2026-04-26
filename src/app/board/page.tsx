@@ -2,7 +2,9 @@ import Link from "next/link";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import RoleBadge from "@/components/RoleBadge";
 import { MessageSquare, Pin, Sparkles, Eye, MessageCircle } from "lucide-react";
+import type { UserRole } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -54,15 +56,27 @@ export default async function BoardPage({
   const { data: posts, count } = await query;
 
   const userIds = [...new Set((posts ?? []).map((p) => p.user_id))];
-  const usersMap: Record<string, { name: string | null; image: string | null }> = {};
+  const usersMap: Record<
+    string,
+    { name: string | null; image: string | null; role: UserRole }
+  > = {};
   if (userIds.length > 0) {
     const { data: users } = await supabase
       .schema("next_auth")
       .from("users")
-      .select("id, name, image, custom_image")
+      .select("id, name, image, custom_image, role, business_name")
       .in("id", userIds);
     for (const u of users ?? []) {
-      usersMap[u.id] = { name: u.name, image: u.custom_image ?? u.image };
+      const role: UserRole =
+        u.role === "admin" || u.role === "business" || u.role === "user"
+          ? u.role
+          : "user";
+      const displayName = role === "business" && u.business_name ? u.business_name : u.name;
+      usersMap[u.id] = {
+        name: displayName,
+        image: u.custom_image ?? u.image,
+        role,
+      };
     }
   }
 
@@ -152,8 +166,11 @@ export default async function BoardPage({
                       <h3 className="font-semibold text-gray-900 truncate hover:text-blue-600 transition-colors">
                         {post.title}
                       </h3>
-                      <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-400">
-                        <span>{author?.name ?? "익명"}</span>
+                      <div className="flex items-center gap-2 mt-1.5 text-xs text-gray-400">
+                        <span className="inline-flex items-center gap-1">
+                          {author?.name ?? "익명"}
+                          {author?.role && <RoleBadge role={author.role} size="xs" />}
+                        </span>
                         <span>·</span>
                         <span>
                           {new Date(post.created_at).toLocaleDateString("ko-KR", {

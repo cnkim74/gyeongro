@@ -45,7 +45,7 @@ export default async function OnboardingPage({
               {user?.name ? `${user.name}님, 환영해요!` : "환영해요!"}
             </h1>
             <p className="text-gray-500 text-sm">
-              마지막 한 단계, 휴대전화 번호만 입력해주세요
+              회원 유형을 선택하고 휴대전화 번호를 입력해주세요
             </p>
           </div>
 
@@ -54,7 +54,7 @@ export default async function OnboardingPage({
           </div>
 
           <p className="text-center text-xs text-gray-400 mt-6 leading-relaxed">
-            여행 일정 알림, 예약 확정 등 중요한 안내에 사용됩니다.
+            휴대전화 번호는 여행 일정 알림 등 중요한 안내에 사용됩니다.
             <br />
             제3자에게 제공되지 않으며, 마케팅 SMS는 발송하지 않아요.
           </p>

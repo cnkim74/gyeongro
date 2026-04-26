@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { getSupabaseServiceClient } from "@/lib/supabase";
-import { isAdmin } from "@/lib/admin";
 import HeaderClient from "./HeaderClient";
+import type { UserRole } from "@/lib/admin";
 
 export default async function Header() {
   const session = await auth();
@@ -9,7 +9,8 @@ export default async function Header() {
     name?: string | null;
     email?: string | null;
     image?: string | null;
-    isAdmin?: boolean;
+    role?: UserRole;
+    businessName?: string | null;
   } | null = null;
 
   if (session?.user?.id) {
@@ -18,22 +19,29 @@ export default async function Header() {
       const { data } = await supabase
         .schema("next_auth")
         .from("users")
-        .select("name, email, image, custom_image")
+        .select("name, email, image, custom_image, role, business_name")
         .eq("id", session.user.id)
         .single();
-      const adminFlag = await isAdmin(session.user.id);
+
+      const role: UserRole =
+        data?.role === "admin" || data?.role === "business" || data?.role === "user"
+          ? data.role
+          : "user";
+
       user = {
         name: data?.name ?? session.user.name ?? null,
         email: data?.email ?? session.user.email ?? null,
         image: data?.custom_image ?? data?.image ?? session.user.image ?? null,
-        isAdmin: adminFlag,
+        role,
+        businessName: data?.business_name ?? null,
       };
     } catch {
       user = {
         name: session.user.name ?? null,
         email: session.user.email ?? null,
         image: session.user.image ?? null,
-        isAdmin: false,
+        role: "user",
+        businessName: null,
       };
     }
   }

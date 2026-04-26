@@ -3,7 +3,9 @@ import { getSupabaseServiceClient } from "@/lib/supabase";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import StarRating from "@/components/StarRating";
+import RoleBadge from "@/components/RoleBadge";
 import { Star, Sparkles, MapPin, ArrowRight } from "lucide-react";
+import type { UserRole } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -40,15 +42,25 @@ export default async function ReviewsPage({
   const { data: reviews, count } = await query.range(offset, offset + limit - 1);
 
   const userIds = [...new Set((reviews ?? []).map((r) => r.user_id))];
-  const usersMap: Record<string, { name: string | null; image: string | null }> = {};
+  const usersMap: Record<
+    string,
+    { name: string | null; image: string | null; role: UserRole }
+  > = {};
   if (userIds.length > 0) {
     const { data: users } = await supabase
       .schema("next_auth")
       .from("users")
-      .select("id, name, image, custom_image")
+      .select("id, name, image, custom_image, role, business_name")
       .in("id", userIds);
     for (const u of users ?? []) {
-      usersMap[u.id] = { name: u.name, image: u.custom_image ?? u.image };
+      const role: UserRole =
+        u.role === "admin" || u.role === "business" || u.role === "user" ? u.role : "user";
+      const displayName = role === "business" && u.business_name ? u.business_name : u.name;
+      usersMap[u.id] = {
+        name: displayName,
+        image: u.custom_image ?? u.image,
+        role,
+      };
     }
   }
 
@@ -170,9 +182,12 @@ export default async function ReviewsPage({
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-gray-700 truncate">
-                          {author?.name ?? "익명"}
-                        </p>
+                        <div className="flex items-center gap-1">
+                          <p className="text-xs font-semibold text-gray-700 truncate">
+                            {author?.name ?? "익명"}
+                          </p>
+                          {author?.role && <RoleBadge role={author.role} size="xs" />}
+                        </div>
                         <p className="text-xs text-gray-400">
                           {new Date(r.created_at).toLocaleDateString("ko-KR")}
                         </p>

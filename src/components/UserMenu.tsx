@@ -3,16 +3,30 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
-import { LogOut, Bookmark, User, Shield } from "lucide-react";
+import { LogOut, Bookmark, User, Shield, Megaphone } from "lucide-react";
+import RoleBadge from "./RoleBadge";
+import type { UserRole } from "@/lib/admin";
 
 interface UserMenuProps {
-  user: { name?: string | null; email?: string | null; image?: string | null };
+  user: {
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+    role?: UserRole;
+    businessName?: string | null;
+  };
   isScrolled: boolean;
-  isAdmin?: boolean;
 }
 
-export default function UserMenu({ user, isScrolled, isAdmin }: UserMenuProps) {
-  const displayName = user.name ?? user.email?.split("@")[0] ?? "사용자";
+export default function UserMenu({ user, isScrolled }: UserMenuProps) {
+  const role: UserRole = user.role ?? "user";
+  const isAdmin = role === "admin";
+  const isBusiness = role === "business";
+  const displayName =
+    isBusiness && user.businessName
+      ? user.businessName
+      : user.name ?? user.email?.split("@")[0] ?? "사용자";
+
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -24,7 +38,7 @@ export default function UserMenu({ user, isScrolled, isAdmin }: UserMenuProps) {
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
-  const initial = user.name?.charAt(0) ?? user.email?.charAt(0) ?? "U";
+  const initial = displayName.charAt(0);
 
   return (
     <div className="relative" ref={ref}>
@@ -46,23 +60,34 @@ export default function UserMenu({ user, isScrolled, isAdmin }: UserMenuProps) {
             {initial.toUpperCase()}
           </div>
         )}
-        <span
-          className={`text-sm font-semibold max-w-[8rem] truncate hidden sm:block ${
-            isScrolled ? "text-gray-900" : "text-white"
-          }`}
-        >
-          {displayName}
-        </span>
+        <div className="hidden sm:flex items-center gap-1.5">
+          <span
+            className={`text-sm font-semibold max-w-[8rem] truncate ${
+              isScrolled ? "text-gray-900" : "text-white"
+            }`}
+          >
+            {displayName}
+          </span>
+          <RoleBadge role={role} size="xs" />
+        </div>
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
+        <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
           <div className="px-4 py-3 border-b border-gray-100">
-            <p className="text-sm font-semibold text-gray-900 truncate">
-              {user.name ?? "사용자"}
-            </p>
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-sm font-semibold text-gray-900 truncate flex-1">
+                {displayName}
+              </p>
+              <RoleBadge role={role} size="xs" />
+            </div>
             {user.email && (
               <p className="text-xs text-gray-400 truncate">{user.email}</p>
+            )}
+            {isBusiness && user.name && user.businessName && (
+              <p className="text-xs text-gray-400 truncate mt-0.5">
+                담당자: {user.name}
+              </p>
             )}
           </div>
 
@@ -82,6 +107,16 @@ export default function UserMenu({ user, isScrolled, isAdmin }: UserMenuProps) {
               <User className="w-4 h-4 text-gray-400" />
               프로필
             </Link>
+            {isBusiness && (
+              <Link
+                href="/sponsor"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-emerald-700 bg-emerald-50/50 hover:bg-emerald-50 transition-colors"
+              >
+                <Megaphone className="w-4 h-4 text-emerald-500" />
+                스폰서 / 홍보 관리
+              </Link>
+            )}
             {isAdmin && (
               <Link
                 href="/admin"

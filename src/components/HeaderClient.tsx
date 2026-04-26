@@ -5,12 +5,15 @@ import { useState, useEffect } from "react";
 import { MapPin, Menu, X } from "lucide-react";
 import UserMenu from "./UserMenu";
 
+import type { UserRole } from "@/lib/admin";
+
 interface HeaderClientProps {
   user: {
     name?: string | null;
     email?: string | null;
     image?: string | null;
-    isAdmin?: boolean;
+    role?: UserRole;
+    businessName?: string | null;
   } | null;
 }
 
@@ -68,11 +71,7 @@ export default function HeaderClient({ user }: HeaderClientProps) {
 
           <div className="hidden md:flex items-center gap-3">
             {user ? (
-              <UserMenu
-                user={user}
-                isScrolled={scrolled}
-                isAdmin={user.isAdmin ?? false}
-              />
+              <UserMenu user={user} isScrolled={scrolled} />
             ) : (
               <>
                 <Link

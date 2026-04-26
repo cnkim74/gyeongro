@@ -4,13 +4,25 @@ import { getSupabaseServiceClient } from "@/lib/supabase";
 export type UserRole = "user" | "business" | "admin";
 
 export const ROLE_LABELS: Record<UserRole, string> = {
-  user: "일반",
+  user: "여행자",
+  business: "길잡이",
+  admin: "경로지기",
+};
+
+export const ROLE_LABELS_FORMAL: Record<UserRole, string> = {
+  user: "일반회원",
   business: "기업회원",
   admin: "관리자",
 };
 
+export const ROLE_EMOJIS: Record<UserRole, string> = {
+  user: "🧳",
+  business: "🧭",
+  admin: "🛡️",
+};
+
 export const ROLE_COLORS: Record<UserRole, string> = {
-  user: "bg-gray-100 text-gray-700",
+  user: "bg-blue-100 text-blue-700",
   business: "bg-emerald-100 text-emerald-700",
   admin: "bg-purple-100 text-purple-700",
 };

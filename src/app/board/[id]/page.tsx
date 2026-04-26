@@ -4,9 +4,11 @@ import { auth } from "@/lib/auth";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import { isAdmin } from "@/lib/admin";
 import Header from "@/components/Header";
+import RoleBadge from "@/components/RoleBadge";
 import { ArrowLeft, Eye, Calendar } from "lucide-react";
 import PostActions from "./PostActions";
 import CommentSection from "./CommentSection";
+import type { UserRole } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +54,7 @@ export default async function PostDetailPage({
   const { data: author } = await supabase
     .schema("next_auth")
     .from("users")
-    .select("name, image, custom_image")
+    .select("name, image, custom_image, role, business_name")
     .eq("id", post.user_id)
     .single();
 
@@ -66,16 +68,26 @@ export default async function PostDetailPage({
   const commentUserIds = [...new Set((comments ?? []).map((c) => c.user_id))];
   const commentAuthors: Record<
     string,
-    { name: string | null; image: string | null }
+    { name: string | null; image: string | null; role: UserRole }
   > = {};
   if (commentUserIds.length > 0) {
     const { data: users } = await supabase
       .schema("next_auth")
       .from("users")
-      .select("id, name, image, custom_image")
+      .select("id, name, image, custom_image, role, business_name")
       .in("id", commentUserIds);
     for (const u of users ?? []) {
-      commentAuthors[u.id] = { name: u.name, image: u.custom_image ?? u.image };
+      const role: UserRole =
+        u.role === "admin" || u.role === "business" || u.role === "user"
+          ? u.role
+          : "user";
+      const displayName =
+        role === "business" && u.business_name ? u.business_name : u.name;
+      commentAuthors[u.id] = {
+        name: displayName,
+        image: u.custom_image ?? u.image,
+        role,
+      };
     }
   }
 
@@ -84,7 +96,14 @@ export default async function PostDetailPage({
   const isCurrentUserAdmin = currentUserId ? await isAdmin(currentUserId) : false;
   const canEdit = currentUserId === post.user_id || isCurrentUserAdmin;
 
-  const authorName = author?.name ?? "익명";
+  const authorRole: UserRole =
+    author?.role === "admin" || author?.role === "business" || author?.role === "user"
+      ? author.role
+      : "user";
+  const authorName =
+    authorRole === "business" && author?.business_name
+      ? author.business_name
+      : author?.name ?? "익명";
   const authorImage = author?.custom_image ?? author?.image ?? null;
 
   return (
@@ -126,7 +145,10 @@ export default async function PostDetailPage({
                   </div>
                 )}
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">{authorName}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-semibold text-gray-900">{authorName}</p>
+                    <RoleBadge role={authorRole} size="xs" />
+                  </div>
                   <div className="flex items-center gap-2 text-xs text-gray-400">
                     <Calendar className="w-3 h-3" />
                     {new Date(post.created_at).toLocaleString("ko-KR")}
@@ -153,7 +175,8 @@ export default async function PostDetailPage({
               content: c.content,
               created_at: c.created_at,
               user_id: c.user_id,
-              author: commentAuthors[c.user_id] ?? { name: null, image: null },
+              author:
+                commentAuthors[c.user_id] ?? { name: null, image: null, role: "user" as UserRole },
             }))}
             currentUserId={currentUserId}
             isAdmin={isCurrentUserAdmin}
