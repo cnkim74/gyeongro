@@ -56,11 +56,12 @@ export default function HeaderClient({ user }: HeaderClientProps) {
             </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-7">
+          <nav className="hidden md:flex items-center gap-6">
             {[
-              { label: "AI 플래너", href: "/planner" },
-              { label: "테마 여행", href: "/themes" },
-              { label: "후기", href: "/reviews" },
+              { label: "플래너", href: "/planner" },
+              { label: "테마", href: "/themes" },
+              { label: "동료 찾기", href: "/partners" },
+              { label: "스토리", href: "/stories" },
               { label: "커뮤니티", href: "/board" },
             ].map((item) => (
               <a
@@ -123,6 +124,8 @@ export default function HeaderClient({ user }: HeaderClientProps) {
             {[
               { label: "AI 플래너", href: "/planner" },
               { label: "테마 여행", href: "/themes" },
+              { label: "동료 찾기", href: "/partners" },
+              { label: "여행 스토리", href: "/stories" },
               { label: "후기", href: "/reviews" },
               { label: "커뮤니티", href: "/board" },
             ].map((item) => (
