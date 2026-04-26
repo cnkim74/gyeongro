@@ -17,6 +17,7 @@ import {
   getDirectionsUrl,
   getDirectionsEmbedUrl,
 } from "@/lib/maps";
+import TravelAdvisory from "@/components/TravelAdvisory";
 
 export interface ScheduleItem {
   time: string;
@@ -282,6 +283,8 @@ export default function ItineraryView({
           </div>
         ))}
       </div>
+
+      <TravelAdvisory itinerary={itinerary} destination={destination} />
 
       {itinerary.tips?.length > 0 && (
         <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 mb-6 border border-amber-100">
