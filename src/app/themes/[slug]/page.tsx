@@ -16,6 +16,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   food: "🍜 미식",
   nature: "🌿 자연",
   culture: "🏛️ 역사·문화",
+  camping: "🏕️ 캠핑",
+  golf: "⛳ 골프",
 };
 
 interface Spot {

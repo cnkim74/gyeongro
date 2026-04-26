@@ -31,6 +31,8 @@ const themes = [
   { id: "anime", label: "애니메이션 성지", emoji: "🌸" },
   { id: "bbang", label: "빵지순례", emoji: "🥐" },
   { id: "local_food", label: "로컬 푸드", emoji: "🍱" },
+  { id: "camping", label: "캠핑", emoji: "🏕️" },
+  { id: "golf", label: "골프", emoji: "⛳" },
 ];
 
 const popularDestinations = [
