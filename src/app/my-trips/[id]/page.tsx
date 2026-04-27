@@ -9,6 +9,10 @@ import SherpaMatchingPanel, {
   type ProposalItem,
 } from "@/components/SherpaMatchingPanel";
 import ReviewForm from "@/components/ReviewForm";
+import RecommendedSherpas, {
+  type ScoredSherpa,
+} from "@/components/RecommendedSherpas";
+import { matchSherpaToTrip } from "@/lib/matching";
 import { ArrowLeft, Star } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -75,6 +79,43 @@ export default async function TripDetailPage({
     canReviewSherpa = !existing;
   }
 
+  // 추천 셰르파 (매칭이 종료되지 않았을 때만)
+  let recommendedSherpas: ScoredSherpa[] = [];
+  if (!acceptedProposal) {
+    const { data: pool } = await supabase
+      .from("sherpas")
+      .select(
+        "slug, display_name, tagline, countries, cities, cities_en, languages, specialties, hourly_rate_krw, half_day_rate_krw, full_day_rate_krw, rating_avg, rating_count, booking_count, avatar_url, cover_image_url"
+      )
+      .eq("status", "published")
+      .limit(120);
+
+    const scored = (pool ?? [])
+      .map((s) => {
+        const breakdown = matchSherpaToTrip(s, {
+          destination: trip.destination,
+          sherpa_required_languages: trip.sherpa_required_languages ?? null,
+          sherpa_required_specialties: trip.sherpa_required_specialties ?? null,
+          sherpa_budget_max_krw: trip.sherpa_budget_max_krw ?? null,
+        });
+        return {
+          ...s,
+          match_score: breakdown.score,
+          match_reasons: breakdown.reasons,
+        } as ScoredSherpa;
+      })
+      .sort((a, b) => b.match_score - a.match_score);
+
+    // 본인이 이미 제안 받은 셰르파는 제외
+    const proposedSherpaSlugs = new Set(
+      proposals.map((p) => p.sherpa.slug).filter(Boolean)
+    );
+    recommendedSherpas = scored
+      .filter((s) => !proposedSherpaSlugs.has(s.slug))
+      .filter((s) => s.match_score >= 50)
+      .slice(0, 6);
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Header />
@@ -96,6 +137,10 @@ export default async function TripDetailPage({
             initialBudgetMax={trip.sherpa_budget_max_krw ?? null}
             proposals={proposals}
           />
+
+          {recommendedSherpas.length > 0 && (
+            <RecommendedSherpas sherpas={recommendedSherpas} />
+          )}
 
           {acceptedProposal && canReviewSherpa && (
             <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-3xl p-6 mb-8">

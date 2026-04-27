@@ -8,6 +8,7 @@ import {
   SPECIALTY_BY_ID,
   LANGUAGE_BY_CODE,
 } from "@/lib/sherpa";
+import { matchSherpaToTrip, matchScoreColor } from "@/lib/matching";
 import {
   ArrowLeft,
   MapPin,
@@ -39,6 +40,8 @@ interface OpenTrip {
   sherpa_budget_max_krw: number | null;
   open_at: string | null;
   has_my_proposal: boolean;
+  match_score: number;
+  match_reasons: string[];
 }
 
 export default async function OpenTripsPage() {
@@ -87,10 +90,37 @@ export default async function OpenTripsPage() {
   }
   const proposedSet = new Set(myProposals.map((p) => p.trip_id));
 
-  const openTrips: OpenTrip[] = (trips ?? []).map((t) => ({
-    ...t,
-    has_my_proposal: proposedSet.has(t.id),
-  }));
+  const openTrips: OpenTrip[] = (trips ?? [])
+    .map((t) => {
+      const breakdown = matchSherpaToTrip(
+        {
+          countries: sherpa.countries,
+          cities: sherpa.cities,
+          cities_en: null,
+          languages: sherpa.languages,
+          specialties: sherpa.specialties,
+          rating_avg: 0,
+          rating_count: 0,
+          booking_count: 0,
+          full_day_rate_krw: null,
+          half_day_rate_krw: null,
+          hourly_rate_krw: null,
+        },
+        {
+          destination: t.destination,
+          sherpa_required_languages: t.sherpa_required_languages,
+          sherpa_required_specialties: t.sherpa_required_specialties,
+          sherpa_budget_max_krw: t.sherpa_budget_max_krw,
+        }
+      );
+      return {
+        ...t,
+        has_my_proposal: proposedSet.has(t.id),
+        match_score: breakdown.score,
+        match_reasons: breakdown.reasons,
+      };
+    })
+    .sort((a, b) => b.match_score - a.match_score);
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -149,11 +179,18 @@ export default async function OpenTripsPage() {
 }
 
 function OpenTripCard({ trip }: { trip: OpenTrip }) {
+  const meta = matchScoreColor(trip.match_score);
   return (
     <Link
       href={`/sherpa/open-trips/${trip.id}`}
-      className="group bg-white rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-0.5 transition-all p-5"
+      className="group relative bg-white rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-0.5 transition-all p-5"
     >
+      <span
+        className={`absolute -top-2 -right-2 inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${meta.bg} ${meta.text}`}
+      >
+        {trip.match_score}% {meta.label}
+      </span>
+
       <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
         <MapPin className="w-3 h-3" />
         {trip.destination}
@@ -168,6 +205,14 @@ function OpenTripCard({ trip }: { trip: OpenTrip }) {
       <h3 className="font-bold text-slate-900 mb-2 tracking-tight group-hover:text-emerald-600 line-clamp-1">
         {trip.title}
       </h3>
+
+      {trip.match_reasons.length > 0 && (
+        <ul className="text-[11px] text-emerald-600 space-y-0.5 mb-3">
+          {trip.match_reasons.slice(0, 2).map((r, i) => (
+            <li key={i}>· {r}</li>
+          ))}
+        </ul>
+      )}
 
       {trip.sherpa_request_notes && (
         <p className="text-sm text-slate-600 line-clamp-2 mb-3 italic">

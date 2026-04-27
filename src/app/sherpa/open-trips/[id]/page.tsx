@@ -9,6 +9,7 @@ import {
   SPECIALTY_BY_ID,
   LANGUAGE_BY_CODE,
 } from "@/lib/sherpa";
+import { matchSherpaToTrip, matchScoreColor } from "@/lib/matching";
 import {
   ArrowLeft,
   MapPin,
@@ -48,7 +49,9 @@ export default async function OpenTripDetailPage({ params }: PageProps) {
 
   const { data: sherpa } = await supabase
     .from("sherpas")
-    .select("id, status")
+    .select(
+      "id, status, countries, cities, languages, specialties, hourly_rate_krw, half_day_rate_krw, full_day_rate_krw"
+    )
     .eq("user_id", session.user.id)
     .maybeSingle();
 
@@ -67,6 +70,30 @@ export default async function OpenTripDetailPage({ params }: PageProps) {
   if (trip.user_id === session.user.id) {
     redirect(`/my-trips/${id}`);
   }
+
+  // 매칭 점수
+  const breakdown = matchSherpaToTrip(
+    {
+      countries: sherpa.countries,
+      cities: sherpa.cities,
+      cities_en: null,
+      languages: sherpa.languages,
+      specialties: sherpa.specialties,
+      rating_avg: 0,
+      rating_count: 0,
+      booking_count: 0,
+      hourly_rate_krw: sherpa.hourly_rate_krw,
+      half_day_rate_krw: sherpa.half_day_rate_krw,
+      full_day_rate_krw: sherpa.full_day_rate_krw,
+    },
+    {
+      destination: trip.destination,
+      sherpa_required_languages: trip.sherpa_required_languages ?? null,
+      sherpa_required_specialties: trip.sherpa_required_specialties ?? null,
+      sherpa_budget_max_krw: trip.sherpa_budget_max_krw ?? null,
+    }
+  );
+  const matchMeta = matchScoreColor(breakdown.score);
 
   // 본인이 이미 제안했는지
   const { data: myProposal } = await supabase
@@ -91,10 +118,30 @@ export default async function OpenTripDetailPage({ params }: PageProps) {
 
           {/* Hero */}
           <div className="bg-gradient-to-br from-emerald-50 via-white to-teal-50 rounded-3xl border border-emerald-100 p-7 mb-6">
-            <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 uppercase tracking-[0.2em] mb-2">
-              <Mountain className="w-3.5 h-3.5" />
-              매칭 공개 중
+            <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 uppercase tracking-[0.2em]">
+                <Mountain className="w-3.5 h-3.5" />
+                매칭 공개 중
+              </div>
+              <div
+                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${matchMeta.bg} ${matchMeta.text}`}
+              >
+                {breakdown.score}% 매칭 · {matchMeta.label}
+              </div>
             </div>
+
+            {breakdown.reasons.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {breakdown.reasons.map((r, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white border border-emerald-200 text-emerald-700 text-[11px] font-medium"
+                  >
+                    ✓ {r}
+                  </span>
+                ))}
+              </div>
+            )}
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-3">
               {trip.title}
             </h1>
