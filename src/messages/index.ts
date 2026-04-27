@@ -1,0 +1,10 @@
+// 번역 메시지 — 한국어/영어
+// 키 추가 시 양쪽 언어 모두 채워주세요. 누락 시 한국어 폴백.
+
+import { ko, KO_KEYS } from "./ko";
+import { en } from "./en";
+
+export const messages = { ko, en };
+
+// 키 자동완성용 — 정적 분석 가능한 union
+export type MessageKey = (typeof KO_KEYS)[number] | string;

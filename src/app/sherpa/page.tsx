@@ -2,6 +2,8 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getSupabaseServiceClient } from "@/lib/supabase";
+import { getLocale, createTranslator } from "@/lib/i18n";
+import type { MessageKey } from "@/messages";
 import {
   SHERPA_SPECIALTIES,
   SPECIALTY_BY_ID,
@@ -33,12 +35,14 @@ export default async function SherpaHubPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
+  const locale = await getLocale();
+  const t = createTranslator(locale);
   const supabase = getSupabaseServiceClient();
 
   let query = supabase
     .from("sherpas")
     .select(
-      "slug, display_name, tagline, countries, cities, languages, specialties, hourly_rate_krw, half_day_rate_krw, full_day_rate_krw, rating_avg, rating_count, booking_count, avatar_url, cover_image_url"
+      "slug, display_name, tagline, tagline_en, countries, cities, cities_en, languages, specialties, hourly_rate_krw, half_day_rate_krw, full_day_rate_krw, rating_avg, rating_count, booking_count, avatar_url, cover_image_url"
     )
     .eq("status", "published")
     .order("rating_avg", { ascending: false, nullsFirst: false })
@@ -70,20 +74,17 @@ export default async function SherpaHubPage({
         <div className="relative max-w-5xl mx-auto px-6 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold mb-5">
             <Mountain className="w-3.5 h-3.5" />
-            Sherpa · Local Guide Matching
+            {t("sherpa.eyebrow")}
           </div>
 
           <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-5 leading-tight tracking-tight">
-            현지를 가장 잘 아는 사람과
+            {t("sherpa.title")}
             <br />
-            함께 떠나세요
+            {t("sherpa.title_2")}
           </h1>
 
-          <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto mb-8">
-            통역·푸드투어·사진·의료동행까지. 검증된 셰르파가 당신의 여정에
-            합류해
-            <br className="hidden sm:block" />
-            관광객으로는 닿을 수 없는 깊이까지 안내합니다.
+          <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto mb-8 whitespace-pre-line">
+            {t("sherpa.subtitle")}
           </p>
 
           <div className="flex flex-wrap justify-center gap-2 mb-2">
@@ -98,7 +99,7 @@ export default async function SherpaHubPage({
                 }`}
               >
                 <span>{s.emoji}</span>
-                {s.label}
+                {t(`sherpa.specialty.${s.id}` as MessageKey)}
               </Link>
             ))}
             {(params.specialty || params.country || params.language || params.city) && (
@@ -106,7 +107,7 @@ export default async function SherpaHubPage({
                 href="/sherpa"
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200"
               >
-                필터 초기화
+                {t("sherpa.filter.reset")}
               </Link>
             )}
           </div>
@@ -118,9 +119,13 @@ export default async function SherpaHubPage({
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
             <p className="text-sm text-slate-500">
-              {sherpas.length}명의 셰르파
+              {t("sherpa.count").replace("{count}", String(sherpas.length))}
               {params.specialty &&
-                ` · ${SPECIALTY_BY_ID[params.specialty]?.label ?? params.specialty}`}
+                ` · ${
+                  t(`sherpa.specialty.${params.specialty}` as MessageKey) ||
+                  SPECIALTY_BY_ID[params.specialty]?.label ||
+                  params.specialty
+                }`}
               {params.language &&
                 ` · ${LANGUAGE_BY_CODE[params.language]?.label ?? params.language}`}
             </p>
@@ -130,34 +135,32 @@ export default async function SherpaHubPage({
                 className="text-sm font-semibold text-slate-600 hover:text-emerald-600 inline-flex items-center gap-1"
               >
                 <Mountain className="w-3.5 h-3.5" />
-                공개된 여행 둘러보기
+                {t("sherpa.see_open_trips")}
               </Link>
               <Link
                 href="/sherpa/become"
                 className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 inline-flex items-center gap-1"
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                셰르파로 등록
+                {t("sherpa.register_cta")}
               </Link>
             </div>
           </div>
 
           {sherpas.length === 0 ? (
             <div className="bg-slate-50 rounded-3xl border border-dashed border-slate-200 p-16 text-center">
-              <p className="text-slate-500 mb-2">
-                조건에 맞는 셰르파가 없어요.
-              </p>
+              <p className="text-slate-500 mb-2">{t("sherpa.empty")}</p>
               <Link
                 href="/sherpa"
                 className="text-sm font-semibold text-emerald-600 hover:text-emerald-700"
               >
-                전체 셰르파 보기 →
+                {t("sherpa.empty.see_all")} →
               </Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {sherpas.map((s) => (
-                <SherpaCard key={s.slug} sherpa={s} />
+                <SherpaCard key={s.slug} sherpa={s} locale={locale} />
               ))}
             </div>
           )}
@@ -168,20 +171,17 @@ export default async function SherpaHubPage({
       <section className="py-16 bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <Mountain className="w-12 h-12 mx-auto mb-4 opacity-80" />
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight">
-            현지를 사랑하나요?
-            <br />
-            셰르파가 되어보세요
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight whitespace-pre-line">
+            {t("sherpa.become.title")}
           </h2>
-          <p className="text-white/85 leading-relaxed mb-8 max-w-xl mx-auto">
-            여행을 좋아하는 사람이라면, 누구나 자기 동네의 셰르파가 될 수 있어요.
-            여행자에게 진짜 동네를 보여주고 보상도 받으세요.
+          <p className="text-white/85 leading-relaxed mb-8 max-w-xl mx-auto whitespace-pre-line">
+            {t("sherpa.become.desc")}
           </p>
           <Link
             href="/sherpa/become"
             className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white text-emerald-700 font-bold hover:bg-emerald-50 transition-colors"
           >
-            셰르파 신청하기
+            {t("sherpa.become.cta")}
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -192,7 +192,19 @@ export default async function SherpaHubPage({
   );
 }
 
-function SherpaCard({ sherpa }: { sherpa: SherpaListItem }) {
+function SherpaCard({
+  sherpa,
+  locale,
+}: {
+  sherpa: SherpaListItem & { tagline_en?: string | null; cities_en?: string[] | null };
+  locale: "ko" | "en";
+}) {
+  const tagline =
+    locale === "en" && sherpa.tagline_en ? sherpa.tagline_en : sherpa.tagline;
+  const cities =
+    locale === "en" && sherpa.cities_en && sherpa.cities_en.length > 0
+      ? sherpa.cities_en
+      : sherpa.cities;
   return (
     <Link
       href={`/sherpa/${sherpa.slug}`}
@@ -215,16 +227,16 @@ function SherpaCard({ sherpa }: { sherpa: SherpaListItem }) {
           <h3 className="font-bold text-slate-900 group-hover:text-emerald-600 truncate">
             {sherpa.display_name}
           </h3>
-          {sherpa.tagline && (
+          {tagline && (
             <p className="text-xs text-slate-500 line-clamp-2 leading-tight mt-0.5">
-              {sherpa.tagline}
+              {tagline}
             </p>
           )}
         </div>
       </div>
 
       <div className="flex items-center gap-2 text-xs text-slate-500 mb-3 flex-wrap">
-        {sherpa.cities.slice(0, 2).map((city, i) => (
+        {cities.slice(0, 2).map((city, i) => (
           <span key={i} className="inline-flex items-center gap-0.5">
             <span>{COUNTRY_FLAGS[sherpa.countries[0]] ?? "🌍"}</span>
             {city}
@@ -263,21 +275,21 @@ function SherpaCard({ sherpa }: { sherpa: SherpaListItem }) {
               </span>
             </span>
           ) : (
-            <span className="text-slate-400">신규</span>
+            <span className="text-slate-400">{locale === "en" ? "New" : "신규"}</span>
           )}
           {sherpa.booking_count > 0 && (
             <span className="text-slate-400 inline-flex items-center gap-0.5">
               <MessageCircle className="w-3 h-3" />
-              {sherpa.booking_count}건
+              {sherpa.booking_count}{locale === "en" ? " trips" : "건"}
             </span>
           )}
         </div>
         <span className="text-sm font-bold text-emerald-600">
           {sherpa.hourly_rate_krw
-            ? `${formatRate(sherpa.hourly_rate_krw)}/h`
+            ? `${formatRate(sherpa.hourly_rate_krw)}${locale === "en" ? "/h" : "/h"}`
             : sherpa.full_day_rate_krw
-            ? `${formatRate(sherpa.full_day_rate_krw)}/일`
-            : "문의"}
+            ? `${formatRate(sherpa.full_day_rate_krw)}${locale === "en" ? "/day" : "/일"}`
+            : (locale === "en" ? "Inquire" : "문의")}
         </span>
       </div>
     </Link>

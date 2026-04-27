@@ -6,8 +6,11 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { LogoMark } from "./Logo";
 import UserMenu from "./UserMenu";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 import type { UserRole } from "@/lib/admin";
+import type { Locale } from "@/lib/i18n";
+import type { MessageKey } from "@/messages";
 
 interface HeaderClientProps {
   user: {
@@ -17,9 +20,12 @@ interface HeaderClientProps {
     role?: UserRole;
     businessName?: string | null;
   } | null;
+  locale: Locale;
+  labels: Record<MessageKey, string>;
 }
 
-export default function HeaderClient({ user }: HeaderClientProps) {
+export default function HeaderClient({ user, locale, labels }: HeaderClientProps) {
+  const t = (k: MessageKey) => labels[k] ?? k;
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -66,13 +72,13 @@ export default function HeaderClient({ user }: HeaderClientProps) {
 
           <nav className="hidden md:flex items-center gap-6">
             {[
-              { label: "플래너", href: "/planner" },
-              { label: "테마", href: "/themes" },
-              { label: "셰르파", href: "/sherpa" },
-              { label: "의료관광", href: "/medical" },
-              { label: "동료 찾기", href: "/partners" },
-              { label: "스토리", href: "/stories" },
-              { label: "커뮤니티", href: "/board" },
+              { label: t("nav.planner"), href: "/planner" },
+              { label: t("nav.themes"), href: "/themes" },
+              { label: t("nav.sherpa"), href: "/sherpa" },
+              { label: t("nav.medical"), href: "/medical" },
+              { label: t("nav.partners"), href: "/partners" },
+              { label: t("nav.stories"), href: "/stories" },
+              { label: t("nav.community"), href: "/board" },
             ].map((item) => (
               <a
                 key={item.href}
@@ -87,6 +93,10 @@ export default function HeaderClient({ user }: HeaderClientProps) {
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
+            <LanguageSwitcher
+              current={locale}
+              variant={useDarkBg ? "dark" : "light"}
+            />
             {user ? (
               <UserMenu user={user} isScrolled={useDarkBg} />
             ) : (
@@ -97,7 +107,7 @@ export default function HeaderClient({ user }: HeaderClientProps) {
                     useDarkBg ? "text-gray-600 hover:text-blue-500" : "text-white/80 hover:text-white"
                   }`}
                 >
-                  로그인
+                  {t("nav.login")}
                 </Link>
                 <Link
                   href="/signup"
@@ -105,13 +115,13 @@ export default function HeaderClient({ user }: HeaderClientProps) {
                     useDarkBg ? "text-gray-600 hover:text-blue-500" : "text-white/80 hover:text-white"
                   }`}
                 >
-                  회원가입
+                  {t("nav.signup")}
                 </Link>
                 <Link
                   href="/planner"
                   className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-sm font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all hover:-translate-y-0.5"
                 >
-                  여행 계획 시작
+                  {t("nav.cta")}
                 </Link>
               </>
             )}
@@ -132,14 +142,13 @@ export default function HeaderClient({ user }: HeaderClientProps) {
         <div className="md:hidden bg-white border-t border-gray-100 shadow-lg">
           <div className="px-4 py-4 space-y-3">
             {[
-              { label: "AI 플래너", href: "/planner" },
-              { label: "테마 여행", href: "/themes" },
-              { label: "셰르파", href: "/sherpa" },
-              { label: "의료관광", href: "/medical" },
-              { label: "동료 찾기", href: "/partners" },
-              { label: "여행 스토리", href: "/stories" },
-              { label: "후기", href: "/reviews" },
-              { label: "커뮤니티", href: "/board" },
+              { label: t("nav.planner"), href: "/planner" },
+              { label: t("nav.themes"), href: "/themes" },
+              { label: t("nav.sherpa"), href: "/sherpa" },
+              { label: t("nav.medical"), href: "/medical" },
+              { label: t("nav.partners"), href: "/partners" },
+              { label: t("nav.stories"), href: "/stories" },
+              { label: t("nav.community"), href: "/board" },
             ].map((item) => (
               <a
                 key={item.href}
@@ -150,6 +159,9 @@ export default function HeaderClient({ user }: HeaderClientProps) {
                 {item.label}
               </a>
             ))}
+            <div className="py-2 border-t border-slate-100">
+              <LanguageSwitcher current={locale} variant="dark" />
+            </div>
             {user ? (
               <>
                 <Link
@@ -157,14 +169,14 @@ export default function HeaderClient({ user }: HeaderClientProps) {
                   className="block text-sm font-medium text-gray-600 py-2"
                   onClick={() => setMenuOpen(false)}
                 >
-                  내 여행 계획
+                  {t("nav.my_trips")}
                 </Link>
                 <Link
                   href="/planner"
                   className="block w-full text-center px-5 py-2.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-sm font-semibold"
                   onClick={() => setMenuOpen(false)}
                 >
-                  여행 계획 시작
+                  {t("nav.cta")}
                 </Link>
               </>
             ) : (
@@ -174,21 +186,21 @@ export default function HeaderClient({ user }: HeaderClientProps) {
                   className="block text-sm font-medium text-gray-600 py-2"
                   onClick={() => setMenuOpen(false)}
                 >
-                  로그인
+                  {t("nav.login")}
                 </Link>
                 <Link
                   href="/signup"
                   className="block text-sm font-medium text-gray-600 py-2"
                   onClick={() => setMenuOpen(false)}
                 >
-                  회원가입
+                  {t("nav.signup")}
                 </Link>
                 <Link
                   href="/planner"
                   className="block w-full text-center px-5 py-2.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-sm font-semibold"
                   onClick={() => setMenuOpen(false)}
                 >
-                  여행 계획 시작
+                  {t("nav.cta")}
                 </Link>
               </>
             )}

@@ -2,8 +2,32 @@ import { auth } from "@/lib/auth";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import HeaderClient from "./HeaderClient";
 import type { UserRole } from "@/lib/admin";
+import { getLocale, createTranslator } from "@/lib/i18n";
+import type { MessageKey } from "@/messages";
 
 export default async function Header() {
+  const locale = await getLocale();
+  const t = createTranslator(locale);
+  const labels: Record<MessageKey, string> = {} as Record<MessageKey, string>;
+  // Header에서 쓰는 키만 미리 계산해서 클라이언트에 전달
+  const headerKeys: MessageKey[] = [
+    "nav.planner",
+    "nav.themes",
+    "nav.sherpa",
+    "nav.medical",
+    "nav.partners",
+    "nav.stories",
+    "nav.community",
+    "nav.login",
+    "nav.signup",
+    "nav.cta",
+    "nav.profile",
+    "nav.my_trips",
+    "nav.logout",
+    "nav.language",
+  ];
+  for (const k of headerKeys) labels[k] = t(k);
+
   const session = await auth();
   let user: {
     name?: string | null;
@@ -59,5 +83,5 @@ export default async function Header() {
     };
   }
 
-  return <HeaderClient user={user} />;
+  return <HeaderClient user={user} locale={locale} labels={labels} />;
 }
