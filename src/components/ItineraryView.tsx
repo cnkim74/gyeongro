@@ -11,6 +11,8 @@ import {
   ChevronUp,
   Map as MapIcon,
   Navigation,
+  HeartPulse,
+  Stethoscope,
 } from "lucide-react";
 import {
   getPlaceSearchUrl,
@@ -55,6 +57,13 @@ export interface Itinerary {
 
 function formatCurrency(n: number) {
   return n?.toLocaleString("ko-KR") ?? "0";
+}
+
+function detectMedicalDayType(day: DayPlan): "treatment" | "recovery" | null {
+  const text = `${day.title ?? ""} ${day.theme ?? ""}`;
+  if (/시술일|시술 ?받|수술일|검진일|검진 ?받/.test(text)) return "treatment";
+  if (/회복|recovery/i.test(text)) return "recovery";
+  return null;
 }
 
 export default function ItineraryView({
@@ -112,21 +121,43 @@ export default function ItineraryView({
       </div>
 
       <div className="space-y-4 mb-6">
-        {itinerary.days?.map((day, idx) => (
+        {itinerary.days?.map((day, idx) => {
+          const medType = detectMedicalDayType(day);
+          const dayBgGradient =
+            medType === "treatment"
+              ? "from-rose-500 to-pink-600"
+              : medType === "recovery"
+              ? "from-rose-300 to-rose-400"
+              : "from-blue-500 to-indigo-600";
+          return (
           <div
             key={day.day}
-            className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm"
+            className={`bg-white rounded-2xl border overflow-hidden shadow-sm ${
+              medType ? "border-rose-200" : "border-gray-100"
+            }`}
           >
             <button
               onClick={() => setExpandedDay(expandedDay === idx ? null : idx)}
               className="w-full flex items-center justify-between p-5 hover:bg-gray-50 transition-colors"
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shrink-0">
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${dayBgGradient} flex items-center justify-center text-white font-bold shrink-0`}>
                   D{day.day}
                 </div>
                 <div className="text-left">
-                  <p className="font-bold text-gray-900">{day.title}</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-bold text-gray-900">{day.title}</p>
+                    {medType === "treatment" && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[10px] font-bold tracking-wide uppercase">
+                        <HeartPulse className="w-2.5 h-2.5" /> 시술일
+                      </span>
+                    )}
+                    {medType === "recovery" && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[10px] font-bold tracking-wide uppercase">
+                        <Stethoscope className="w-2.5 h-2.5" /> 회복일
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-gray-400">{day.theme}</p>
                 </div>
               </div>
@@ -281,7 +312,8 @@ export default function ItineraryView({
               </div>
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <TravelAdvisory itinerary={itinerary} destination={destination} />

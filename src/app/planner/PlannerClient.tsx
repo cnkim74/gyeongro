@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, Suspense } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import ItineraryView, { type Itinerary } from "@/components/ItineraryView";
@@ -16,6 +16,8 @@ import {
   AlertCircle,
   Bookmark,
   CheckCircle,
+  HeartPulse,
+  Stethoscope,
 } from "lucide-react";
 
 const themes = [
@@ -64,6 +66,45 @@ function PlannerContent() {
   const [savedId, setSavedId] = useState<string | null>(null);
   const rawBuffer = useRef("");
 
+  // 의료관광 옵션
+  const [medicalEnabled, setMedicalEnabled] = useState(false);
+  const [medicalProcedure, setMedicalProcedure] = useState<string>("");
+  const [medicalClinicId, setMedicalClinicId] = useState<string>("");
+  const [medicalTreatmentDay, setMedicalTreatmentDay] = useState<number>(2);
+  const [procedures, setProcedures] = useState<
+    Array<{ slug: string; name_ko: string; emoji: string | null; recovery_days: number | null }>
+  >([]);
+  const [clinics, setClinics] = useState<
+    Array<{ id: string; name: string; city: string; country: string }>
+  >([]);
+
+  useEffect(() => {
+    if (!medicalEnabled) return;
+    if (procedures.length > 0) return;
+    fetch("/api/medical/options")
+      .then((r) => r.json())
+      .then((d) => setProcedures(d.procedures ?? []))
+      .catch(() => {});
+  }, [medicalEnabled, procedures.length]);
+
+  useEffect(() => {
+    if (!medicalEnabled || !medicalProcedure) return;
+    const params = new URLSearchParams({ procedure: medicalProcedure });
+    if (destination) params.set("destination", destination);
+    let cancelled = false;
+    fetch(`/api/medical/options?${params}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (!cancelled) setClinics(d.clinics ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setClinics([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [medicalEnabled, medicalProcedure, destination]);
+
   const toggleTheme = (id: string) => {
     setSelectedThemes((prev) =>
       prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
@@ -77,6 +118,20 @@ function PlannerContent() {
     rawBuffer.current = "";
 
     try {
+      const procedureMeta = procedures.find((p) => p.slug === medicalProcedure);
+      const clinicMeta = clinics.find((c) => c.id === medicalClinicId);
+      const medicalPayload = medicalEnabled && medicalProcedure
+        ? {
+            procedureSlug: medicalProcedure,
+            procedureName: procedureMeta?.name_ko,
+            recoveryDays: procedureMeta?.recovery_days ?? null,
+            clinicId: medicalClinicId || null,
+            clinicName: clinicMeta?.name ?? null,
+            clinicCity: clinicMeta?.city ?? null,
+            treatmentDay: medicalTreatmentDay,
+          }
+        : null;
+
       const res = await fetch("/api/generate-itinerary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -87,6 +142,7 @@ function PlannerContent() {
           budget: budget * people,
           travelStyle,
           themes: selectedThemes,
+          medical: medicalPayload,
         }),
       });
 
@@ -320,9 +376,129 @@ function PlannerContent() {
                 </div>
               </div>
 
+              {/* 의료관광 통합 */}
+              <div className="rounded-2xl border-2 border-rose-100 bg-gradient-to-br from-rose-50/50 to-pink-50/50 p-5">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={medicalEnabled}
+                    onChange={(e) => setMedicalEnabled(e.target.checked)}
+                    className="mt-1 w-4 h-4 accent-rose-500"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <HeartPulse className="w-4 h-4 text-rose-500" />
+                      <span className="text-sm font-bold text-slate-900">
+                        의료관광 일정 포함
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      시술·검진을 일정에 포함하면 AI가 회복 기간을 고려해 부담 없는 코스를 짜요.
+                    </p>
+                  </div>
+                </label>
+
+                {medicalEnabled && (
+                  <div className="mt-5 space-y-4 pl-7">
+                    {/* 시술 선택 */}
+                    <div>
+                      <label className="text-xs font-semibold text-slate-700 mb-2 block">
+                        시술 종류
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {procedures.map((p) => (
+                          <button
+                            key={p.slug}
+                            type="button"
+                            onClick={() => {
+                              setMedicalProcedure(p.slug);
+                              setMedicalClinicId("");
+                              setClinics([]);
+                            }}
+                            className={`p-3 rounded-xl border-2 transition-all text-center ${
+                              medicalProcedure === p.slug
+                                ? "border-rose-500 bg-rose-50"
+                                : "border-slate-200 bg-white hover:border-slate-300"
+                            }`}
+                          >
+                            <div className="text-2xl mb-1">{p.emoji}</div>
+                            <div className="text-xs font-semibold text-slate-900">
+                              {p.name_ko}
+                            </div>
+                            {p.recovery_days && (
+                              <div className="text-[10px] text-slate-500 mt-0.5">
+                                회복 {p.recovery_days}일
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 클리닉 선택 (있으면) */}
+                    {medicalProcedure && clinics.length > 0 && (
+                      <div>
+                        <label className="text-xs font-semibold text-slate-700 mb-2 block">
+                          클리닉 선택{" "}
+                          <span className="text-slate-400 font-normal">
+                            (선택, 미선택 시 도시만 반영)
+                          </span>
+                        </label>
+                        <select
+                          value={medicalClinicId}
+                          onChange={(e) => setMedicalClinicId(e.target.value)}
+                          className="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-slate-900 text-sm bg-white"
+                        >
+                          <option value="">선택 안 함</option>
+                          {clinics.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name} ({c.city})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {/* 시술일 선택 */}
+                    {medicalProcedure && (
+                      <div>
+                        <label className="text-xs font-semibold text-slate-700 mb-2 block">
+                          시술 받는 날
+                        </label>
+                        <div className="flex gap-2 flex-wrap">
+                          {Array.from({ length: days + 1 }, (_, i) => i + 1).map(
+                            (d) => (
+                              <button
+                                key={d}
+                                type="button"
+                                onClick={() => setMedicalTreatmentDay(d)}
+                                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                                  medicalTreatmentDay === d
+                                    ? "bg-rose-500 text-white"
+                                    : "bg-white border border-slate-200 text-slate-600 hover:border-rose-300"
+                                }`}
+                              >
+                                Day {d}
+                              </button>
+                            )
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-2">
+                          <Stethoscope className="w-3 h-3 inline mr-0.5" />
+                          시술일 이후 회복 기간은 가벼운 일정으로 자동 조정됩니다.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <button
                 onClick={handleSubmit}
-                disabled={!destination.trim()}
+                disabled={
+                  !destination.trim() ||
+                  (medicalEnabled && !medicalProcedure)
+                }
                 className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-lg flex items-center justify-center gap-2 hover:shadow-xl hover:shadow-blue-500/25 hover:-translate-y-0.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
               >
                 <Sparkles className="w-5 h-5" />

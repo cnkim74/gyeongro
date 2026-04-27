@@ -22,10 +22,30 @@ function tryRepairJson(text: string): string {
   return t;
 }
 
+interface MedicalContext {
+  procedureSlug: string;
+  procedureName?: string;
+  recoveryDays?: number | null;
+  clinicId?: string | null;
+  clinicName?: string | null;
+  clinicCity?: string | null;
+  treatmentDay: number; // 1-based Day index
+}
+
+const MEDICAL_GUIDANCE: Record<string, string> = {
+  "plastic-surgery":
+    "성형 시술은 출국 전후 활동 제한이 큼. 시술 당일 다른 일정 금지. 회복 기간(7일 내외) 동안 햇빛·운동·과음·수영장·사우나 금지. 비행기는 시술 후 5~7일 후 권장. 회복 중에는 호텔·카페·실내 박물관·짧은 산책 위주.",
+  "health-checkup":
+    "건강검진은 검진 전날 자정부터 금식 필수. 검진 당일은 오전~오후 병원 머무름. 검진 후 결과 상담은 1~2일 후. 검진 다음 날부터는 일반 관광 가능, 단 첫날은 가벼운 일정 권장.",
+  "hair-transplant":
+    "모발이식 후 7~10일 동안 머리 보호 필수. 시술 직후 2~3일은 두피 통증·붓기. 첫 5일은 모자 착용 금지(이식부 압박 위험). 햇빛·과한 활동·수영·사우나 금지. 회복기에는 실내 위주 가벼운 일정, 한국식 마사지·헬스 금지.",
+};
+
 export async function POST(req: NextRequest) {
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   const body = await req.json();
-  const { destination, days, people, budget, travelStyle, themes } = body;
+  const { destination, days, people, budget, travelStyle, themes, medical } = body;
+  const medicalCtx = medical as MedicalContext | null;
 
   if (!destination || !days || !people || !budget) {
     return Response.json({ error: "필수 입력값이 없습니다." }, { status: 400 });
@@ -62,6 +82,33 @@ export async function POST(req: NextRequest) {
   const nights = days;
   const totalDays = days + 1;
 
+  // 의료관광 가이드 블록
+  let medicalBlock = "";
+  if (medicalCtx?.procedureSlug && medicalCtx.treatmentDay >= 1) {
+    const guidance = MEDICAL_GUIDANCE[medicalCtx.procedureSlug] ?? "";
+    const recoveryEndDay = Math.min(
+      totalDays,
+      medicalCtx.treatmentDay + (medicalCtx.recoveryDays ?? 3)
+    );
+    medicalBlock = `
+
+⚕️ 의료관광 일정 통합 (매우 중요):
+- 시술: ${medicalCtx.procedureName ?? medicalCtx.procedureSlug}
+${medicalCtx.clinicName ? `- 클리닉: ${medicalCtx.clinicName}${medicalCtx.clinicCity ? ` (${medicalCtx.clinicCity})` : ""}` : ""}
+- 시술 받는 날: Day ${medicalCtx.treatmentDay}
+- 회복 기간: Day ${medicalCtx.treatmentDay} ~ Day ${recoveryEndDay}
+
+회복 가이드: ${guidance}
+
+다음 규칙을 반드시 지켜:
+1. Day ${medicalCtx.treatmentDay} (시술일): 오전 시술 → 오후~저녁은 숙소 휴식. 스케줄 항목은 1~2개만, 모두 클리닉/병원 또는 인근 호텔.
+2. Day ${medicalCtx.treatmentDay + 1} ~ Day ${recoveryEndDay} (회복일): 가벼운 실내 활동만. 카페·서점·박물관·짧은 산책. 격한 운동·물놀이·사우나·뷔페·과음 금지. 클리닉/병원 인근 동선으로 묶기.
+3. Day ${medicalCtx.treatmentDay - 1} 이전 (시술 전): 일반 관광 가능. 단 시술 전날(Day ${medicalCtx.treatmentDay - 1})은 가벼운 일정 + 일찍 귀가. 건강검진의 경우 자정부터 금식.
+4. Day ${recoveryEndDay + 1} 이후 (회복 후): 정상 관광 일정 가능.
+5. 각 day의 title 또는 theme 안에 시술일/회복일임을 명시 (예: "시술일 — 휴식", "회복 2일차 — 가벼운 산책").
+6. tips 배열에 의료 주의사항 1~2개 추가.`;
+  }
+
   const prompt = `당신은 전문 여행 플래너입니다. 아래 조건에 맞는 상세한 여행 일정을 만들어주세요.
 
 여행 조건:
@@ -70,7 +117,7 @@ export async function POST(req: NextRequest) {
 - 인원: ${people}명
 - 총 예산: ${budget.toLocaleString()}원 (1인 기준 ${Math.round(budget / people).toLocaleString()}원)
 - 여행 스타일: ${styleText}
-- 관심 테마: ${themeText}${themeDetail ? `\n  - ${themeDetail}` : ""}
+- 관심 테마: ${themeText}${themeDetail ? `\n  - ${themeDetail}` : ""}${medicalBlock}
 
 다음 JSON 구조로 응답하세요:
 
