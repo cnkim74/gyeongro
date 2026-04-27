@@ -1,4 +1,4 @@
-// 여행 컨셉 아바타 갤러리 — 8종 (사람 2 + 동물 6)
+// 여행 컨셉 아바타 갤러리 — 10종 (사람 3 + 동물 7), 5×2 그리드
 // 사용처:
 //   - 회원가입/프로필에서 선택
 //   - 사용자에게 표시할 이미지 우선순위: custom_image > avatar_preset URL > OAuth image > fallback
@@ -24,6 +24,13 @@ export const AVATAR_PRESETS: AvatarPreset[] = [
     label: "백패커",
     emoji: "🎒",
     url: "/avatars/explorer.svg",
+    category: "human",
+  },
+  {
+    id: "journalist",
+    label: "수첩 여행가",
+    emoji: "📓",
+    url: "/avatars/journalist.svg",
     category: "human",
   },
   {
