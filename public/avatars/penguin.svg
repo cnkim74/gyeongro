@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <radialGradient id="bg-pg" cx="0.5" cy="0.4" r="0.7">
+      <stop offset="0%" stop-color="#bfdbfe"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </radialGradient>
+    <linearGradient id="pg-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#374151"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="100" fill="url(#bg-pg)"/>
+  <!-- body -->
+  <path d="M40 200 Q 100 140 160 200 Z" fill="url(#pg-body)"/>
+  <ellipse cx="100" cy="172" rx="36" ry="20" fill="#fafaf9"/>
+  <!-- bow tie -->
+  <path d="M88 148 L 80 158 L 88 168 Z" fill="#dc2626"/>
+  <path d="M112 148 L 120 158 L 112 168 Z" fill="#dc2626"/>
+  <rect x="96" y="153" width="8" height="10" rx="1" fill="#7f1d1d"/>
+  <!-- head -->
+  <ellipse cx="100" cy="100" rx="44" ry="48" fill="url(#pg-body)"/>
+  <!-- white face -->
+  <ellipse cx="100" cy="110" rx="28" ry="32" fill="#fafaf9"/>
+  <!-- traveler scarf -->
+  <ellipse cx="100" cy="142" rx="42" ry="8" fill="#dc2626"/>
+  <path d="M132 145 L 145 165 L 138 168 Z" fill="#dc2626"/>
+  <!-- hat (winter wool) -->
+  <path d="M58 70 Q 100 30 142 70 L 142 80 L 58 80 Z" fill="#dc2626"/>
+  <ellipse cx="100" cy="80" rx="44" ry="4" fill="#7f1d1d"/>
+  <circle cx="100" cy="32" r="10" fill="#fff"/>
+  <line x1="100" y1="30" x2="100" y2="42" stroke="#fafaf9" stroke-width="2"/>
+  <!-- earmuff style band stripes -->
+  <path d="M58 73 L 142 73" stroke="#fff" stroke-width="2" stroke-dasharray="4 4"/>
+  <!-- beak -->
+  <path d="M92 122 L 100 132 L 108 122 L 100 126 Z" fill="#fbbf24"/>
+  <line x1="100" y1="126" x2="100" y2="132" stroke="#d97706" stroke-width="1"/>
+  <!-- eyes -->
+  <ellipse cx="86" cy="108" rx="5" ry="6" fill="#1f2937"/>
+  <ellipse cx="114" cy="108" rx="5" ry="6" fill="#1f2937"/>
+  <circle cx="88" cy="106" r="1.5" fill="#fff"/>
+  <circle cx="116" cy="106" r="1.5" fill="#fff"/>
+  <!-- cheeks -->
+  <ellipse cx="72" cy="120" rx="6" ry="3" fill="#fda4af" opacity="0.6"/>
+  <ellipse cx="128" cy="120" rx="6" ry="3" fill="#fda4af" opacity="0.6"/>
+</svg>

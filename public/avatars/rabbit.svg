@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <radialGradient id="bg-r" cx="0.5" cy="0.4" r="0.7">
+      <stop offset="0%" stop-color="#fce7f3"/>
+      <stop offset="100%" stop-color="#f9a8d4"/>
+    </radialGradient>
+    <linearGradient id="rabbit-fur" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fafaf9"/>
+      <stop offset="100%" stop-color="#d6d3d1"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="100" fill="url(#bg-r)"/>
+  <!-- body -->
+  <path d="M40 200 Q 100 145 160 200 Z" fill="#9333ea"/>
+  <!-- map in hand -->
+  <rect x="78" y="148" width="44" height="32" rx="2" fill="#fde68a" transform="rotate(-8 100 164)"/>
+  <path d="M82 156 Q 100 152 118 158" stroke="#dc2626" stroke-width="1.5" fill="none" transform="rotate(-8 100 164)"/>
+  <path d="M82 165 Q 100 161 118 167" stroke="#1d4ed8" stroke-width="1.5" fill="none" transform="rotate(-8 100 164)"/>
+  <circle cx="92" cy="172" r="2" fill="#dc2626" transform="rotate(-8 100 164)"/>
+  <!-- long ears -->
+  <ellipse cx="76" cy="38" rx="11" ry="32" fill="url(#rabbit-fur)" transform="rotate(-12 76 38)"/>
+  <ellipse cx="124" cy="38" rx="11" ry="32" fill="url(#rabbit-fur)" transform="rotate(12 124 38)"/>
+  <ellipse cx="76" cy="42" rx="5" ry="22" fill="#fbcfe8" transform="rotate(-12 76 42)"/>
+  <ellipse cx="124" cy="42" rx="5" ry="22" fill="#fbcfe8" transform="rotate(12 124 42)"/>
+  <!-- head -->
+  <ellipse cx="100" cy="100" rx="46" ry="48" fill="url(#rabbit-fur)"/>
+  <!-- ribbon -->
+  <path d="M55 80 L 50 92 L 62 88 Z" fill="#dc2626"/>
+  <path d="M55 80 L 60 92 L 50 88 Z" fill="#dc2626"/>
+  <circle cx="56" cy="86" r="3" fill="#7f1d1d"/>
+  <!-- eyes -->
+  <ellipse cx="80" cy="100" rx="5.5" ry="7" fill="#1f2937"/>
+  <ellipse cx="120" cy="100" rx="5.5" ry="7" fill="#1f2937"/>
+  <circle cx="82" cy="98" r="1.8" fill="#fff"/>
+  <circle cx="122" cy="98" r="1.8" fill="#fff"/>
+  <!-- cheeks -->
+  <ellipse cx="64" cy="118" rx="6" ry="4" fill="#fda4af" opacity="0.7"/>
+  <ellipse cx="136" cy="118" rx="6" ry="4" fill="#fda4af" opacity="0.7"/>
+  <!-- nose Y-shape -->
+  <path d="M100 118 L 100 124 M 100 124 L 96 128 M 100 124 L 104 128" stroke="#be185d" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- buck teeth -->
+  <rect x="96" y="128" width="4" height="6" rx="1" fill="#fff"/>
+  <rect x="100" y="128" width="4" height="6" rx="1" fill="#fff"/>
+  <line x1="100" y1="128" x2="100" y2="134" stroke="#d6d3d1" stroke-width="0.5"/>
+</svg>

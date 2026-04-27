@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <radialGradient id="bg-e" cx="0.5" cy="0.4" r="0.7">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="100%" stop-color="#fbbf24"/>
+    </radialGradient>
+    <linearGradient id="skin-e" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fbcfa3"/>
+      <stop offset="100%" stop-color="#e9a574"/>
+    </linearGradient>
+    <linearGradient id="hair-e" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#92400e"/>
+      <stop offset="100%" stop-color="#5b2306"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="100" fill="url(#bg-e)"/>
+  <!-- backpack strap -->
+  <path d="M40 200 Q 100 145 160 200 Z" fill="#16a34a"/>
+  <rect x="64" y="140" width="6" height="60" fill="#15803d"/>
+  <rect x="130" y="140" width="6" height="60" fill="#15803d"/>
+  <!-- neck -->
+  <rect x="88" y="125" width="24" height="20" rx="6" fill="url(#skin-e)"/>
+  <!-- head -->
+  <ellipse cx="100" cy="95" rx="42" ry="46" fill="url(#skin-e)"/>
+  <!-- ponytail hair -->
+  <path d="M58 90 Q 55 50 100 42 Q 145 50 142 95 Q 142 75 130 68 Q 100 60 70 68 Q 58 75 58 90 Z" fill="url(#hair-e)"/>
+  <ellipse cx="148" cy="100" rx="10" ry="22" fill="url(#hair-e)" transform="rotate(15 148 100)"/>
+  <!-- bandana -->
+  <path d="M60 78 Q 100 70 140 78 L 138 88 Q 100 80 62 88 Z" fill="#dc2626"/>
+  <circle cx="78" cy="83" r="2" fill="#fff" opacity="0.7"/>
+  <circle cx="100" cy="80" r="2" fill="#fff" opacity="0.7"/>
+  <circle cx="122" cy="83" r="2" fill="#fff" opacity="0.7"/>
+  <!-- eyes -->
+  <ellipse cx="84" cy="105" rx="5" ry="6" fill="#1f2937"/>
+  <ellipse cx="116" cy="105" rx="5" ry="6" fill="#1f2937"/>
+  <circle cx="86" cy="103" r="1.5" fill="#fff"/>
+  <circle cx="118" cy="103" r="1.5" fill="#fff"/>
+  <!-- cheeks -->
+  <ellipse cx="74" cy="118" rx="6" ry="4" fill="#fda4af" opacity="0.6"/>
+  <ellipse cx="126" cy="118" rx="6" ry="4" fill="#fda4af" opacity="0.6"/>
+  <!-- smile -->
+  <path d="M88 122 Q 100 132 112 122" stroke="#7c2d12" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</svg>

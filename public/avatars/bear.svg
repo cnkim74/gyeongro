@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <radialGradient id="bg-b" cx="0.5" cy="0.4" r="0.7">
+      <stop offset="0%" stop-color="#fef3c7"/>
+      <stop offset="100%" stop-color="#fbbf24"/>
+    </radialGradient>
+    <linearGradient id="bear-fur" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#a8763a"/>
+      <stop offset="100%" stop-color="#7c4a1e"/>
+    </linearGradient>
+    <linearGradient id="bear-snout" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fde2c4"/>
+      <stop offset="100%" stop-color="#e9b884"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="100" fill="url(#bg-b)"/>
+  <!-- body / scarf -->
+  <path d="M40 200 Q 100 145 160 200 Z" fill="#0f766e"/>
+  <ellipse cx="100" cy="155" rx="40" ry="11" fill="#dc2626"/>
+  <!-- ears (back) -->
+  <circle cx="58" cy="62" r="20" fill="#7c4a1e"/>
+  <circle cx="142" cy="62" r="20" fill="#7c4a1e"/>
+  <!-- head -->
+  <ellipse cx="100" cy="95" rx="50" ry="48" fill="url(#bear-fur)"/>
+  <!-- inner ears -->
+  <circle cx="58" cy="62" r="11" fill="#fda4af"/>
+  <circle cx="142" cy="62" r="11" fill="#fda4af"/>
+  <!-- baseball cap (traveler vibe) -->
+  <path d="M52 70 Q 100 30 148 70 L 148 78 L 52 78 Z" fill="#1d4ed8"/>
+  <ellipse cx="100" cy="78" rx="48" ry="6" fill="#1e3a8a"/>
+  <path d="M148 75 L 175 78 L 175 82 L 150 82 Z" fill="#1d4ed8"/>
+  <circle cx="100" cy="58" r="6" fill="#fbbf24"/>
+  <text x="100" y="61" text-anchor="middle" font-family="sans-serif" font-size="8" font-weight="bold" fill="#1e3a8a">P</text>
+  <!-- snout -->
+  <ellipse cx="100" cy="115" rx="22" ry="16" fill="url(#bear-snout)"/>
+  <!-- nose -->
+  <ellipse cx="100" cy="105" rx="6" ry="4.5" fill="#1f2937"/>
+  <!-- mouth -->
+  <path d="M100 110 L 100 118 M 100 118 Q 92 124 86 120 M 100 118 Q 108 124 114 120" stroke="#1f2937" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- eyes -->
+  <ellipse cx="80" cy="92" rx="5" ry="6" fill="#1f2937"/>
+  <ellipse cx="120" cy="92" rx="5" ry="6" fill="#1f2937"/>
+  <circle cx="82" cy="90" r="1.5" fill="#fff"/>
+  <circle cx="122" cy="90" r="1.5" fill="#fff"/>
+  <!-- cheeks -->
+  <ellipse cx="62" cy="108" rx="7" ry="5" fill="#fda4af" opacity="0.6"/>
+  <ellipse cx="138" cy="108" rx="7" ry="5" fill="#fda4af" opacity="0.6"/>
+</svg>

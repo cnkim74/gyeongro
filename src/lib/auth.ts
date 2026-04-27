@@ -1,8 +1,11 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Kakao from "next-auth/providers/kakao";
+import Credentials from "next-auth/providers/credentials";
 import type { OAuthConfig } from "next-auth/providers";
 import { SupabaseAdapter } from "@auth/supabase-adapter";
+import { createClient } from "@supabase/supabase-js";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 interface NaverProfile {
@@ -43,6 +46,43 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const hasSupabase = !!supabaseUrl && !!supabaseServiceKey;
 
+const credentialsProvider = Credentials({
+  id: "credentials",
+  name: "Email",
+  credentials: {
+    email: { label: "Email", type: "email" },
+    password: { label: "Password", type: "password" },
+  },
+  async authorize(creds) {
+    const email = (creds?.email ?? "").toString().trim().toLowerCase();
+    const password = (creds?.password ?? "").toString();
+    if (!email || !password) return null;
+    if (!supabaseUrl || !supabaseServiceKey) return null;
+
+    const sb = createClient(supabaseUrl, supabaseServiceKey, {
+      db: { schema: "next_auth" },
+      auth: { persistSession: false },
+    });
+
+    const { data: user } = await sb
+      .from("users")
+      .select("id, email, name, image, password_hash, custom_image, nickname, avatar_preset")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (!user || !user.password_hash) return null;
+    const ok = await bcrypt.compare(password, user.password_hash);
+    if (!ok) return null;
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.nickname ?? user.name ?? null,
+      image: user.custom_image ?? user.image ?? null,
+    };
+  },
+});
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Google({
@@ -54,14 +94,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientId: process.env.KAKAO_CLIENT_ID,
       clientSecret: process.env.KAKAO_CLIENT_SECRET,
     }),
+    credentialsProvider,
   ],
+  // Credentials provider 호환을 위해 JWT 세션 사용.
+  // Supabase Adapter는 OAuth 사용자/계정 저장용으로 유지 (세션만 JWT).
   ...(hasSupabase
     ? {
         adapter: SupabaseAdapter({
           url: supabaseUrl!,
           secret: supabaseServiceKey!,
         }),
-        session: { strategy: "database" as const },
+        session: { strategy: "jwt" as const },
       }
     : {
         session: { strategy: "jwt" as const },

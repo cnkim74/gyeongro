@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <radialGradient id="bg-c" cx="0.5" cy="0.4" r="0.7">
+      <stop offset="0%" stop-color="#cffafe"/>
+      <stop offset="100%" stop-color="#67e8f9"/>
+    </radialGradient>
+    <linearGradient id="cat-fur" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="100" fill="url(#bg-c)"/>
+  <!-- body / shirt -->
+  <path d="M40 200 Q 100 145 160 200 Z" fill="#0891b2"/>
+  <!-- beach ball / sunglasses prop -->
+  <circle cx="55" cy="170" r="14" fill="#dc2626"/>
+  <path d="M41 170 L 69 170 M 55 156 L 55 184" stroke="#fff" stroke-width="2"/>
+  <path d="M50 158 Q 56 170 50 182" stroke="#fff" stroke-width="2" fill="none"/>
+  <path d="M60 158 Q 54 170 60 182" stroke="#fff" stroke-width="2" fill="none"/>
+  <!-- ears -->
+  <path d="M58 78 L 55 38 L 86 65 Z" fill="url(#cat-fur)"/>
+  <path d="M142 78 L 145 38 L 114 65 Z" fill="url(#cat-fur)"/>
+  <path d="M64 70 L 62 50 L 80 64 Z" fill="#fda4af"/>
+  <path d="M136 70 L 138 50 L 120 64 Z" fill="#fda4af"/>
+  <!-- head -->
+  <ellipse cx="100" cy="100" rx="46" ry="44" fill="url(#cat-fur)"/>
+  <!-- stripes -->
+  <path d="M62 82 Q 70 78 78 82" stroke="#c2410c" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M122 82 Q 130 78 138 82" stroke="#c2410c" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M58 95 L 70 95" stroke="#c2410c" stroke-width="2" stroke-linecap="round"/>
+  <path d="M130 95 L 142 95" stroke="#c2410c" stroke-width="2" stroke-linecap="round"/>
+  <!-- sunglasses (heart shape) -->
+  <ellipse cx="80" cy="100" rx="14" ry="11" fill="#1f2937"/>
+  <ellipse cx="120" cy="100" rx="14" ry="11" fill="#1f2937"/>
+  <rect x="93" y="98" width="14" height="3" fill="#1f2937"/>
+  <ellipse cx="76" cy="97" rx="4" ry="3" fill="#67e8f9" opacity="0.6"/>
+  <ellipse cx="116" cy="97" rx="4" ry="3" fill="#67e8f9" opacity="0.6"/>
+  <!-- nose -->
+  <path d="M97 117 L 100 122 L 103 117 Z" fill="#fda4af"/>
+  <!-- whiskers -->
+  <path d="M70 120 L 90 122 M 70 125 L 90 124" stroke="#9a3412" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M130 120 L 110 122 M 130 125 L 110 124" stroke="#9a3412" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- mouth -->
+  <path d="M100 122 L 100 128 M 100 128 Q 94 134 90 130 M 100 128 Q 106 134 110 130" stroke="#1f2937" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>

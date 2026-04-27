@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <radialGradient id="bg-f" cx="0.5" cy="0.4" r="0.7">
+      <stop offset="0%" stop-color="#fed7aa"/>
+      <stop offset="100%" stop-color="#fb923c"/>
+    </radialGradient>
+    <linearGradient id="fox-fur" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="100" fill="url(#bg-f)"/>
+  <!-- body -->
+  <path d="M40 200 Q 100 145 160 200 Z" fill="#7c2d12"/>
+  <!-- camera strap -->
+  <path d="M70 145 L 100 165 L 130 145" stroke="#1f2937" stroke-width="3" fill="none"/>
+  <!-- camera body -->
+  <rect x="86" y="158" width="28" height="20" rx="4" fill="#1f2937"/>
+  <circle cx="100" cy="168" r="6" fill="#374151"/>
+  <circle cx="100" cy="168" r="3.5" fill="#60a5fa"/>
+  <rect x="106" y="160" width="4" height="3" fill="#dc2626"/>
+  <!-- ears (back/triangular) -->
+  <path d="M55 70 L 70 30 L 88 70 Z" fill="url(#fox-fur)"/>
+  <path d="M145 70 L 130 30 L 112 70 Z" fill="url(#fox-fur)"/>
+  <path d="M62 64 L 70 42 L 80 64 Z" fill="#fda4af"/>
+  <path d="M138 64 L 130 42 L 120 64 Z" fill="#fda4af"/>
+  <!-- head shape (heart-like for fox) -->
+  <path d="M50 90 Q 50 130 100 145 Q 150 130 150 90 Q 150 60 130 55 Q 100 75 70 55 Q 50 60 50 90 Z" fill="url(#fox-fur)"/>
+  <!-- white face mask -->
+  <path d="M70 100 Q 70 130 100 138 Q 130 130 130 100 Q 115 110 100 110 Q 85 110 70 100 Z" fill="#fafaf9"/>
+  <!-- snout -->
+  <path d="M88 120 Q 100 132 112 120 Q 100 130 88 120 Z" fill="#fafaf9"/>
+  <!-- nose -->
+  <ellipse cx="100" cy="118" rx="4" ry="3" fill="#1f2937"/>
+  <!-- mouth -->
+  <path d="M100 121 L 100 126 M 100 126 Q 95 130 91 128 M 100 126 Q 105 130 109 128" stroke="#1f2937" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- eyes -->
+  <ellipse cx="80" cy="100" rx="5.5" ry="6.5" fill="#1f2937"/>
+  <ellipse cx="120" cy="100" rx="5.5" ry="6.5" fill="#1f2937"/>
+  <circle cx="82" cy="98" r="1.8" fill="#fff"/>
+  <circle cx="122" cy="98" r="1.8" fill="#fff"/>
+  <!-- cheeks -->
+  <ellipse cx="68" cy="118" rx="5" ry="3.5" fill="#dc2626" opacity="0.4"/>
+  <ellipse cx="132" cy="118" rx="5" ry="3.5" fill="#dc2626" opacity="0.4"/>
+</svg>
