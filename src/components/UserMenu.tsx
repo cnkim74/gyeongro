@@ -22,6 +22,7 @@ export default function UserMenu({ user, isScrolled }: UserMenuProps) {
   const role: UserRole = user.role ?? "user";
   const isAdmin = role === "admin";
   const isBusiness = role === "business";
+  const isSherpa = role === "sherpa";
   const displayName =
     isBusiness && user.businessName
       ? user.businessName
@@ -79,7 +80,7 @@ export default function UserMenu({ user, isScrolled }: UserMenuProps) {
               <p className="text-sm font-semibold text-gray-900 truncate flex-1">
                 {displayName}
               </p>
-              <RoleBadge role={role} size="xs" />
+              <RoleBadge role={role} size="xs" showTraveler />
             </div>
             {user.email && (
               <p className="text-xs text-gray-400 truncate">{user.email}</p>
@@ -107,14 +108,26 @@ export default function UserMenu({ user, isScrolled }: UserMenuProps) {
               <User className="w-4 h-4 text-gray-400" />
               프로필
             </Link>
-            <Link
-              href="/sherpa/dashboard"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              <Mountain className="w-4 h-4 text-emerald-500" />
-              셰르파 대시보드
-            </Link>
+            {(isSherpa || isAdmin) && (
+              <Link
+                href="/sherpa/dashboard"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-amber-700 bg-amber-50/50 hover:bg-amber-50 transition-colors"
+              >
+                <Mountain className="w-4 h-4 text-amber-500" />
+                셰르파 대시보드
+              </Link>
+            )}
+            {!isSherpa && !isAdmin && !isBusiness && (
+              <Link
+                href="/sherpa/become"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <Mountain className="w-4 h-4 text-amber-500" />
+                셰르파로 활동하기
+              </Link>
+            )}
             {isBusiness && (
               <Link
                 href="/sponsor"

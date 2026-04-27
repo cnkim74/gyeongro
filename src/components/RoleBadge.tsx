@@ -1,10 +1,18 @@
-import { ROLE_LABELS, ROLE_EMOJIS, ROLE_COLORS, type UserRole } from "@/lib/admin";
+import {
+  ROLE_LABELS,
+  ROLE_EMOJIS,
+  ROLE_COLORS,
+  parseRole,
+  type UserRole,
+} from "@/lib/admin";
 
 interface RoleBadgeProps {
   role?: UserRole | string | null;
   size?: "xs" | "sm" | "md";
   showEmoji?: boolean;
   showLabel?: boolean;
+  /** user(여행자) 뱃지를 강제로 보여줄지 — 기본은 size="md"일 때만 */
+  showTraveler?: boolean;
 }
 
 const SIZE_MAP = {
@@ -18,22 +26,20 @@ export default function RoleBadge({
   size = "sm",
   showEmoji = true,
   showLabel = true,
+  showTraveler,
 }: RoleBadgeProps) {
-  const r = (role as UserRole) ?? "user";
-  if (r !== "user" && r !== "business" && r !== "admin") return null;
-  // 일반회원(여행자)은 너무 흔하니 기본적으로 안 보이게 (옵션으로 제어)
-  if (r === "user" && size !== "md") return null;
+  const r: UserRole = parseRole(role);
 
-  const label = ROLE_LABELS[r];
-  const emoji = ROLE_EMOJIS[r];
-  const color = ROLE_COLORS[r];
+  // 여행자 뱃지는 너무 흔하니 기본 노출 ❌ (size=md 또는 showTraveler=true 일 때만)
+  const shouldShowTraveler = showTraveler ?? size === "md";
+  if (r === "user" && !shouldShowTraveler) return null;
 
   return (
     <span
-      className={`inline-flex items-center gap-0.5 rounded-full font-semibold whitespace-nowrap ${color} ${SIZE_MAP[size]}`}
+      className={`inline-flex items-center gap-0.5 rounded-full font-semibold whitespace-nowrap ${ROLE_COLORS[r]} ${SIZE_MAP[size]}`}
     >
-      {showEmoji && <span>{emoji}</span>}
-      {showLabel && <span>{label}</span>}
+      {showEmoji && <span>{ROLE_EMOJIS[r]}</span>}
+      {showLabel && <span>{ROLE_LABELS[r]}</span>}
     </span>
   );
 }
