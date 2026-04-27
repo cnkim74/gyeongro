@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import RoleBadge from "@/components/RoleBadge";
 import { BookOpen, Plus, MapPin, Heart, Eye } from "lucide-react";
-import type { UserRole } from "@/lib/admin";
+import { parseRole, type UserRole } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -49,10 +49,7 @@ export default async function StoriesPage() {
       .select("id, name, image, custom_image, role")
       .in("id", userIds);
     for (const u of users ?? []) {
-      const role: UserRole =
-        u.role === "admin" || u.role === "business" || u.role === "user"
-          ? u.role
-          : "user";
+      const role = parseRole(u.role);
       usersMap[u.id] = {
         name: u.name,
         image: u.custom_image ?? u.image,

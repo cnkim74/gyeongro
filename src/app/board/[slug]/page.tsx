@@ -78,7 +78,10 @@ export default async function BoardPostsPage({
       .in("id", userIds);
     for (const u of users ?? []) {
       const role: UserRole =
-        u.role === "admin" || u.role === "business" || u.role === "user"
+        u.role === "admin" ||
+        u.role === "business" ||
+        u.role === "sherpa" ||
+        u.role === "user"
           ? u.role
           : "user";
       const displayName =

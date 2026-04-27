@@ -10,7 +10,7 @@ import {
   Calendar,
   ArrowRight,
 } from "lucide-react";
-import type { UserRole } from "@/lib/admin";
+import { parseRole, type UserRole } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -62,10 +62,7 @@ export default async function PartnersPage() {
       .select("id, name, image, custom_image, role")
       .in("id", userIds);
     for (const u of users ?? []) {
-      const role: UserRole =
-        u.role === "admin" || u.role === "business" || u.role === "user"
-          ? u.role
-          : "user";
+      const role: UserRole = parseRole(u.role);
       usersMap[u.id] = {
         name: u.name,
         image: u.custom_image ?? u.image,

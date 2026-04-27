@@ -77,7 +77,10 @@ export default async function PostDetailPage({
       .in("id", commentUserIds);
     for (const u of users ?? []) {
       const role: UserRole =
-        u.role === "admin" || u.role === "business" || u.role === "user"
+        u.role === "admin" ||
+        u.role === "business" ||
+        u.role === "sherpa" ||
+        u.role === "user"
           ? u.role
           : "user";
       const displayName =
@@ -96,7 +99,10 @@ export default async function PostDetailPage({
   const canEdit = currentUserId === post.user_id || isCurrentUserAdmin;
 
   const authorRole: UserRole =
-    author?.role === "admin" || author?.role === "business" || author?.role === "user"
+    author?.role === "admin" ||
+    author?.role === "business" ||
+    author?.role === "sherpa" ||
+    author?.role === "user"
       ? author.role
       : "user";
   const authorName =

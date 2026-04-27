@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import StarRating from "@/components/StarRating";
 import RoleBadge from "@/components/RoleBadge";
 import { Star, Sparkles, MapPin, ArrowRight } from "lucide-react";
-import type { UserRole } from "@/lib/admin";
+import { parseRole, type UserRole } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -53,8 +53,7 @@ export default async function ReviewsPage({
       .select("id, name, image, custom_image, role, business_name")
       .in("id", userIds);
     for (const u of users ?? []) {
-      const role: UserRole =
-        u.role === "admin" || u.role === "business" || u.role === "user" ? u.role : "user";
+      const role: UserRole = parseRole(u.role);
       const displayName = role === "business" && u.business_name ? u.business_name : u.name;
       usersMap[u.id] = {
         name: displayName,

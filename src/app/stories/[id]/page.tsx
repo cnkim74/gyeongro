@@ -1,12 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { isAdmin } from "@/lib/admin";
+import { isAdmin, parseRole } from "@/lib/admin";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import Header from "@/components/Header";
 import RoleBadge from "@/components/RoleBadge";
 import { ArrowLeft, MapPin, Calendar, Eye } from "lucide-react";
-import type { UserRole } from "@/lib/admin";
 import StoryActions from "./StoryActions";
 import LikeButton from "./LikeButton";
 
@@ -71,10 +70,7 @@ export default async function StoryDetailPage({
     liked = !!like;
   }
 
-  const authorRole: UserRole =
-    author?.role === "admin" || author?.role === "business" || author?.role === "user"
-      ? author.role
-      : "user";
+  const authorRole = parseRole(author?.role);
   const authorName = author?.name ?? "익명";
   const authorImage = author?.custom_image ?? author?.image ?? null;
   const sections: Section[] = (story.sections ?? []) as Section[];

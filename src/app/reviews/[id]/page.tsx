@@ -2,13 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getSupabaseServiceClient } from "@/lib/supabase";
-import { isAdmin } from "@/lib/admin";
+import { isAdmin, parseRole } from "@/lib/admin";
 import Header from "@/components/Header";
 import StarRating from "@/components/StarRating";
 import RoleBadge from "@/components/RoleBadge";
 import { ArrowLeft, Calendar, MapPin } from "lucide-react";
 import ReviewActions from "./ReviewActions";
-import type { UserRole } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -50,10 +49,7 @@ export default async function ReviewDetailPage({
   const adminFlag = currentUserId ? await isAdmin(currentUserId) : false;
   const canEdit = currentUserId === review.user_id || adminFlag;
 
-  const authorRole: UserRole =
-    author?.role === "admin" || author?.role === "business" || author?.role === "user"
-      ? author.role
-      : "user";
+  const authorRole = parseRole(author?.role);
   const authorName =
     authorRole === "business" && author?.business_name
       ? author.business_name

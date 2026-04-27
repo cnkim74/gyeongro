@@ -70,7 +70,10 @@ export default async function Header() {
     }
 
     const role: UserRole =
-      data?.role === "admin" || data?.role === "business" || data?.role === "user"
+      data?.role === "admin" ||
+      data?.role === "business" ||
+      data?.role === "sherpa" ||
+      data?.role === "user"
         ? (data.role as UserRole)
         : "user";
 

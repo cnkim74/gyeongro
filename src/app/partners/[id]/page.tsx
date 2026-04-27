@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { isAdmin } from "@/lib/admin";
+import { isAdmin, parseRole } from "@/lib/admin";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import Header from "@/components/Header";
 import RoleBadge from "@/components/RoleBadge";
@@ -85,7 +85,7 @@ export default async function PartnerDetailPage({
 
   let applications: ApplicationRow[] = [];
   let myApplication: ApplicationRow | null = null;
-  let appUsersMap: Record<string, { name: string | null; image: string | null; role: UserRole }> = {};
+  const appUsersMap: Record<string, { name: string | null; image: string | null; role: UserRole }> = {};
 
   if (currentUserId) {
     const { data: appData } = await supabase
@@ -103,8 +103,7 @@ export default async function PartnerDetailPage({
         .select("id, name, image, custom_image, role")
         .in("id", appUserIds);
       for (const u of appUsers ?? []) {
-        const role: UserRole =
-          u.role === "admin" || u.role === "business" || u.role === "user" ? u.role : "user";
+        const role: UserRole = parseRole(u.role);
         appUsersMap[u.id] = {
           name: u.name,
           image: u.custom_image ?? u.image,
@@ -114,10 +113,7 @@ export default async function PartnerDetailPage({
     }
   }
 
-  const authorRole: UserRole =
-    author?.role === "admin" || author?.role === "business" || author?.role === "user"
-      ? author.role
-      : "user";
+  const authorRole: UserRole = parseRole(author?.role);
   const authorName = author?.name ?? "익명";
   const authorImage = author?.custom_image ?? author?.image ?? null;
 
