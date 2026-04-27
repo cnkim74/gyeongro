@@ -4,14 +4,23 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Globe, Check, ChevronDown } from "lucide-react";
 
+type LocaleCode = "ko" | "en" | "ja" | "zh";
+
 interface Props {
-  current: "ko" | "en";
+  current: LocaleCode;
   variant?: "light" | "dark";
 }
 
-const LOCALES: Array<{ code: "ko" | "en"; label: string; native: string; flag: string }> = [
+const LOCALES: Array<{
+  code: LocaleCode;
+  label: string;
+  native: string;
+  flag: string;
+}> = [
   { code: "ko", label: "Korean", native: "한국어", flag: "🇰🇷" },
   { code: "en", label: "English", native: "English", flag: "🇺🇸" },
+  { code: "ja", label: "Japanese", native: "日本語", flag: "🇯🇵" },
+  { code: "zh", label: "Chinese", native: "简体中文", flag: "🇨🇳" },
 ];
 
 export default function LanguageSwitcher({ current, variant = "dark" }: Props) {
@@ -19,7 +28,7 @@ export default function LanguageSwitcher({ current, variant = "dark" }: Props) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  const handleSelect = (locale: "ko" | "en") => {
+  const handleSelect = (locale: LocaleCode) => {
     setOpen(false);
     if (locale === current) return;
     startTransition(async () => {

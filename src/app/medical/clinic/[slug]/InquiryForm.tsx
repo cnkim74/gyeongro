@@ -3,13 +3,60 @@
 import { useState } from "react";
 import { Loader2, CheckCircle, AlertCircle, Send } from "lucide-react";
 
+interface InquiryLabels {
+  intro: string;
+  name: string;
+  email: string;
+  phone: string;
+  contactMethod: string;
+  contactEmail: string;
+  contactPhone: string;
+  contactKakao: string;
+  contactWhatsapp: string;
+  preferredDate: string;
+  budget: string;
+  notes: string;
+  notesPlaceholder: string;
+  submit: string;
+  successTitle: string;
+  successBody: string;
+  disclaimer: string;
+}
+
 interface Props {
   clinicId: string;
   clinicName: string;
   procedureSlug: string;
+  locale?: "ko" | "en" | "ja" | "zh";
+  labels?: InquiryLabels;
 }
 
-export default function InquiryForm({ clinicId, clinicName, procedureSlug }: Props) {
+const FALLBACK_LABELS: InquiryLabels = {
+  intro: "{name}에 대한 상담 요청입니다.",
+  name: "이름",
+  email: "이메일",
+  phone: "연락처 (선택)",
+  contactMethod: "선호하는 연락 방법",
+  contactEmail: "이메일",
+  contactPhone: "전화",
+  contactKakao: "카톡",
+  contactWhatsapp: "WhatsApp",
+  preferredDate: "희망 시기 (선택)",
+  budget: "예산 (만원, 선택)",
+  notes: "상담 내용",
+  notesPlaceholder: "시술 부위, 현재 상태, 이전 시술 이력, 궁금한 점 등을 적어주세요.",
+  submit: "상담 신청",
+  successTitle: "상담 신청이 접수됐어요",
+  successBody: "입력하신 연락처로 운영팀이 24~48시간 내 연락드립니다.",
+  disclaimer: "제출하시면 Pothos의 개인정보처리방침에 따라 입력 정보가 수집·활용됩니다.",
+};
+
+export default function InquiryForm({
+  clinicId,
+  clinicName,
+  procedureSlug,
+  labels = FALLBACK_LABELS,
+}: Props) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -67,34 +114,31 @@ export default function InquiryForm({ clinicId, clinicName, procedureSlug }: Pro
           <CheckCircle className="w-8 h-8" />
         </div>
         <h3 className="text-lg font-bold text-slate-900 mb-2">
-          상담 신청이 접수됐어요
+          {labels.successTitle}
         </h3>
         <p className="text-sm text-slate-600 leading-relaxed">
-          입력하신 연락처로 운영팀이 24~48시간 내 연락드립니다.
-          <br />
-          긴급한 경우 이메일로 직접 문의해주세요.
+          {labels.successBody}
         </p>
       </div>
     );
   }
 
+  const introText = labels.intro.replace("{name}", clinicName);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <p className="text-xs text-slate-500 leading-relaxed bg-slate-50 rounded-xl p-3">
-        <span className="font-semibold text-slate-700">{clinicName}</span>에
-        대한 상담 요청입니다. Pothos가 검토 후 클리닉 측에 전달하거나, 직접
-        연락처를 안내해드립니다.
+        {introText}
       </p>
 
       <div>
         <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-          이름 <span className="text-rose-500">*</span>
+          {labels.name} <span className="text-rose-500">*</span>
         </label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="홍길동"
           className="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-slate-900"
           required
         />
@@ -103,7 +147,7 @@ export default function InquiryForm({ clinicId, clinicName, procedureSlug }: Pro
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-            이메일 <span className="text-rose-500">*</span>
+            {labels.email} <span className="text-rose-500">*</span>
           </label>
           <input
             type="email"
@@ -116,7 +160,7 @@ export default function InquiryForm({ clinicId, clinicName, procedureSlug }: Pro
         </div>
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-            연락처 (선택)
+            {labels.phone}
           </label>
           <input
             type="tel"
@@ -130,14 +174,14 @@ export default function InquiryForm({ clinicId, clinicName, procedureSlug }: Pro
 
       <div>
         <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-          선호하는 연락 방법
+          {labels.contactMethod}
         </label>
         <div className="grid grid-cols-4 gap-2">
           {[
-            { id: "email", label: "이메일" },
-            { id: "phone", label: "전화" },
-            { id: "kakao", label: "카톡" },
-            { id: "whatsapp", label: "WhatsApp" },
+            { id: "email", label: labels.contactEmail },
+            { id: "phone", label: labels.contactPhone },
+            { id: "kakao", label: labels.contactKakao },
+            { id: "whatsapp", label: labels.contactWhatsapp },
           ].map((c) => (
             <button
               key={c.id}
@@ -158,7 +202,7 @@ export default function InquiryForm({ clinicId, clinicName, procedureSlug }: Pro
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-            희망 시기 (선택)
+            {labels.preferredDate}
           </label>
           <input
             type="date"
@@ -170,7 +214,7 @@ export default function InquiryForm({ clinicId, clinicName, procedureSlug }: Pro
         </div>
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-            예산 (만원, 선택)
+            {labels.budget}
           </label>
           <input
             type="number"
@@ -185,12 +229,12 @@ export default function InquiryForm({ clinicId, clinicName, procedureSlug }: Pro
 
       <div>
         <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-          상담 내용 <span className="text-rose-500">*</span>
+          {labels.notes} <span className="text-rose-500">*</span>
         </label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="시술 부위, 현재 상태, 이전 시술 이력, 궁금한 점 등을 적어주세요."
+          placeholder={labels.notesPlaceholder}
           rows={5}
           className="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-slate-900 resize-none"
           required
@@ -215,11 +259,11 @@ export default function InquiryForm({ clinicId, clinicName, procedureSlug }: Pro
         ) : (
           <Send className="w-4 h-4" />
         )}
-        상담 신청
+        {labels.submit}
       </button>
 
       <p className="text-[11px] text-slate-400 leading-relaxed text-center">
-        제출하시면 Pothos의 개인정보처리방침에 따라 입력 정보가 수집·활용됩니다.
+        {labels.disclaimer}
       </p>
     </form>
   );

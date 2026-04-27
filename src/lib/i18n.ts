@@ -10,13 +10,13 @@
 import { cookies } from "next/headers";
 import { messages, type MessageKey } from "@/messages";
 
-export type Locale = "ko" | "en";
-export const SUPPORTED_LOCALES: Locale[] = ["ko", "en"];
+export type Locale = "ko" | "en" | "ja" | "zh";
+export const SUPPORTED_LOCALES: Locale[] = ["ko", "en", "ja", "zh"];
 export const DEFAULT_LOCALE: Locale = "ko";
 export const LOCALE_COOKIE = "pothos_locale";
 
 export function isLocale(s: string | undefined | null): s is Locale {
-  return s === "ko" || s === "en";
+  return s === "ko" || s === "en" || s === "ja" || s === "zh";
 }
 
 /** 서버 컴포넌트에서 현재 locale 조회 */
@@ -36,15 +36,24 @@ export function createTranslator(locale: Locale) {
   };
 }
 
-/** DB 컬럼 폴백 헬퍼 — _en 우선, 없으면 한국어 */
+/** DB 컬럼 폴백 헬퍼 — locale 컬럼 → en → ko */
 export function pickLocalized<T extends Record<string, unknown>>(
   obj: T,
   baseField: string,
   locale: Locale
 ): string | null {
-  if (locale === "en") {
-    const en = obj[`${baseField}_en`] as string | null | undefined;
-    if (en && en.trim()) return en;
+  if (locale !== "ko") {
+    // locale 전용 컬럼 (예: name_ja, name_zh)
+    const localized = obj[`${baseField}_${locale}`] as string | null | undefined;
+    if (localized && localized.trim()) return localized;
+    // ja/zh는 영문으로 폴백 (ko 가 아닌 외국어 사용자에게 영문이 더 친숙)
+    if (locale !== "en") {
+      const en = obj[`${baseField}_en`] as string | null | undefined;
+      if (en && en.trim()) return en;
+    } else {
+      const en = obj[`${baseField}_en`] as string | null | undefined;
+      if (en && en.trim()) return en;
+    }
   }
   const ko = obj[baseField] as string | null | undefined;
   return ko ?? null;

@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getSupabaseServiceClient } from "@/lib/supabase";
+import { getLocale, createTranslator } from "@/lib/i18n";
+import type { MessageKey } from "@/messages";
 import {
   SPECIALTY_BY_ID,
   LANGUAGE_BY_CODE,
@@ -43,6 +45,8 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function SherpaDetailPage({ params }: PageProps) {
   const { slug } = await params;
+  const locale = await getLocale();
+  const t = createTranslator(locale);
   const supabase = getSupabaseServiceClient();
 
   const { data: sherpa } = await supabase
@@ -60,6 +64,15 @@ export default async function SherpaDetailPage({ params }: PageProps) {
     .update({ view_count: (sherpa.view_count ?? 0) + 1 })
     .eq("id", sherpa.id);
 
+  // Localized DB content
+  const tagline =
+    locale !== "ko" && sherpa.tagline_en ? sherpa.tagline_en : sherpa.tagline;
+  const bio = locale !== "ko" && sherpa.bio_en ? sherpa.bio_en : sherpa.bio;
+  const cities =
+    locale !== "ko" && sherpa.cities_en && sherpa.cities_en.length > 0
+      ? sherpa.cities_en
+      : sherpa.cities;
+
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <Header />
@@ -70,7 +83,7 @@ export default async function SherpaDetailPage({ params }: PageProps) {
             href="/sherpa"
             className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 mb-6"
           >
-            <ArrowLeft className="w-4 h-4" /> 셰르파 둘러보기
+            <ArrowLeft className="w-4 h-4" /> {t("sherpa.detail.back")}
           </Link>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -95,27 +108,25 @@ export default async function SherpaDetailPage({ params }: PageProps) {
                     <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
                       {sherpa.display_name}
                     </h1>
-                    {sherpa.tagline && (
-                      <p className="text-slate-600 mt-1">{sherpa.tagline}</p>
-                    )}
+                    {tagline && <p className="text-slate-600 mt-1">{tagline}</p>}
                     <div className="flex items-center gap-3 text-xs mt-3 flex-wrap">
                       {sherpa.rating_count > 0 && (
                         <span className="inline-flex items-center gap-0.5 font-semibold text-amber-600">
                           <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                           {Number(sherpa.rating_avg ?? 0).toFixed(2)}
                           <span className="text-slate-400 font-normal">
-                            ({sherpa.rating_count}개 후기)
+                            ({t("sherpa.detail.reviews").replace("{count}", String(sherpa.rating_count))})
                           </span>
                         </span>
                       )}
                       <span className="text-slate-500 inline-flex items-center gap-0.5">
                         <MessageCircle className="w-3 h-3" />
-                        {sherpa.booking_count}건 매칭
+                        {t("sherpa.detail.matches").replace("{count}", String(sherpa.booking_count))}
                       </span>
                       {sherpa.avg_response_hours != null && (
                         <span className="text-slate-500 inline-flex items-center gap-0.5">
                           <Clock className="w-3 h-3" />
-                          평균 {sherpa.avg_response_hours}시간 내 응답
+                          {t("sherpa.detail.response").replace("{hours}", String(sherpa.avg_response_hours))}
                         </span>
                       )}
                     </div>
@@ -128,13 +139,13 @@ export default async function SherpaDetailPage({ params }: PageProps) {
                     {sherpa.verified_id && (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold">
                         <ShieldCheck className="w-3 h-3" />
-                        신원 인증
+                        {t("sherpa.detail.verified_id")}
                       </span>
                     )}
                     {sherpa.verified_local && (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
                         <MapPin className="w-3 h-3" />
-                        현지 거주 확인
+                        {t("sherpa.detail.verified_local")}
                       </span>
                     )}
                   </div>
@@ -142,7 +153,7 @@ export default async function SherpaDetailPage({ params }: PageProps) {
 
                 {/* Bio */}
                 <div className="prose prose-sm max-w-none text-slate-700 leading-relaxed">
-                  {sherpa.bio.split("\n").map((p: string, i: number) => (
+                  {(bio ?? "").split("\n").map((p: string, i: number) => (
                     <p key={i} className="mb-3 last:mb-0">
                       {p}
                     </p>
@@ -154,10 +165,10 @@ export default async function SherpaDetailPage({ params }: PageProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 <div className="bg-white border border-slate-200 rounded-2xl p-5">
                   <h3 className="text-xs font-bold tracking-wider uppercase text-slate-500 mb-3">
-                    활동 지역
+                    {t("sherpa.detail.activity_area")}
                   </h3>
                   <div className="space-y-2">
-                    {sherpa.cities.map((city: string, i: number) => (
+                    {cities.map((city: string, i: number) => (
                       <div
                         key={i}
                         className="flex items-center gap-2 text-sm text-slate-700"
@@ -173,7 +184,7 @@ export default async function SherpaDetailPage({ params }: PageProps) {
 
                 <div className="bg-white border border-slate-200 rounded-2xl p-5">
                   <h3 className="text-xs font-bold tracking-wider uppercase text-slate-500 mb-3">
-                    구사 언어
+                    {t("sherpa.detail.languages")}
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {sherpa.languages.map((l: string) => {
@@ -195,10 +206,13 @@ export default async function SherpaDetailPage({ params }: PageProps) {
               {/* Specialties */}
               <div className="bg-white border border-slate-200 rounded-2xl p-5 mb-6">
                 <h3 className="text-xs font-bold tracking-wider uppercase text-slate-500 mb-3">
-                  전문 분야
+                  {t("sherpa.detail.specialties")}
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {sherpa.specialties.map((s: string) => {
+                    const specialtyLabel = t(
+                      `sherpa.specialty.${s}` as MessageKey
+                    );
                     const meta = SPECIALTY_BY_ID[s];
                     return (
                       <div
@@ -207,7 +221,7 @@ export default async function SherpaDetailPage({ params }: PageProps) {
                       >
                         <span className="text-lg">{meta?.emoji}</span>
                         <span className="text-xs font-semibold">
-                          {meta?.label ?? s}
+                          {specialtyLabel || meta?.label || s}
                         </span>
                       </div>
                     );
@@ -218,20 +232,22 @@ export default async function SherpaDetailPage({ params }: PageProps) {
               {/* Disclaimer */}
               <div className="text-xs text-slate-400 leading-relaxed bg-slate-50 rounded-2xl p-4 border border-slate-100">
                 <ShieldCheck className="w-4 h-4 inline mr-1 text-slate-500" />
-                Pothos 셰르파는 정식 관광통역안내사 자격증 소지자가 아닐 수 있습니다.
-                자격증이 필요한 유료 관광 안내(관광진흥법 제38조)를 원하시면 자격증 보유 셰르파를 선택하세요.
-                현재 MVP 단계로 결제는 셰르파와 직접 협의 후 진행됩니다.
+                {t("sherpa.detail.disclaimer")}
               </div>
             </div>
 
             {/* Right: pricing + booking */}
             <aside className="lg:sticky lg:top-24 h-fit space-y-4">
               <div className="bg-white border border-slate-200 rounded-2xl p-5">
-                <h3 className="text-sm font-bold text-slate-900 mb-3">가격</h3>
+                <h3 className="text-sm font-bold text-slate-900 mb-3">
+                  {t("sherpa.detail.pricing")}
+                </h3>
                 <div className="space-y-2 text-sm">
                   {sherpa.hourly_rate_krw && (
                     <div className="flex items-center justify-between">
-                      <span className="text-slate-600">시간당</span>
+                      <span className="text-slate-600">
+                        {t("sherpa.detail.pricing.hourly")}
+                      </span>
                       <span className="font-bold text-slate-900">
                         {formatRate(sherpa.hourly_rate_krw)}
                       </span>
@@ -239,7 +255,9 @@ export default async function SherpaDetailPage({ params }: PageProps) {
                   )}
                   {sherpa.half_day_rate_krw && (
                     <div className="flex items-center justify-between">
-                      <span className="text-slate-600">반나절 (4시간)</span>
+                      <span className="text-slate-600">
+                        {t("sherpa.detail.pricing.half_day")}
+                      </span>
                       <span className="font-bold text-slate-900">
                         {formatRate(sherpa.half_day_rate_krw)}
                       </span>
@@ -247,7 +265,9 @@ export default async function SherpaDetailPage({ params }: PageProps) {
                   )}
                   {sherpa.full_day_rate_krw && (
                     <div className="flex items-center justify-between">
-                      <span className="text-slate-600">종일 (8시간)</span>
+                      <span className="text-slate-600">
+                        {t("sherpa.detail.pricing.full_day")}
+                      </span>
                       <span className="font-bold text-slate-900">
                         {formatRate(sherpa.full_day_rate_krw)}
                       </span>
@@ -258,16 +278,38 @@ export default async function SherpaDetailPage({ params }: PageProps) {
 
               <div className="bg-white border border-slate-200 rounded-2xl p-5">
                 <h3 className="text-sm font-bold text-slate-900 mb-3">
-                  예약 요청
+                  {t("sherpa.detail.book.title")}
                 </h3>
                 <BookingForm
                   sherpaId={sherpa.id}
                   sherpaName={sherpa.display_name}
-                  defaultCity={sherpa.cities[0] ?? ""}
+                  defaultCity={cities[0] ?? ""}
                   hourly={sherpa.hourly_rate_krw}
                   halfDay={sherpa.half_day_rate_krw}
                   fullDay={sherpa.full_day_rate_krw}
                   languages={sherpa.languages}
+                  labels={{
+                    intro: t("book.intro"),
+                    city: t("book.field.city"),
+                    party: t("book.field.party"),
+                    start: t("book.field.start"),
+                    end: t("book.field.end"),
+                    duration: t("book.field.duration"),
+                    durationHourly: t("book.field.duration.hourly"),
+                    durationHalfDay: t("book.field.duration.half_day"),
+                    durationFullDay: t("book.field.duration.full_day"),
+                    durationMultiDay: t("book.field.duration.multi_day"),
+                    notes: t("book.field.notes"),
+                    notesPlaceholder: t("book.field.notes_placeholder"),
+                    name: t("book.field.name"),
+                    email: t("book.field.email"),
+                    phone: t("book.field.phone"),
+                    estimated: t("book.field.estimated"),
+                    submit: t("book.submit"),
+                    successTitle: t("book.success.title"),
+                    successBody: t("book.success.body"),
+                    disclaimer: t("book.disclaimer"),
+                  }}
                 />
               </div>
             </aside>

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getSupabaseServiceClient } from "@/lib/supabase";
+import { getLocale, createTranslator } from "@/lib/i18n";
 import {
   ArrowLeft,
   MapPin,
@@ -47,15 +48,34 @@ export async function generateMetadata({ params }: PageProps) {
   };
 }
 
-function formatPrice(min: number | null, max: number | null) {
-  if (!min && !max) return "문의";
-  const fmt = (n: number) => `${(n / 10000).toLocaleString("ko-KR")}만원`;
+function formatPrice(
+  min: number | null,
+  max: number | null,
+  locale: "ko" | "en" | "ja" | "zh"
+) {
+  if (!min && !max) {
+    return locale === "en"
+      ? "Inquire"
+      : locale === "ja"
+      ? "問合せ"
+      : locale === "zh"
+      ? "咨询"
+      : "문의";
+  }
+  const fmt = (n: number) => {
+    if (locale === "en") return `${(n / 1000).toLocaleString("en-US")}K KRW`;
+    if (locale === "ja") return `${(n / 10000).toLocaleString("ja-JP")}万ウォン`;
+    if (locale === "zh") return `${(n / 10000).toLocaleString("zh-CN")}万韩元`;
+    return `${(n / 10000).toLocaleString("ko-KR")}만원`;
+  };
   if (min && max && min !== max) return `${fmt(min)} ~ ${fmt(max)}`;
   return fmt(min ?? max ?? 0);
 }
 
 export default async function ClinicDetailPage({ params }: PageProps) {
   const { slug } = await params;
+  const locale = await getLocale();
+  const t = createTranslator(locale);
   const supabase = getSupabaseServiceClient();
 
   const { data: clinic } = await supabase
@@ -79,14 +99,36 @@ export default async function ClinicDetailPage({ params }: PageProps) {
     : [];
   const { data: procedures } = await supabase
     .from("medical_procedures")
-    .select("slug, name_ko, emoji")
+    .select("slug, name_ko, name_en, emoji")
     .in("slug", procedureSlugs.length > 0 ? procedureSlugs : [""]);
 
-  const sourceLabel: Record<string, string> = {
-    ai_curated: "AI 큐레이션",
-    user_submitted: "사용자 등록",
-    verified_partner: "인증 파트너",
+  const sourceLabel: Record<string, Record<string, string>> = {
+    ko: { ai_curated: "AI 큐레이션", user_submitted: "사용자 등록", verified_partner: "인증 파트너" },
+    en: { ai_curated: "AI curated", user_submitted: "User submitted", verified_partner: "Verified partner" },
+    ja: { ai_curated: "AIキュレーション", user_submitted: "ユーザー登録", verified_partner: "認証パートナー" },
+    zh: { ai_curated: "AI精选", user_submitted: "用户提交", verified_partner: "认证合作伙伴" },
   };
+
+  const clinicName =
+    locale === "en" && clinic.name_en
+      ? clinic.name_en
+      : locale !== "ko" && clinic.name_en
+      ? clinic.name_en
+      : clinic.name;
+  const clinicCity =
+    locale !== "ko" && clinic.city_en ? clinic.city_en : clinic.city;
+  const clinicDescription =
+    locale !== "ko" && clinic.description_en
+      ? clinic.description_en
+      : clinic.description;
+  const clinicHighlights =
+    locale !== "ko" && clinic.highlights_en && clinic.highlights_en.length > 0
+      ? clinic.highlights_en
+      : clinic.highlights;
+  const clinicSpecialties =
+    locale !== "ko" && clinic.specialties_en && clinic.specialties_en.length > 0
+      ? clinic.specialties_en
+      : clinic.specialties;
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -98,7 +140,7 @@ export default async function ClinicDetailPage({ params }: PageProps) {
             href="/medical"
             className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 mb-6"
           >
-            <ArrowLeft className="w-4 h-4" /> 의료관광 홈
+            <ArrowLeft className="w-4 h-4" /> {t("clinic.detail.back")}
           </Link>
 
           {/* Hero */}
@@ -111,12 +153,12 @@ export default async function ClinicDetailPage({ params }: PageProps) {
                 <div>
                   <p className="text-xs font-semibold tracking-wider text-slate-500 mb-0.5">
                     <MapPin className="w-3 h-3 inline mr-0.5" />
-                    {clinic.country} · {clinic.city}
+                    {clinic.country} · {clinicCity}
                   </p>
                   <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
-                    {clinic.name}
+                    {clinicName}
                   </h1>
-                  {clinic.name_en && (
+                  {locale === "ko" && clinic.name_en && (
                     <p className="text-sm text-slate-500 mt-1 italic">
                       {clinic.name_en}
                     </p>
@@ -136,30 +178,34 @@ export default async function ClinicDetailPage({ params }: PageProps) {
                 </span>
                 <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200">
                   <Sparkles className="w-3 h-3" />
-                  {sourceLabel[clinic.source] ?? clinic.source}
+                  {sourceLabel[locale]?.[clinic.source] ?? clinic.source}
                 </span>
               </div>
             </div>
 
-            {clinic.description && (
+            {clinicDescription && (
               <p className="text-slate-700 leading-relaxed mt-4">
-                {clinic.description}
+                {clinicDescription}
               </p>
             )}
 
             {/* Procedure tags */}
             {procedures && procedures.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-5">
-                {procedures.map((p) => (
-                  <Link
-                    key={p.slug}
-                    href={`/medical/${p.slug}`}
-                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white border border-slate-200 text-xs font-medium text-slate-700 hover:border-rose-300 transition-colors"
-                  >
-                    <span>{p.emoji}</span>
-                    {p.name_ko}
-                  </Link>
-                ))}
+                {procedures.map((p) => {
+                  const procName =
+                    locale !== "ko" && p.name_en ? p.name_en : p.name_ko;
+                  return (
+                    <Link
+                      key={p.slug}
+                      href={`/medical/${p.slug}`}
+                      className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white border border-slate-200 text-xs font-medium text-slate-700 hover:border-rose-300 transition-colors"
+                    >
+                      <span>{p.emoji}</span>
+                      {procName}
+                    </Link>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -168,13 +214,13 @@ export default async function ClinicDetailPage({ params }: PageProps) {
             {/* Left: details */}
             <div className="lg:col-span-2 space-y-8">
               {/* Highlights */}
-              {clinic.highlights && clinic.highlights.length > 0 && (
+              {clinicHighlights && clinicHighlights.length > 0 && (
                 <section>
                   <h2 className="text-lg font-bold text-slate-900 mb-4 tracking-tight">
-                    주요 특징
+                    {t("clinic.detail.highlights")}
                   </h2>
                   <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {clinic.highlights.map((h: string, i: number) => (
+                    {clinicHighlights.map((h: string, i: number) => (
                       <li
                         key={i}
                         className="flex items-start gap-2 text-sm text-slate-700 bg-slate-50 rounded-xl p-3"
@@ -188,13 +234,13 @@ export default async function ClinicDetailPage({ params }: PageProps) {
               )}
 
               {/* Specialties */}
-              {clinic.specialties && clinic.specialties.length > 0 && (
+              {clinicSpecialties && clinicSpecialties.length > 0 && (
                 <section>
                   <h2 className="text-lg font-bold text-slate-900 mb-4 tracking-tight">
-                    세부 시술
+                    {t("clinic.detail.specialties")}
                   </h2>
                   <div className="flex flex-wrap gap-2">
-                    {clinic.specialties.map((s: string, i: number) => (
+                    {clinicSpecialties.map((s: string, i: number) => (
                       <span
                         key={i}
                         className="px-3 py-1.5 rounded-full bg-rose-50 text-rose-700 text-xs font-medium"
@@ -209,15 +255,14 @@ export default async function ClinicDetailPage({ params }: PageProps) {
               {/* Price */}
               <section>
                 <h2 className="text-lg font-bold text-slate-900 mb-4 tracking-tight">
-                  가격대
+                  {t("clinic.detail.price")}
                 </h2>
                 <div className="bg-rose-50 rounded-2xl p-5">
                   <p className="text-2xl font-bold text-rose-700">
-                    {formatPrice(clinic.price_range_min, clinic.price_range_max)}
+                    {formatPrice(clinic.price_range_min, clinic.price_range_max, locale)}
                   </p>
                   <p className="text-xs text-slate-500 mt-1">
-                    시술 종류·옵션·환율에 따라 달라질 수 있습니다. 정확한
-                    견적은 클리닉 상담을 통해 확인하세요.
+                    {t("clinic.detail.price_note")}
                   </p>
                 </div>
               </section>
@@ -225,9 +270,7 @@ export default async function ClinicDetailPage({ params }: PageProps) {
               {/* Disclaimer */}
               <section className="text-xs text-slate-400 leading-relaxed bg-slate-50 rounded-2xl p-4 border border-slate-100">
                 <ShieldCheck className="w-4 h-4 inline mr-1 text-slate-500" />
-                Pothos는 정보 제공 목적의 큐레이션 미디어입니다. 의료행위·예약·결제를
-                직접 대행하지 않으며, 의료행위에 대한 책임은 해당 클리닉에 있습니다.
-                의료법 제27조(영리 알선·유인 금지)를 준수합니다.
+                {t("clinic.detail.disclaimer")}
               </section>
             </div>
 
@@ -238,7 +281,7 @@ export default async function ClinicDetailPage({ params }: PageProps) {
                 clinic.website_url) && (
                 <div className="bg-white rounded-2xl border border-slate-200 p-5">
                   <h3 className="text-sm font-bold text-slate-900 mb-3">
-                    클리닉 직접 연락처
+                    {t("clinic.detail.contact")}
                   </h3>
                   <ul className="space-y-2 text-sm">
                     {clinic.contact_phone && (
@@ -272,7 +315,7 @@ export default async function ClinicDetailPage({ params }: PageProps) {
                           className="flex items-center gap-2 text-slate-700 hover:text-rose-600"
                         >
                           <Globe className="w-4 h-4 text-slate-400" />
-                          공식 웹사이트
+                          {t("clinic.detail.website")}
                         </a>
                       </li>
                     )}
@@ -282,12 +325,32 @@ export default async function ClinicDetailPage({ params }: PageProps) {
 
               <div className="bg-white rounded-2xl border border-slate-200 p-5">
                 <h3 className="text-sm font-bold text-slate-900 mb-3">
-                  Pothos를 통해 상담 요청
+                  {t("clinic.detail.inquire.title")}
                 </h3>
                 <InquiryForm
                   clinicId={clinic.id}
-                  clinicName={clinic.name}
+                  clinicName={clinicName}
                   procedureSlug={procedureSlugs[0] ?? ""}
+                  locale={locale}
+                  labels={{
+                    intro: t("inquiry.intro"),
+                    name: t("inquiry.field.name"),
+                    email: t("inquiry.field.email"),
+                    phone: t("inquiry.field.phone"),
+                    contactMethod: t("inquiry.field.contact_method"),
+                    contactEmail: t("inquiry.field.contact.email"),
+                    contactPhone: t("inquiry.field.contact.phone"),
+                    contactKakao: t("inquiry.field.contact.kakao"),
+                    contactWhatsapp: t("inquiry.field.contact.whatsapp"),
+                    preferredDate: t("inquiry.field.preferred_date"),
+                    budget: t("inquiry.field.budget"),
+                    notes: t("inquiry.field.notes"),
+                    notesPlaceholder: t("inquiry.field.notes_placeholder"),
+                    submit: t("inquiry.submit"),
+                    successTitle: t("inquiry.success.title"),
+                    successBody: t("inquiry.success.body"),
+                    disclaimer: t("inquiry.disclaimer"),
+                  }}
                 />
               </div>
             </aside>

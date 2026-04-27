@@ -3,6 +3,29 @@
 import { useState, useMemo } from "react";
 import { Loader2, AlertCircle, CheckCircle, Send } from "lucide-react";
 
+interface BookingLabels {
+  intro: string;
+  city: string;
+  party: string;
+  start: string;
+  end: string;
+  duration: string;
+  durationHourly: string;
+  durationHalfDay: string;
+  durationFullDay: string;
+  durationMultiDay: string;
+  notes: string;
+  notesPlaceholder: string;
+  name: string;
+  email: string;
+  phone: string;
+  estimated: string;
+  submit: string;
+  successTitle: string;
+  successBody: string;
+  disclaimer: string;
+}
+
 interface Props {
   sherpaId: string;
   sherpaName: string;
@@ -11,9 +34,33 @@ interface Props {
   halfDay: number | null;
   fullDay: number | null;
   languages: string[];
+  labels?: BookingLabels;
 }
 
 type Duration = "hourly" | "half_day" | "full_day" | "multi_day";
+
+const FALLBACK_LABELS: BookingLabels = {
+  intro: "{name} 셰르파에게 직접 예약 요청을 보냅니다.",
+  city: "도시",
+  party: "인원",
+  start: "시작일",
+  end: "종료일",
+  duration: "이용 시간",
+  durationHourly: "시간제",
+  durationHalfDay: "반나절",
+  durationFullDay: "종일",
+  durationMultiDay: "다중일",
+  notes: "요청 사항",
+  notesPlaceholder: "어떤 도움이 필요한지, 관심사, 특이사항을 적어주세요.",
+  name: "이름",
+  email: "이메일",
+  phone: "연락처 (선택)",
+  estimated: "예상 비용",
+  submit: "예약 요청 보내기",
+  successTitle: "예약 요청이 전송됐어요",
+  successBody: "{name} 셰르파에게 요청이 전달됐습니다.",
+  disclaimer: "결제는 셰르파와 직접 협의 후 진행됩니다.",
+};
 
 export default function BookingForm({
   sherpaId,
@@ -22,6 +69,7 @@ export default function BookingForm({
   hourly,
   halfDay,
   fullDay,
+  labels = FALLBACK_LABELS,
 }: Props) {
   const [destinationCity, setDestinationCity] = useState(defaultCity);
   const [startDate, setStartDate] = useState(() => {
@@ -110,12 +158,10 @@ export default function BookingForm({
           <CheckCircle className="w-8 h-8" />
         </div>
         <h3 className="text-lg font-bold text-slate-900 mb-2">
-          예약 요청이 전송됐어요
+          {labels.successTitle}
         </h3>
         <p className="text-sm text-slate-600 leading-relaxed">
-          {sherpaName} 셰르파에게 요청이 전달됐습니다.
-          <br />
-          평균 응답 시간 내에 확인 후 회신드립니다.
+          {labels.successBody.replace("{name}", sherpaName)}
         </p>
       </div>
     );
@@ -126,7 +172,7 @@ export default function BookingForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1">
-            도시
+            {labels.city}
           </label>
           <input
             type="text"
@@ -138,7 +184,7 @@ export default function BookingForm({
         </div>
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1">
-            인원
+            {labels.party}
           </label>
           <div className="flex items-center gap-2">
             <button
@@ -165,7 +211,7 @@ export default function BookingForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1">
-            시작일
+            {labels.start}
           </label>
           <input
             type="date"
@@ -181,7 +227,7 @@ export default function BookingForm({
         </div>
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1">
-            종료일
+            {labels.end}
           </label>
           <input
             type="date"
@@ -196,14 +242,14 @@ export default function BookingForm({
 
       <div>
         <label className="block text-xs font-semibold text-slate-700 mb-2">
-          이용 시간
+          {labels.duration}
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {[
-            { id: "hourly", label: "시간제", price: hourly, suffix: "/시간" },
-            { id: "half_day", label: "반나절", price: halfDay, suffix: "(4h)" },
-            { id: "full_day", label: "종일", price: fullDay, suffix: "(8h)" },
-            { id: "multi_day", label: "다중일", price: fullDay, suffix: "/일" },
+            { id: "hourly", label: labels.durationHourly, price: hourly, suffix: "/h" },
+            { id: "half_day", label: labels.durationHalfDay, price: halfDay, suffix: "(4h)" },
+            { id: "full_day", label: labels.durationFullDay, price: fullDay, suffix: "(8h)" },
+            { id: "multi_day", label: labels.durationMultiDay, price: fullDay, suffix: "/d" },
           ].map((d) => (
             <button
               key={d.id}
@@ -227,7 +273,6 @@ export default function BookingForm({
         </div>
         {duration === "hourly" && (
           <div className="mt-2 flex items-center gap-2">
-            <span className="text-xs text-slate-600">시간:</span>
             {[2, 3, 4, 6].map((h) => (
               <button
                 key={h}
@@ -239,7 +284,7 @@ export default function BookingForm({
                     : "bg-slate-100 text-slate-600"
                 }`}
               >
-                {h}시간
+                {h}h
               </button>
             ))}
           </div>
@@ -248,12 +293,12 @@ export default function BookingForm({
 
       <div>
         <label className="block text-xs font-semibold text-slate-700 mb-1">
-          요청 사항 <span className="text-rose-500">*</span>
+          {labels.notes} <span className="text-rose-500">*</span>
         </label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="어떤 도움이 필요한지, 관심사, 특이사항을 적어주세요."
+          placeholder={labels.notesPlaceholder}
           rows={4}
           className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none text-slate-900 text-sm resize-none"
           required
@@ -264,7 +309,7 @@ export default function BookingForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1">
-            이름 <span className="text-rose-500">*</span>
+            {labels.name} <span className="text-rose-500">*</span>
           </label>
           <input
             type="text"
@@ -276,7 +321,7 @@ export default function BookingForm({
         </div>
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1">
-            이메일 <span className="text-rose-500">*</span>
+            {labels.email} <span className="text-rose-500">*</span>
           </label>
           <input
             type="email"
@@ -290,7 +335,7 @@ export default function BookingForm({
 
       <div>
         <label className="block text-xs font-semibold text-slate-700 mb-1">
-          연락처 (선택)
+          {labels.phone}
         </label>
         <input
           type="tel"
@@ -304,9 +349,9 @@ export default function BookingForm({
       {/* Estimated price */}
       {estimatedPrice > 0 && (
         <div className="bg-emerald-50 rounded-xl p-3 flex items-center justify-between">
-          <span className="text-xs text-slate-600">예상 비용</span>
+          <span className="text-xs text-slate-600">{labels.estimated}</span>
           <span className="text-lg font-bold text-emerald-700">
-            {estimatedPrice.toLocaleString("ko-KR")}원
+            {estimatedPrice.toLocaleString("ko-KR")} KRW
           </span>
         </div>
       )}
@@ -328,11 +373,11 @@ export default function BookingForm({
         ) : (
           <Send className="w-4 h-4" />
         )}
-        예약 요청 보내기
+        {labels.submit}
       </button>
 
       <p className="text-[11px] text-slate-400 text-center leading-relaxed">
-        결제는 셰르파와 직접 협의 후 진행됩니다. (현재 MVP — 추후 안전결제 도입 예정)
+        {labels.disclaimer}
       </p>
     </form>
   );

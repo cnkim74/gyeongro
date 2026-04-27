@@ -249,7 +249,7 @@ function ClinicGrid({
   emptyText,
 }: {
   clinics: Clinic[];
-  locale: "ko" | "en";
+  locale: "ko" | "en" | "ja" | "zh";
   emptyText: string;
 }) {
   if (clinics.length === 0) {
@@ -262,10 +262,10 @@ function ClinicGrid({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {clinics.map((c) => {
-        const cityLabel = locale === "en" && c.city_en ? c.city_en : c.city;
-        const nameLabel = locale === "en" && c.name_en ? c.name_en : c.name;
+        const cityLabel = locale !== "ko" && c.city_en ? c.city_en : c.city;
+        const nameLabel = locale !== "ko" && c.name_en ? c.name_en : c.name;
         const highlights =
-          locale === "en" && c.highlights_en && c.highlights_en.length > 0
+          locale !== "ko" && c.highlights_en && c.highlights_en.length > 0
             ? c.highlights_en
             : c.highlights;
         return (

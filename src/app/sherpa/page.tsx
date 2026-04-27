@@ -197,12 +197,12 @@ function SherpaCard({
   locale,
 }: {
   sherpa: SherpaListItem & { tagline_en?: string | null; cities_en?: string[] | null };
-  locale: "ko" | "en";
+  locale: "ko" | "en" | "ja" | "zh";
 }) {
   const tagline =
-    locale === "en" && sherpa.tagline_en ? sherpa.tagline_en : sherpa.tagline;
+    locale !== "ko" && sherpa.tagline_en ? sherpa.tagline_en : sherpa.tagline;
   const cities =
-    locale === "en" && sherpa.cities_en && sherpa.cities_en.length > 0
+    locale !== "ko" && sherpa.cities_en && sherpa.cities_en.length > 0
       ? sherpa.cities_en
       : sherpa.cities;
   return (
