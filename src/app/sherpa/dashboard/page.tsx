@@ -20,6 +20,7 @@ import {
 import DashboardTabs from "./DashboardTabs";
 import BookingActions from "./BookingActions";
 import ProfileEditor from "./ProfileEditor";
+import ReplyForm from "./ReplyForm";
 import { formatRate } from "@/lib/sherpa";
 
 export const metadata = {
@@ -95,6 +96,36 @@ export default async function SherpaDashboardPage() {
   const proposals = (proposalsRaw ?? []) as any[];
   const allBookings = bookings ?? [];
 
+  // 받은 후기
+  const { data: reviewsRaw } = await supabase
+    .from("sherpa_reviews")
+    .select("id, rating, comment, sherpa_reply, sherpa_replied_at, created_at, client_id, status")
+    .eq("sherpa_id", sherpa.id)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  const reviewClientIds = (reviewsRaw ?? [])
+    .map((r) => r.client_id)
+    .filter((v): v is string => !!v);
+  let reviewClientMap: Record<string, string> = {};
+  if (reviewClientIds.length > 0) {
+    const { data: users } = await supabase
+      .schema("next_auth")
+      .from("users")
+      .select("id, nickname, name")
+      .in("id", reviewClientIds);
+    reviewClientMap = Object.fromEntries(
+      (users ?? []).map((u) => [u.id, u.nickname ?? u.name ?? "익명 여행자"])
+    );
+  }
+  const reviews = (reviewsRaw ?? []).map((r) => ({
+    ...r,
+    client_name: r.client_id ? reviewClientMap[r.client_id] ?? null : null,
+  }));
+  const pendingReplies = reviews.filter(
+    (r) => !r.sherpa_reply && r.status === "visible"
+  ).length;
+
   const pendingBookings = allBookings.filter((b) => b.status === "pending").length;
   const pendingProposals = proposals.filter((p) => p.status === "pending").length;
 
@@ -158,6 +189,7 @@ export default async function SherpaDashboardPage() {
           <DashboardTabs
             bookingCount={pendingBookings}
             proposalCount={pendingProposals}
+            reviewCount={pendingReplies}
             stats={
               <StatsView
                 rating={Number(sherpa.rating_avg ?? 0)}
@@ -173,6 +205,7 @@ export default async function SherpaDashboardPage() {
             }
             bookings={<BookingsView bookings={allBookings} />}
             proposals={<ProposalsView proposals={proposals} />}
+            reviews={<ReviewsView reviews={reviews} />}
             profile={<ProfileEditor sherpa={sherpa} />}
           />
         </div>
@@ -465,6 +498,80 @@ function ProposalsView({
           <p className="text-sm text-slate-700 leading-relaxed line-clamp-3 whitespace-pre-line">
             {p.message}
           </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ReviewsView({
+  reviews,
+}: {
+  reviews: Array<{
+    id: string;
+    rating: number;
+    comment: string;
+    sherpa_reply: string | null;
+    sherpa_replied_at: string | null;
+    created_at: string;
+    client_name: string | null;
+    status: string;
+  }>;
+}) {
+  if (reviews.length === 0) {
+    return (
+      <EmptyState
+        title="아직 받은 후기가 없어요"
+        sub="첫 매칭이 완료되면 여행자가 후기를 남길 수 있어요."
+      />
+    );
+  }
+  return (
+    <div className="space-y-3">
+      {reviews.map((r) => (
+        <div
+          key={r.id}
+          className="bg-white border border-slate-200 rounded-2xl p-5"
+        >
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <div className="inline-flex">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <Star
+                    key={n}
+                    className={`w-4 h-4 ${
+                      r.rating >= n
+                        ? "fill-amber-400 text-amber-400"
+                        : "text-slate-200"
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-sm font-semibold text-slate-700">
+                {r.client_name ?? "익명 여행자"}
+              </span>
+            </div>
+            <span className="text-xs text-slate-400">
+              {new Date(r.created_at).toLocaleDateString("ko-KR")}
+            </span>
+          </div>
+
+          <p className="text-sm text-slate-700 leading-relaxed mb-2 whitespace-pre-line">
+            {r.comment}
+          </p>
+
+          {r.sherpa_reply ? (
+            <div className="mt-3 pl-3 border-l-2 border-emerald-200 bg-emerald-50/40 rounded-r-xl p-3">
+              <p className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider mb-1">
+                나의 답글
+              </p>
+              <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-line">
+                {r.sherpa_reply}
+              </p>
+            </div>
+          ) : (
+            <ReplyForm reviewId={r.id} />
+          )}
         </div>
       ))}
     </div>

@@ -11,6 +11,7 @@ import {
   COUNTRY_FLAGS,
   formatRate,
 } from "@/lib/sherpa";
+import ReviewsList, { type Review } from "@/components/ReviewsList";
 import {
   ArrowLeft,
   Star,
@@ -72,6 +73,45 @@ export default async function SherpaDetailPage({ params }: PageProps) {
     locale !== "ko" && sherpa.cities_en && sherpa.cities_en.length > 0
       ? sherpa.cities_en
       : sherpa.cities;
+
+  // 후기 목록 (visible)
+  const { data: reviewsRaw } = await supabase
+    .from("sherpa_reviews")
+    .select(
+      "id, rating, comment, sherpa_reply, sherpa_replied_at, created_at, client_id"
+    )
+    .eq("sherpa_id", sherpa.id)
+    .eq("status", "visible")
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  // 작성자 닉네임 매핑
+  const clientIds = (reviewsRaw ?? [])
+    .map((r) => r.client_id)
+    .filter((v): v is string => !!v);
+  let clientNameMap: Record<string, string> = {};
+  if (clientIds.length > 0) {
+    const { data: users } = await supabase
+      .schema("next_auth")
+      .from("users")
+      .select("id, nickname, name")
+      .in("id", clientIds);
+    clientNameMap = Object.fromEntries(
+      (users ?? []).map((u) => [
+        u.id,
+        u.nickname ?? u.name ?? "익명 여행자",
+      ])
+    );
+  }
+  const reviews: Review[] = (reviewsRaw ?? []).map((r) => ({
+    id: r.id,
+    rating: r.rating,
+    comment: r.comment,
+    sherpa_reply: r.sherpa_reply,
+    sherpa_replied_at: r.sherpa_replied_at,
+    created_at: r.created_at,
+    client_name: r.client_id ? clientNameMap[r.client_id] ?? null : null,
+  }));
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -228,6 +268,18 @@ export default async function SherpaDetailPage({ params }: PageProps) {
                   })}
                 </div>
               </div>
+
+              {/* Reviews */}
+              <section>
+                <h2 className="text-lg font-bold text-slate-900 mb-4 tracking-tight">
+                  후기 {sherpa.rating_count > 0 ? `(${sherpa.rating_count})` : ""}
+                </h2>
+                <ReviewsList
+                  reviews={reviews}
+                  averageRating={sherpa.rating_avg}
+                  totalCount={sherpa.rating_count}
+                />
+              </section>
 
               {/* Disclaimer */}
               <div className="text-xs text-slate-400 leading-relaxed bg-slate-50 rounded-2xl p-4 border border-slate-100">

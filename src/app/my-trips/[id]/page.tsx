@@ -8,7 +8,8 @@ import TravelEssentials from "@/components/TravelEssentials";
 import SherpaMatchingPanel, {
   type ProposalItem,
 } from "@/components/SherpaMatchingPanel";
-import { ArrowLeft } from "lucide-react";
+import ReviewForm from "@/components/ReviewForm";
+import { ArrowLeft, Star } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +63,18 @@ export default async function TripDetailPage({
     },
   }));
 
+  // 수락된 제안이 있으면 후기 작성 가능 여부 체크
+  const acceptedProposal = proposals.find((p) => p.status === "accepted");
+  let canReviewSherpa = false;
+  if (acceptedProposal) {
+    const { data: existing } = await supabase
+      .from("sherpa_reviews")
+      .select("id")
+      .eq("proposal_id", acceptedProposal.id)
+      .maybeSingle();
+    canReviewSherpa = !existing;
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Header />
@@ -83,6 +96,30 @@ export default async function TripDetailPage({
             initialBudgetMax={trip.sherpa_budget_max_krw ?? null}
             proposals={proposals}
           />
+
+          {acceptedProposal && canReviewSherpa && (
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-3xl p-6 mb-8">
+              <div className="flex items-center gap-2 mb-1">
+                <Star className="w-5 h-5 text-amber-500 fill-amber-400" />
+                <h3 className="text-lg font-bold text-slate-900">
+                  매칭 후기 남기기
+                </h3>
+              </div>
+              <p className="text-sm text-slate-600 mb-5">
+                <span className="font-semibold">
+                  {acceptedProposal.sherpa.display_name}
+                </span>{" "}
+                셰르파와의 경험은 어땠나요? 다른 여행자에게 큰 도움이 됩니다.
+              </p>
+              <div className="bg-white rounded-2xl p-5">
+                <ReviewForm
+                  sherpaId={acceptedProposal.sherpa.id}
+                  sherpaName={acceptedProposal.sherpa.display_name}
+                  proposalId={acceptedProposal.id}
+                />
+              </div>
+            </div>
+          )}
 
           <ItineraryView itinerary={trip.itinerary} destination={trip.destination} />
           <TravelEssentials />

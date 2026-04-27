@@ -1,21 +1,24 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { LayoutDashboard, Inbox, Send, UserCog } from "lucide-react";
+import { LayoutDashboard, Inbox, Send, UserCog, Star } from "lucide-react";
 
 interface Props {
   stats: ReactNode;
   bookings: ReactNode;
   proposals: ReactNode;
+  reviews: ReactNode;
   profile: ReactNode;
   bookingCount: number;
   proposalCount: number;
+  reviewCount: number;
 }
 
 const TABS = [
   { id: "stats", label: "통계", icon: LayoutDashboard },
   { id: "bookings", label: "받은 예약", icon: Inbox },
   { id: "proposals", label: "내 제안", icon: Send },
+  { id: "reviews", label: "후기", icon: Star },
   { id: "profile", label: "프로필", icon: UserCog },
 ] as const;
 
@@ -25,9 +28,11 @@ export default function DashboardTabs({
   stats,
   bookings,
   proposals,
+  reviews,
   profile,
   bookingCount,
   proposalCount,
+  reviewCount,
 }: Props) {
   const [active, setActive] = useState<TabId>("stats");
 
@@ -42,6 +47,8 @@ export default function DashboardTabs({
               ? bookingCount
               : tab.id === "proposals"
               ? proposalCount
+              : tab.id === "reviews"
+              ? reviewCount
               : null;
           return (
             <button
@@ -75,6 +82,7 @@ export default function DashboardTabs({
         {active === "stats" && stats}
         {active === "bookings" && bookings}
         {active === "proposals" && proposals}
+        {active === "reviews" && reviews}
         {active === "profile" && profile}
       </div>
     </div>
