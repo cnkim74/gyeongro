@@ -5,6 +5,8 @@
 
 import { requireAdmin } from "@/lib/admin";
 import { getSupabaseServiceClient } from "@/lib/supabase";
+import { sendEmail } from "@/lib/email";
+import { clinicApprovedEmail, clinicRejectedEmail } from "@/lib/email-templates";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -47,5 +49,51 @@ export async function PATCH(
   if (error) {
     return Response.json({ error: "처리 중 오류" }, { status: 500 });
   }
+
+  // 이메일 알림 (publish/reject 만)
+  if (nextStatus === "published" || nextStatus === "rejected") {
+    void notifyClinic(id, nextStatus, body.reason ?? null);
+  }
+
   return Response.json({ ok: true, status: nextStatus });
+}
+
+async function notifyClinic(
+  clinicId: string,
+  status: "published" | "rejected",
+  reason: string | null
+) {
+  try {
+    const supabase = getSupabaseServiceClient();
+    const { data: clinic } = await supabase
+      .from("medical_clinics")
+      .select("name, slug, contact_email, submitted_by, source")
+      .eq("id", clinicId)
+      .maybeSingle();
+    if (!clinic) return;
+    // AI 큐레이션은 등록자가 관리자 자신이라 알림 불필요
+    if (clinic.source === "ai_curated") return;
+
+    // 1순위: 클리닉 contact_email, 2순위: 등록한 사용자의 이메일
+    let to = clinic.contact_email as string | null;
+    if (!to && clinic.submitted_by) {
+      const { data: user } = await supabase
+        .schema("next_auth")
+        .from("users")
+        .select("email")
+        .eq("id", clinic.submitted_by)
+        .maybeSingle();
+      to = user?.email ?? null;
+    }
+    if (!to) return;
+
+    const tpl =
+      status === "published"
+        ? clinicApprovedEmail({ clinicName: clinic.name, slug: clinic.slug })
+        : clinicRejectedEmail({ clinicName: clinic.name, reason });
+
+    await sendEmail({ to, subject: tpl.subject, html: tpl.html });
+  } catch (err) {
+    console.error("[notifyClinic] failed:", err);
+  }
 }
