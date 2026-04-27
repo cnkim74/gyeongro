@@ -10,6 +10,7 @@ import {
   Filter,
 } from "lucide-react";
 import ReviewActions from "./ReviewActions";
+import CurateButton from "./CurateButton";
 
 export const metadata = {
   title: "의료관광 클리닉 관리 - Admin",
@@ -63,15 +64,26 @@ export default async function AdminClinicsPage({
     .eq("status", activeStatus)
     .order("created_at", { ascending: false });
 
+  // CurateButton에 시술 옵션 전달용
+  const { data: procedures } = await supabase
+    .from("medical_procedures")
+    .select("slug, name_ko, emoji")
+    .order("display_order");
+
   return (
     <div className="p-6 lg:p-8 max-w-7xl">
-      <div className="flex items-center gap-2 mb-1">
-        <HeartPulse className="w-5 h-5 text-rose-500" />
-        <h1 className="text-2xl font-bold text-slate-900">의료관광 클리닉</h1>
+      <div className="flex items-start justify-between gap-4 flex-wrap mb-6">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <HeartPulse className="w-5 h-5 text-rose-500" />
+            <h1 className="text-2xl font-bold text-slate-900">의료관광 클리닉</h1>
+          </div>
+          <p className="text-sm text-slate-500">
+            사용자 등록 신청 검수 + AI 큐레이션 데이터 관리
+          </p>
+        </div>
+        <CurateButton procedures={procedures ?? []} />
       </div>
-      <p className="text-sm text-slate-500 mb-6">
-        사용자 등록 신청 검수 + AI 큐레이션 데이터 관리
-      </p>
 
       {/* Status tabs */}
       <div className="flex gap-2 mb-6 overflow-x-auto">

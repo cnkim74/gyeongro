@@ -14,6 +14,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import ReviewActions from "./ReviewActions";
+import CurateButton from "./CurateButton";
 
 export const metadata = {
   title: "셰르파 관리 - Admin",
@@ -63,13 +64,18 @@ export default async function AdminSherpasPage({
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl">
-      <div className="flex items-center gap-2 mb-1">
-        <Mountain className="w-5 h-5 text-emerald-500" />
-        <h1 className="text-2xl font-bold text-slate-900">셰르파</h1>
+      <div className="flex items-start justify-between gap-4 flex-wrap mb-6">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Mountain className="w-5 h-5 text-emerald-500" />
+            <h1 className="text-2xl font-bold text-slate-900">셰르파</h1>
+          </div>
+          <p className="text-sm text-slate-500">
+            등록 신청 검수 + 활동중 셰르파 관리
+          </p>
+        </div>
+        <CurateButton />
       </div>
-      <p className="text-sm text-slate-500 mb-6">
-        등록 신청 검수 + 활동중 셰르파 관리
-      </p>
 
       <div className="flex gap-2 mb-6 overflow-x-auto">
         {STATUS_TABS.map((tab) => {
