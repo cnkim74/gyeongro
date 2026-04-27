@@ -12,11 +12,17 @@ import {
   Home,
   ShoppingBag,
   Layers,
+  HeartPulse,
+  Mountain,
+  MessagesSquare,
 } from "lucide-react";
 
 const MENU = [
   { href: "/admin", label: "대시보드", icon: LayoutDashboard },
   { href: "/admin/users", label: "사용자 관리", icon: Users },
+  { href: "/admin/sherpas", label: "셰르파 검수", icon: Mountain },
+  { href: "/admin/medical/clinics", label: "클리닉 검수", icon: HeartPulse },
+  { href: "/admin/medical/inquiries", label: "의료 상담 요청", icon: MessagesSquare },
   { href: "/admin/boards", label: "게시판 관리", icon: Layers },
   { href: "/admin/posts", label: "게시글 관리", icon: MessageSquare },
   { href: "/admin/trips", label: "여행 계획", icon: Map },
