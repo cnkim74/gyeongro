@@ -10,7 +10,6 @@ import {
   Info,
   Calendar as CalendarIcon,
   Download,
-  ExternalLink,
   Cloud,
   Loader2,
   Shield,
@@ -421,32 +420,37 @@ export default function TravelAdvisory({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <button
-            onClick={handleDownloadICS}
-            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition-colors"
-          >
-            <Download className="w-4 h-4" />
-            iCalendar (.ics) 다운로드
-          </button>
-          <button
-            onClick={handleGoogleCalendar}
-            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors"
-          >
-            <ExternalLink className="w-4 h-4" />
-            Google 캘린더로 등록
-          </button>
-        </div>
+        <button
+          onClick={handleGoogleCalendar}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-base font-bold hover:shadow-xl hover:shadow-blue-500/25 hover:-translate-y-0.5 transition-all"
+        >
+          <CalendarIcon className="w-5 h-5" />
+          내 캘린더에 추가
+        </button>
 
-        <div className="mt-4 pt-4 border-t border-slate-100 text-[11px] text-slate-500 leading-relaxed">
-          <p>
-            💡 <span className="font-semibold">.ics 파일</span>은 Apple
-            캘린더·Outlook·삼성 캘린더에서 모두 열립니다.
-            <br />
-            안드로이드는 다운로드한 .ics 파일을 열면 Google 캘린더가 자동으로
-            실행됩니다.
-          </p>
-        </div>
+        <p className="mt-2.5 text-[11px] text-slate-500 text-center">
+          버튼을 누르면 캘린더 이벤트 작성창이 열려요. 저장 한 번이면 끝!
+        </p>
+
+        <details className="mt-4 pt-4 border-t border-slate-100 group">
+          <summary className="text-xs text-slate-500 cursor-pointer hover:text-slate-700 inline-flex items-center gap-1 list-none">
+            <Download className="w-3 h-3" />
+            다른 캘린더 사용? (Apple · Outlook · 삼성)
+          </summary>
+          <div className="mt-3">
+            <button
+              onClick={handleDownloadICS}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              iCalendar (.ics) 파일 다운로드
+            </button>
+            <p className="mt-2 text-[11px] text-slate-400 leading-relaxed">
+              파일을 열면 Apple 캘린더·Outlook·삼성 캘린더에서 자동으로 일정이
+              추가됩니다.
+            </p>
+          </div>
+        </details>
       </div>
     </div>
   );
