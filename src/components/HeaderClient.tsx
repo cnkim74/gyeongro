@@ -7,6 +7,7 @@ import { Menu, X } from "lucide-react";
 import { LogoMark } from "./Logo";
 import UserMenu from "./UserMenu";
 import LanguageSwitcher from "./LanguageSwitcher";
+import SearchBar from "./SearchBar";
 
 import type { UserRole } from "@/lib/admin";
 import type { Locale } from "@/lib/i18n";
@@ -93,6 +94,7 @@ export default function HeaderClient({ user, locale, labels }: HeaderClientProps
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
+            <SearchBar variant={useDarkBg ? "dark" : "light"} />
             <LanguageSwitcher
               current={locale}
               variant={useDarkBg ? "dark" : "light"}
