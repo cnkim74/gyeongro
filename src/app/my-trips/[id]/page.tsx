@@ -5,6 +5,9 @@ import { getSupabaseServiceClient } from "@/lib/supabase";
 import Header from "@/components/Header";
 import ItineraryView from "@/components/ItineraryView";
 import TravelEssentials from "@/components/TravelEssentials";
+import SherpaMatchingPanel, {
+  type ProposalItem,
+} from "@/components/SherpaMatchingPanel";
 import { ArrowLeft } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +31,37 @@ export default async function TripDetailPage({
 
   if (error || !trip) notFound();
 
+  // 셰르파 제안들 (조인)
+  const { data: proposalsRaw } = await supabase
+    .from("sherpa_proposals")
+    .select(
+      "id, proposed_price_krw, proposed_scope, message, status, created_at, sherpas(id, slug, display_name, tagline, avatar_url, rating_avg, rating_count, booking_count, languages, specialties)"
+    )
+    .eq("trip_id", id)
+    .order("created_at", { ascending: false });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const proposals: ProposalItem[] = (proposalsRaw ?? []).map((p: any) => ({
+    id: p.id,
+    proposed_price_krw: p.proposed_price_krw,
+    proposed_scope: p.proposed_scope,
+    message: p.message,
+    status: p.status,
+    created_at: p.created_at,
+    sherpa: {
+      id: p.sherpas?.id ?? "",
+      slug: p.sherpas?.slug ?? "",
+      display_name: p.sherpas?.display_name ?? "셰르파",
+      tagline: p.sherpas?.tagline ?? null,
+      avatar_url: p.sherpas?.avatar_url ?? null,
+      rating_avg: p.sherpas?.rating_avg ?? null,
+      rating_count: p.sherpas?.rating_count ?? 0,
+      booking_count: p.sherpas?.booking_count ?? 0,
+      languages: p.sherpas?.languages ?? [],
+      specialties: p.sherpas?.specialties ?? [],
+    },
+  }));
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Header />
@@ -39,6 +73,17 @@ export default async function TripDetailPage({
           >
             <ArrowLeft className="w-4 h-4" />내 여행 목록으로
           </Link>
+
+          <SherpaMatchingPanel
+            tripId={trip.id}
+            initialSeeking={!!trip.seeking_sherpa}
+            initialNotes={trip.sherpa_request_notes ?? null}
+            initialLanguages={trip.sherpa_required_languages ?? []}
+            initialSpecialties={trip.sherpa_required_specialties ?? []}
+            initialBudgetMax={trip.sherpa_budget_max_krw ?? null}
+            proposals={proposals}
+          />
+
           <ItineraryView itinerary={trip.itinerary} destination={trip.destination} />
           <TravelEssentials />
         </div>

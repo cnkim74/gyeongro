@@ -116,7 +116,7 @@ export default async function SherpaHubPage({
       {/* List */}
       <section className="py-14 bg-white">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
             <p className="text-sm text-slate-500">
               {sherpas.length}명의 셰르파
               {params.specialty &&
@@ -124,13 +124,22 @@ export default async function SherpaHubPage({
               {params.language &&
                 ` · ${LANGUAGE_BY_CODE[params.language]?.label ?? params.language}`}
             </p>
-            <Link
-              href="/sherpa/become"
-              className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 inline-flex items-center gap-1"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              셰르파로 등록하기
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/sherpa/open-trips"
+                className="text-sm font-semibold text-slate-600 hover:text-emerald-600 inline-flex items-center gap-1"
+              >
+                <Mountain className="w-3.5 h-3.5" />
+                공개된 여행 둘러보기
+              </Link>
+              <Link
+                href="/sherpa/become"
+                className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 inline-flex items-center gap-1"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                셰르파로 등록
+              </Link>
+            </div>
           </div>
 
           {sherpas.length === 0 ? (
