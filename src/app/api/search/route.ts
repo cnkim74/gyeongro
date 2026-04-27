@@ -1,185 +1,54 @@
-// 통합 검색 — 셰르파 + 의료 클리닉 + 큐레이티드 테마
+// 통합 검색 API — 셰르파 + 의료 클리닉 + 큐레이티드 테마
 //
-// GET /api/search?q=검색어&limit=8
-//   -> { query, sherpas, clinics, themes }
-//
-// 매칭: ILIKE %q% (간단한 부분 문자열 매치, MVP)
-// locale별 컬럼(name_en/description_en 등)도 함께 검색
+// GET /api/search
+//   q          검색어 (1자 이상)
+//   type       all | sherpa | clinic | theme   (기본 all)
+//   country    KR,JP   (콤마)
+//   city       Seoul
+//   language   ko,en   (셰르파)
+//   specialty  city_guide,food_tour
+//   direction  inbound | outbound     (클리닉)
+//   category   string                 (테마)
+//   minPrice / maxPrice   int (KRW, 셰르파 hourly_rate_krw)
+//   minRating  number 0~5             (셰르파)
+//   sort       relevance | rating | price_asc | price_desc | newest
+//   page       1-based, 기본 1
+//   pageSize   기본 12, 최대 24
+//   suggest    1 → 자동완성 모드 (각 타입별 4개)
 
-import { getSupabaseServiceClient } from "@/lib/supabase";
+import { performSearch, type SearchType, type SortKey } from "@/lib/search";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-interface SherpaResult {
-  type: "sherpa";
-  slug: string;
-  display_name: string;
-  tagline: string | null;
-  countries: string[];
-  cities: string[];
-  languages: string[];
-  specialties: string[];
-  rating_avg: number | null;
-  rating_count: number;
-  avatar_url: string | null;
-}
-
-interface ClinicResult {
-  type: "clinic";
-  slug: string;
-  name: string;
-  name_en: string | null;
-  city: string;
-  country: string;
-  direction: "inbound" | "outbound";
-  description: string | null;
-  specialties: string[] | null;
-}
-
-interface ThemeResult {
-  type: "theme";
-  slug: string;
-  title: string;
-  subtitle: string | null;
-  destination: string | null;
-  category: string;
-  cover_image_url: string | null;
+function parseList(raw: string | null): string[] {
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const q = (url.searchParams.get("q") ?? "").trim();
-  const limit = Math.min(20, Math.max(1, Number(url.searchParams.get("limit") ?? 8)));
-
-  if (q.length < 1) {
-    return Response.json({
-      query: q,
-      sherpas: [],
-      clinics: [],
-      themes: [],
-    });
-  }
-
-  const supabase = getSupabaseServiceClient();
-  const pattern = `%${q.replace(/[%_]/g, "")}%`;
-
-  // 병렬 쿼리
-  const [sherpasRes, clinicsRes, themesRes] = await Promise.all([
-    // 셰르파: display_name + tagline + tagline_en + bio + bio_en
-    // PostgREST의 .or() 로 OR 조합
-    supabase
-      .from("sherpas")
-      .select(
-        "slug, display_name, tagline, tagline_en, countries, cities, cities_en, languages, specialties, rating_avg, rating_count, avatar_url"
-      )
-      .eq("status", "published")
-      .or(
-        [
-          `display_name.ilike.${pattern}`,
-          `tagline.ilike.${pattern}`,
-          `tagline_en.ilike.${pattern}`,
-          `bio.ilike.${pattern}`,
-          `bio_en.ilike.${pattern}`,
-        ].join(",")
-      )
-      .order("rating_avg", { ascending: false, nullsFirst: false })
-      .limit(limit),
-
-    // 클리닉: name, name_en, description, description_en, city, city_en
-    supabase
-      .from("medical_clinics")
-      .select(
-        "slug, name, name_en, city, city_en, country, direction, description, description_en, specialties, specialties_en"
-      )
-      .eq("status", "published")
-      .or(
-        [
-          `name.ilike.${pattern}`,
-          `name_en.ilike.${pattern}`,
-          `description.ilike.${pattern}`,
-          `description_en.ilike.${pattern}`,
-          `city.ilike.${pattern}`,
-          `city_en.ilike.${pattern}`,
-        ].join(",")
-      )
-      .order("display_order")
-      .limit(limit),
-
-    // 큐레이티드 테마: title, subtitle, destination
-    supabase
-      .from("curated_themes")
-      .select(
-        "slug, title, subtitle, description, destination, category, cover_image_url"
-      )
-      .or(
-        [
-          `title.ilike.${pattern}`,
-          `subtitle.ilike.${pattern}`,
-          `description.ilike.${pattern}`,
-          `destination.ilike.${pattern}`,
-        ].join(",")
-      )
-      .limit(limit),
-  ]);
-
-  // 추가로 도시/전문분야 배열 매칭 (배열 안에 q가 포함된 요소 있는지)
-  const lowerQ = q.toLowerCase();
-  const sherpaArrayMatches = (
-    await supabase
-      .from("sherpas")
-      .select(
-        "slug, display_name, tagline, tagline_en, countries, cities, cities_en, languages, specialties, rating_avg, rating_count, avatar_url"
-      )
-      .eq("status", "published")
-      .order("rating_avg", { ascending: false, nullsFirst: false })
-      .limit(60)
-  ).data ?? [];
-
-  const arrayHits = sherpaArrayMatches.filter((s) => {
-    const hay = [
-      ...(s.cities ?? []),
-      ...(s.cities_en ?? []),
-      ...(s.specialties ?? []),
-    ]
-      .join(" ")
-      .toLowerCase();
-    return hay.includes(lowerQ);
+  const direction = url.searchParams.get("direction");
+  const result = await performSearch({
+    q: url.searchParams.get("q") ?? "",
+    type: (url.searchParams.get("type") ?? "all") as SearchType,
+    countries: parseList(url.searchParams.get("country")),
+    city: url.searchParams.get("city") ?? "",
+    languages: parseList(url.searchParams.get("language")),
+    specialties: parseList(url.searchParams.get("specialty")),
+    direction:
+      direction === "inbound" || direction === "outbound" ? direction : null,
+    category: url.searchParams.get("category") ?? "",
+    minPrice: Number(url.searchParams.get("minPrice")) || 0,
+    maxPrice: Number(url.searchParams.get("maxPrice")) || 0,
+    minRating: Number(url.searchParams.get("minRating")) || 0,
+    sort: (url.searchParams.get("sort") ?? "relevance") as SortKey,
+    page: Number(url.searchParams.get("page")) || 1,
+    pageSize: Number(url.searchParams.get("pageSize")) || 12,
+    suggest: url.searchParams.get("suggest") === "1",
   });
-
-  // 셰르파 머지 (중복 제거)
-  const sherpaMap = new Map<string, SherpaResult>();
-  for (const s of (sherpasRes.data ?? [])) {
-    sherpaMap.set(s.slug, { type: "sherpa", ...s });
-  }
-  for (const s of arrayHits) {
-    if (!sherpaMap.has(s.slug)) {
-      sherpaMap.set(s.slug, { type: "sherpa", ...s });
-    }
-  }
-  const sherpas = Array.from(sherpaMap.values()).slice(0, limit);
-
-  const clinics: ClinicResult[] = (clinicsRes.data ?? []).map((c) => ({
-    type: "clinic" as const,
-    slug: c.slug,
-    name: c.name,
-    name_en: c.name_en,
-    city: c.city,
-    country: c.country,
-    direction: c.direction as "inbound" | "outbound",
-    description: c.description,
-    specialties: c.specialties,
-  }));
-
-  const themes: ThemeResult[] = (themesRes.data ?? []).map((t) => ({
-    type: "theme" as const,
-    slug: t.slug,
-    title: t.title,
-    subtitle: t.subtitle,
-    destination: t.destination,
-    category: t.category,
-    cover_image_url: t.cover_image_url,
-  }));
-
-  return Response.json({ query: q, sherpas, clinics, themes });
+  return Response.json(result);
 }
