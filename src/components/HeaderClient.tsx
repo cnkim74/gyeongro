@@ -68,6 +68,7 @@ export default function HeaderClient({ user }: HeaderClientProps) {
             {[
               { label: "플래너", href: "/planner" },
               { label: "테마", href: "/themes" },
+              { label: "셰르파", href: "/sherpa" },
               { label: "의료관광", href: "/medical" },
               { label: "동료 찾기", href: "/partners" },
               { label: "스토리", href: "/stories" },
@@ -133,6 +134,8 @@ export default function HeaderClient({ user }: HeaderClientProps) {
             {[
               { label: "AI 플래너", href: "/planner" },
               { label: "테마 여행", href: "/themes" },
+              { label: "셰르파", href: "/sherpa" },
+              { label: "의료관광", href: "/medical" },
               { label: "동료 찾기", href: "/partners" },
               { label: "여행 스토리", href: "/stories" },
               { label: "후기", href: "/reviews" },
