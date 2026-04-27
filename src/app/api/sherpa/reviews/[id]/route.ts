@@ -8,6 +8,7 @@
 
 import { auth } from "@/lib/auth";
 import { getSupabaseServiceClient } from "@/lib/supabase";
+import { notifyReviewReplied } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -77,5 +78,9 @@ export async function PATCH(
   if (error) {
     return Response.json({ error: "저장 중 오류" }, { status: 500 });
   }
+
+  // 여행자에게 알림 메일
+  void notifyReviewReplied(id);
+
   return Response.json({ ok: true });
 }

@@ -8,6 +8,7 @@
 
 import { auth } from "@/lib/auth";
 import { getSupabaseServiceClient } from "@/lib/supabase";
+import { notifyProposalReceived } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -98,6 +99,9 @@ export async function POST(request: Request) {
     }
     return Response.json({ error: "제출 중 오류" }, { status: 500 });
   }
+
+  // 여행자에게 알림 메일
+  if (inserted?.id) void notifyProposalReceived(inserted.id);
 
   return Response.json({ id: inserted?.id }, { status: 201 });
 }

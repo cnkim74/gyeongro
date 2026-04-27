@@ -5,6 +5,7 @@
 
 import { auth } from "@/lib/auth";
 import { getSupabaseServiceClient } from "@/lib/supabase";
+import { notifyBookingResponse } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -99,5 +100,9 @@ export async function PATCH(
   if (error) {
     return Response.json({ error: "처리 중 오류" }, { status: 500 });
   }
+
+  // 여행자에게 알림 메일
+  void notifyBookingResponse(id, action as "accept" | "decline" | "complete");
+
   return Response.json({ ok: true, status: updates.status });
 }

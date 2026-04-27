@@ -5,6 +5,7 @@
 
 import { auth } from "@/lib/auth";
 import { getSupabaseServiceClient } from "@/lib/supabase";
+import { notifyProposalResponse } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -90,6 +91,9 @@ export async function PATCH(
   if (error) {
     return Response.json({ error: "처리 중 오류" }, { status: 500 });
   }
+
+  // 셰르파에게 알림 메일
+  void notifyProposalResponse(id, body.action as "accept" | "decline", body.reason ?? null);
 
   return Response.json({ ok: true });
 }

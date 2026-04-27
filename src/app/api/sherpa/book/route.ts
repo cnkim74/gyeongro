@@ -9,6 +9,7 @@
 
 import { auth } from "@/lib/auth";
 import { getSupabaseServiceClient } from "@/lib/supabase";
+import { notifyBookingReceived } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -99,7 +100,8 @@ export async function POST(request: Request) {
     );
   }
 
-  // booking_count 캐시 (best-effort, 수락 시점이 더 정확하지만 우선 요청 단위)
-  // → 수락 시점에 증가하도록 추후 변경 권장
+  // 셰르파에게 알림 메일
+  void notifyBookingReceived(inserted.id);
+
   return Response.json({ id: inserted.id }, { status: 201 });
 }
