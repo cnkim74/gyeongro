@@ -12,6 +12,7 @@ import ReviewForm from "@/components/ReviewForm";
 import RecommendedSherpas, {
   type ScoredSherpa,
 } from "@/components/RecommendedSherpas";
+import MessageThread from "@/components/MessageThread";
 import { matchSherpaToTrip } from "@/lib/matching";
 import { ArrowLeft, Star } from "lucide-react";
 
@@ -140,6 +141,18 @@ export default async function TripDetailPage({
 
           {recommendedSherpas.length > 0 && (
             <RecommendedSherpas sherpas={recommendedSherpas} />
+          )}
+
+          {acceptedProposal && (
+            <div className="mb-8">
+              <MessageThread
+                proposalId={acceptedProposal.id}
+                myRole="traveler"
+                myUserId={session.user.id}
+                partnerName={acceptedProposal.sherpa.display_name}
+                partnerAvatar={acceptedProposal.sherpa.avatar_url}
+              />
+            </div>
           )}
 
           {acceptedProposal && canReviewSherpa && (

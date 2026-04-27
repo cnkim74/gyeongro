@@ -21,6 +21,7 @@ import DashboardTabs from "./DashboardTabs";
 import BookingActions from "./BookingActions";
 import ProfileEditor from "./ProfileEditor";
 import ReplyForm from "./ReplyForm";
+import MessageThread from "@/components/MessageThread";
 import { formatRate } from "@/lib/sherpa";
 
 export const metadata = {
@@ -203,8 +204,12 @@ export default async function SherpaDashboardPage() {
                 viewCount={sherpa.view_count}
               />
             }
-            bookings={<BookingsView bookings={allBookings} />}
-            proposals={<ProposalsView proposals={proposals} />}
+            bookings={
+              <BookingsView bookings={allBookings} myUserId={session.user.id} />
+            }
+            proposals={
+              <ProposalsView proposals={proposals} myUserId={session.user.id} />
+            }
             reviews={<ReviewsView reviews={reviews} />}
             profile={<ProfileEditor sherpa={sherpa} />}
           />
@@ -350,6 +355,7 @@ function ActionCard({
 
 function BookingsView({
   bookings,
+  myUserId,
 }: {
   bookings: Array<{
     id: string;
@@ -366,6 +372,7 @@ function BookingsView({
     status: string;
     created_at: string;
   }>;
+  myUserId: string;
 }) {
   if (bookings.length === 0) {
     return (
@@ -377,75 +384,91 @@ function BookingsView({
   }
   return (
     <div className="space-y-3">
-      {bookings.map((b) => (
-        <div
-          key={b.id}
-          className="bg-white rounded-2xl border border-slate-200 p-5"
-        >
-          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-            <div className="flex items-center gap-2 text-xs text-slate-500">
-              <Calendar className="w-3 h-3" />
-              {new Date(b.created_at).toLocaleString("ko-KR")}
+      {bookings.map((b) => {
+        const showThread = b.status === "accepted" || b.status === "completed";
+        return (
+          <div
+            key={b.id}
+            className="bg-white rounded-2xl border border-slate-200 p-5"
+          >
+            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <Calendar className="w-3 h-3" />
+                {new Date(b.created_at).toLocaleString("ko-KR")}
+              </div>
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                  STATUS_COLOR[b.status] ?? "bg-slate-100 text-slate-500"
+                }`}
+              >
+                {STATUS_LABEL[b.status] ?? b.status}
+              </span>
             </div>
-            <span
-              className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
-                STATUS_COLOR[b.status] ?? "bg-slate-100 text-slate-500"
-              }`}
-            >
-              {STATUS_LABEL[b.status] ?? b.status}
-            </span>
-          </div>
 
-          <div className="flex items-center gap-3 mb-2 flex-wrap">
-            <h3 className="font-bold text-slate-900">{b.contact_name}</h3>
-            <a
-              href={`mailto:${b.contact_email}`}
-              className="text-xs text-blue-600 hover:underline"
-            >
-              {b.contact_email}
-            </a>
-            {b.contact_phone && (
+            <div className="flex items-center gap-3 mb-2 flex-wrap">
+              <h3 className="font-bold text-slate-900">{b.contact_name}</h3>
               <a
-                href={`tel:${b.contact_phone}`}
+                href={`mailto:${b.contact_email}`}
                 className="text-xs text-blue-600 hover:underline"
               >
-                {b.contact_phone}
+                {b.contact_email}
               </a>
-            )}
-          </div>
-
-          <div className="flex items-center gap-3 text-xs text-slate-500 mb-3 flex-wrap">
-            <span>📍 {b.destination_city}</span>
-            <span>
-              📅 {b.start_date} ~ {b.end_date}
-            </span>
-            <span>👥 {b.party_size}명</span>
-            <span>⏱ {durationLabel(b.duration_type)}</span>
-            {b.estimated_price_krw && (
-              <span className="font-semibold text-emerald-600">
-                {formatRate(b.estimated_price_krw)}
-              </span>
-            )}
-          </div>
-
-          {b.notes && (
-            <div className="bg-slate-50 rounded-xl p-3 text-sm text-slate-700 mb-3 whitespace-pre-line">
-              {b.notes}
+              {b.contact_phone && (
+                <a
+                  href={`tel:${b.contact_phone}`}
+                  className="text-xs text-blue-600 hover:underline"
+                >
+                  {b.contact_phone}
+                </a>
+              )}
             </div>
-          )}
 
-          <BookingActions bookingId={b.id} currentStatus={b.status} />
-        </div>
-      ))}
+            <div className="flex items-center gap-3 text-xs text-slate-500 mb-3 flex-wrap">
+              <span>📍 {b.destination_city}</span>
+              <span>
+                📅 {b.start_date} ~ {b.end_date}
+              </span>
+              <span>👥 {b.party_size}명</span>
+              <span>⏱ {durationLabel(b.duration_type)}</span>
+              {b.estimated_price_krw && (
+                <span className="font-semibold text-emerald-600">
+                  {formatRate(b.estimated_price_krw)}
+                </span>
+              )}
+            </div>
+
+            {b.notes && (
+              <div className="bg-slate-50 rounded-xl p-3 text-sm text-slate-700 mb-3 whitespace-pre-line">
+                {b.notes}
+              </div>
+            )}
+
+            <BookingActions bookingId={b.id} currentStatus={b.status} />
+
+            {showThread && (
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <MessageThread
+                  bookingId={b.id}
+                  myRole="sherpa"
+                  myUserId={myUserId}
+                  partnerName={b.contact_name}
+                />
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
 
 function ProposalsView({
   proposals,
+  myUserId,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   proposals: any[];
+  myUserId: string;
 }) {
   if (proposals.length === 0) {
     return (
@@ -498,6 +521,17 @@ function ProposalsView({
           <p className="text-sm text-slate-700 leading-relaxed line-clamp-3 whitespace-pre-line">
             {p.message}
           </p>
+
+          {p.status === "accepted" && (
+            <div className="mt-4 pt-4 border-t border-slate-100">
+              <MessageThread
+                proposalId={p.id}
+                myRole="sherpa"
+                myUserId={myUserId}
+                partnerName={p.travel_plans?.title ?? "여행자"}
+              />
+            </div>
+          )}
         </div>
       ))}
     </div>

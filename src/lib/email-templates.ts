@@ -456,3 +456,36 @@ export function reviewReplyEmail(opts: {
     `),
   };
 }
+
+// ========== Direct Messages ==========
+
+export function messageReceivedEmail(opts: {
+  recipientName: string;
+  senderName: string;
+  preview: string;
+  threadUrl: string;
+  contextLabel: string;     // 예: '도쿄 여행 매칭', '서울 푸드 투어 예약'
+}): { subject: string; html: string } {
+  const truncated =
+    opts.preview.length > 200 ? opts.preview.slice(0, 200) + "…" : opts.preview;
+  return {
+    subject: `[Pothos] ${opts.senderName} 님의 메시지`,
+    html: layout(`
+      <span style="display:inline-block;padding:4px 10px;border-radius:9999px;background:#eff6ff;color:#2563eb;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;">New Message</span>
+      <h1 style="margin:16px 0 8px;font-size:22px;font-weight:700;color:#0f172a;letter-spacing:-.02em;">
+        ${escapeHtml(opts.recipientName)} 님께 메시지가 도착했어요
+      </h1>
+      <p style="margin:0 0 12px;font-size:13px;color:#94a3b8;">
+        ${escapeHtml(opts.contextLabel)}
+      </p>
+      <div style="margin:8px 0 16px;padding:14px 16px;background:#eff6ff;border-left:3px solid #3b82f6;border-radius:8px;">
+        <p style="margin:0 0 6px;font-size:12px;color:#3b82f6;font-weight:600;">${escapeHtml(opts.senderName)}</p>
+        <p style="margin:0;font-size:14px;line-height:1.65;color:#1e293b;white-space:pre-line;">${escapeHtml(truncated)}</p>
+      </div>
+      ${buttonHtml("스레드 열기", opts.threadUrl, "#2563eb")}
+      <p style="margin:16px 0 0;font-size:11px;color:#94a3b8;line-height:1.6;">
+        Pothos에 로그인해 답장을 보내실 수 있어요.
+      </p>
+    `),
+  };
+}

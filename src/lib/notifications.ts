@@ -15,7 +15,10 @@ import {
   proposalDeclinedEmail,
   reviewReceivedEmail,
   reviewReplyEmail,
+  messageReceivedEmail,
 } from "@/lib/email-templates";
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://pothostravel.com";
 
 const DURATION_LABEL: Record<string, string> = {
   hourly: "시간제",
@@ -292,5 +295,89 @@ export async function notifyReviewReplied(reviewId: string): Promise<void> {
     await sendEmail({ to: recipient.email, subject: tpl.subject, html: tpl.html });
   } catch (err) {
     console.error("[notifyReviewReplied] failed:", err);
+  }
+}
+
+// ========== Direct Messages ==========
+
+export async function notifyMessageReceived(messageId: string): Promise<void> {
+  try {
+    const supabase = getSupabaseServiceClient();
+    const { data: msg } = await supabase
+      .from("sherpa_messages")
+      .select("body, sender_id, sender_role, booking_id, proposal_id")
+      .eq("id", messageId)
+      .maybeSingle();
+    if (!msg) return;
+
+    let recipientUserId: string | null = null;
+    let threadUrl = "";
+    let contextLabel = "Pothos 메시지";
+    let senderName = "상대방";
+
+    // 발신자 이름
+    const sender = await fetchUserEmail(supabase, msg.sender_id);
+    senderName = sender.name ?? senderName;
+
+    if (msg.booking_id) {
+      const { data: booking } = await supabase
+        .from("sherpa_bookings")
+        .select(
+          "id, client_id, destination_city, sherpas(user_id, slug, display_name)"
+        )
+        .eq("id", msg.booking_id)
+        .maybeSingle();
+      if (!booking) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const sherpa = (booking as any).sherpas;
+      // 받는 사람: 발신자가 traveler면 sherpa, 아니면 traveler
+      if (msg.sender_role === "traveler") {
+        recipientUserId = sherpa?.user_id ?? null;
+        threadUrl = `${BASE_URL}/sherpa/dashboard`;
+      } else {
+        recipientUserId = booking.client_id;
+        // 여행자에게는 자기 매칭 페이지로 (직접 booking 페이지 없음, 우선 일반 my-trips로)
+        threadUrl = `${BASE_URL}/my-trips`;
+      }
+      contextLabel = `${booking.destination_city} · ${sherpa?.display_name ?? "셰르파"} 예약`;
+    } else if (msg.proposal_id) {
+      const { data: proposal } = await supabase
+        .from("sherpa_proposals")
+        .select(
+          "id, sherpas(user_id, slug, display_name), travel_plans(user_id, title, id)"
+        )
+        .eq("id", msg.proposal_id)
+        .maybeSingle();
+      if (!proposal) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const sherpa = (proposal as any).sherpas;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const trip = (proposal as any).travel_plans;
+      if (msg.sender_role === "traveler") {
+        recipientUserId = sherpa?.user_id ?? null;
+        threadUrl = `${BASE_URL}/sherpa/dashboard`;
+      } else {
+        recipientUserId = trip?.user_id ?? null;
+        threadUrl = trip?.id ? `${BASE_URL}/my-trips/${trip.id}` : `${BASE_URL}/my-trips`;
+      }
+      contextLabel = `${trip?.title ?? "여행"} · ${sherpa?.display_name ?? "셰르파"} 매칭`;
+    }
+
+    if (!recipientUserId) return;
+    if (recipientUserId === msg.sender_id) return; // 본인에게 발송 X
+
+    const recipient = await fetchUserEmail(supabase, recipientUserId);
+    if (!recipient.email) return;
+
+    const tpl = messageReceivedEmail({
+      recipientName: recipient.name ?? "사용자",
+      senderName,
+      preview: msg.body,
+      threadUrl,
+      contextLabel,
+    });
+    await sendEmail({ to: recipient.email, subject: tpl.subject, html: tpl.html });
+  } catch (err) {
+    console.error("[notifyMessageReceived] failed:", err);
   }
 }
