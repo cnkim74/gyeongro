@@ -146,7 +146,24 @@ function PlannerContent() {
         }),
       });
 
-      if (!res.ok || !res.body) throw new Error("서버 오류가 발생했습니다.");
+      // 한도/로그인 등 비-스트림 오류는 JSON 형태로 반환됨
+      if (!res.ok) {
+        let msg = "서버 오류가 발생했습니다.";
+        try {
+          const data = await res.json();
+          if (res.status === 401 && data.needsLogin) {
+            msg = "AI 플래너는 로그인이 필요해요. 로그인 후 다시 시도해주세요.";
+          } else if (res.status === 429 && data.quotaExceeded) {
+            msg = `오늘의 무료 AI 플래너 한도(${data.limit}회)를 다 사용했어요. 내일 자정(KST)에 리셋됩니다.`;
+          } else if (data.error) {
+            msg = data.error;
+          }
+        } catch {
+          // ignore parse error
+        }
+        throw new Error(msg);
+      }
+      if (!res.body) throw new Error("서버 오류가 발생했습니다.");
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();

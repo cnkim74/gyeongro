@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server";
 import Groq from "groq-sdk";
+import { auth } from "@/lib/auth";
+import { consumeQuota, QuotaExceededError } from "@/lib/ai-quota";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -42,7 +44,15 @@ const MEDICAL_GUIDANCE: Record<string, string> = {
 };
 
 export async function POST(req: NextRequest) {
-  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  // 1. 로그인 필수
+  const session = await auth();
+  if (!session?.user?.id) {
+    return Response.json(
+      { error: "AI 플래너는 로그인 후 사용 가능합니다.", needsLogin: true },
+      { status: 401 }
+    );
+  }
+
   const body = await req.json();
   const { destination, days, people, budget, travelStyle, themes, medical } = body;
   const medicalCtx = medical as MedicalContext | null;
@@ -50,6 +60,28 @@ export async function POST(req: NextRequest) {
   if (!destination || !days || !people || !budget) {
     return Response.json({ error: "필수 입력값이 없습니다." }, { status: 400 });
   }
+
+  // 2. 사용 한도 체크 + 차감
+  try {
+    await consumeQuota(session.user.id, "planner");
+  } catch (err) {
+    if (err instanceof QuotaExceededError) {
+      return Response.json(
+        {
+          error: `오늘의 무료 AI 플래너 한도를 다 사용했어요. (${err.used}/${err.limit})`,
+          quotaExceeded: true,
+          action: err.action,
+          used: err.used,
+          limit: err.limit,
+          hasCredits: err.hasCredits,
+        },
+        { status: 429 }
+      );
+    }
+    throw err;
+  }
+
+  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
   const themeText = themes?.length > 0 ? themes.join(", ") : "일반 관광";
   const themeHints: Record<string, string> = {
