@@ -1,7 +1,8 @@
 // 이메일/비밀번호 회원가입 API
 //
-// POST { email, password, nickname?, phone?, avatarPreset? }
-//   -> 201 { id, email }
+// POST { email, password, nickname?, phone?, avatarPreset?, role? }
+//   role: "user" | "business" | "sherpa"  (admin은 가입 시 선택 불가)
+//   -> 201 { id, email, role }
 //   -> 400 (검증 실패), 409 (중복), 500 (서버)
 //
 // 닉네임은 권장(선택). 미입력 시 NULL로 저장.
@@ -9,6 +10,8 @@
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 import { AVATAR_BY_ID } from "@/lib/avatars";
+
+const VALID_SIGNUP_ROLES = new Set(["user", "business", "sherpa"]);
 
 export const runtime = "nodejs";
 
@@ -36,6 +39,7 @@ export async function POST(request: Request) {
     nickname?: string;
     phone?: string;
     avatarPreset?: string;
+    role?: string;
   };
   try {
     body = await request.json();
@@ -48,6 +52,7 @@ export async function POST(request: Request) {
   const nickname = body.nickname?.trim() || null;
   const phoneInput = body.phone?.trim() || null;
   const avatarPreset = body.avatarPreset?.trim() || null;
+  const role = body.role && VALID_SIGNUP_ROLES.has(body.role) ? body.role : "user";
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return Response.json({ error: "올바른 이메일 주소를 입력해주세요." }, { status: 400 });
@@ -120,8 +125,9 @@ export async function POST(request: Request) {
       avatar_preset: avatarPreset,
       password_hash,
       signup_provider: "credentials",
+      role,
     })
-    .select("id, email")
+    .select("id, email, role")
     .single();
 
   if (error || !inserted) {
@@ -131,5 +137,8 @@ export async function POST(request: Request) {
     return Response.json({ error: "가입 중 오류가 발생했습니다." }, { status: 500 });
   }
 
-  return Response.json({ id: inserted.id, email: inserted.email }, { status: 201 });
+  return Response.json(
+    { id: inserted.id, email: inserted.email, role: inserted.role },
+    { status: 201 }
+  );
 }

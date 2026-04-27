@@ -2,7 +2,65 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Phone, ArrowRight, Loader2, AlertCircle, Briefcase, Plane } from "lucide-react";
+import {
+  Phone,
+  ArrowRight,
+  Loader2,
+  AlertCircle,
+  Building2,
+  Plane,
+  Mountain,
+} from "lucide-react";
+
+type OnboardingRole = "user" | "business" | "sherpa";
+
+interface RoleCard {
+  id: OnboardingRole;
+  label: string;
+  icon: React.ReactNode;
+  emoji: string;
+  description: string;
+  next: string;
+  iconColor: string;
+  active: string;
+  inactive: string;
+}
+
+const ROLE_CARDS: RoleCard[] = [
+  {
+    id: "user",
+    label: "여행자",
+    icon: <Plane className="w-5 h-5" />,
+    emoji: "🧳",
+    description: "여행 계획·셰르파 만나기",
+    next: "",
+    iconColor: "text-blue-500",
+    active: "border-blue-500 bg-blue-50",
+    inactive: "border-gray-200 hover:border-gray-300",
+  },
+  {
+    id: "sherpa",
+    label: "셰르파",
+    icon: <Mountain className="w-5 h-5" />,
+    emoji: "🏔️",
+    description: "현지 가이드로 활동",
+    next: "/sherpa/become",
+    iconColor: "text-amber-500",
+    active: "border-amber-500 bg-amber-50",
+    inactive: "border-gray-200 hover:border-gray-300",
+  },
+  {
+    id: "business",
+    label: "파트너",
+    icon: <Building2 className="w-5 h-5" />,
+    emoji: "🏢",
+    description: "기업·클리닉·여행사",
+    next: "",
+    iconColor: "text-emerald-500",
+    active: "border-emerald-500 bg-emerald-50",
+    inactive: "border-gray-200 hover:border-gray-300",
+  },
+];
 
 function formatPhone(input: string): string {
   const digits = input.replace(/[^\d]/g, "").slice(0, 11);
@@ -16,7 +74,7 @@ function formatPhone(input: string): string {
 export default function OnboardingForm({ callbackUrl }: { callbackUrl: string }) {
   const router = useRouter();
   const [phone, setPhone] = useState("");
-  const [role, setRole] = useState<"user" | "business">("user");
+  const [role, setRole] = useState<OnboardingRole>("user");
   const [businessName, setBusinessName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +83,7 @@ export default function OnboardingForm({ callbackUrl }: { callbackUrl: string })
     e.preventDefault();
     setError(null);
     if (role === "business" && !businessName.trim()) {
-      setError("길잡이(기업회원)는 사업체 이름을 입력해주세요.");
+      setError("파트너(기업회원)는 사업체 이름을 입력해주세요.");
       return;
     }
     setSubmitting(true);
@@ -41,7 +99,11 @@ export default function OnboardingForm({ callbackUrl }: { callbackUrl: string })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "저장 실패");
-      router.replace(callbackUrl);
+
+      const roleNext = ROLE_CARDS.find((c) => c.id === role)?.next ?? "";
+      const next =
+        callbackUrl !== "/" || !roleNext ? callbackUrl : roleNext;
+      router.replace(next);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "오류가 발생했어요.");
@@ -56,54 +118,48 @@ export default function OnboardingForm({ callbackUrl }: { callbackUrl: string })
         <label className="text-sm font-semibold text-gray-700 mb-3 block">
           회원 유형
         </label>
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={() => setRole("user")}
-            className={`p-4 rounded-2xl border-2 text-left transition-all ${
-              role === "user"
-                ? "border-blue-500 bg-blue-50"
-                : "border-gray-200 hover:border-gray-300"
-            }`}
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <Plane className="w-5 h-5 text-blue-500" />
-              <span className="text-2xl">🧳</span>
-            </div>
-            <p className="font-bold text-gray-900">여행자</p>
-            <p className="text-xs text-gray-500 mt-0.5">개인 회원</p>
-          </button>
-          <button
-            type="button"
-            onClick={() => setRole("business")}
-            className={`p-4 rounded-2xl border-2 text-left transition-all ${
-              role === "business"
-                ? "border-emerald-500 bg-emerald-50"
-                : "border-gray-200 hover:border-gray-300"
-            }`}
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <Briefcase className="w-5 h-5 text-emerald-500" />
-              <span className="text-2xl">🧭</span>
-            </div>
-            <p className="font-bold text-gray-900">길잡이</p>
-            <p className="text-xs text-gray-500 mt-0.5">기업·광고주</p>
-          </button>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {ROLE_CARDS.map((c) => {
+            const active = role === c.id;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setRole(c.id)}
+                className={`p-3 rounded-2xl border-2 text-left transition-all ${
+                  active ? c.active : c.inactive
+                }`}
+              >
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className={c.iconColor}>{c.icon}</span>
+                  <span className="text-lg">{c.emoji}</span>
+                </div>
+                <p className="font-bold text-gray-900 text-sm">{c.label}</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">{c.description}</p>
+              </button>
+            );
+          })}
         </div>
+        {role === "sherpa" && (
+          <p className="text-[11px] text-amber-700 mt-2 flex items-start gap-1">
+            <Mountain className="w-3 h-3 mt-0.5 shrink-0" />
+            <span>저장 후 셰르파 신청 페이지로 이동합니다. 운영팀 검수 후 활동 가능해요.</span>
+          </p>
+        )}
       </div>
 
-      {/* 기업회원이면 사업체 이름 */}
+      {/* 파트너면 사업체 이름 */}
       {role === "business" && (
         <div>
           <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
-            <Briefcase className="w-4 h-4 text-emerald-500" />
+            <Building2 className="w-4 h-4 text-emerald-500" />
             사업체 이름
           </label>
           <input
             type="text"
             value={businessName}
             onChange={(e) => setBusinessName(e.target.value)}
-            placeholder="예: 마이리얼트립, 스카이스캐너..."
+            placeholder="예: 마이리얼트립, 강남○○병원..."
             required={role === "business"}
             maxLength={100}
             className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none text-gray-900 placeholder-gray-400"

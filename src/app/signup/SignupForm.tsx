@@ -13,8 +13,62 @@ import {
   Sparkles,
   Eye,
   EyeOff,
+  Plane,
+  Building2,
+  Mountain,
 } from "lucide-react";
 import { AVATAR_PRESETS } from "@/lib/avatars";
+
+type SignupRole = "user" | "business" | "sherpa";
+
+interface RoleCard {
+  id: SignupRole;
+  label: string;
+  icon: React.ReactNode;
+  emoji: string;
+  description: string;
+  next: string; // 가입 후 이동할 경로 (callbackUrl 우선, 빈 경우 이 값)
+  color: { active: string; inactive: string };
+}
+
+const ROLE_CARDS: RoleCard[] = [
+  {
+    id: "user",
+    label: "여행자",
+    icon: <Plane className="w-5 h-5" />,
+    emoji: "🧳",
+    description: "여행을 계획하고 셰르파를 만나요",
+    next: "",
+    color: {
+      active: "border-blue-500 bg-blue-50 ring-2 ring-blue-100",
+      inactive: "border-slate-200 hover:border-blue-300",
+    },
+  },
+  {
+    id: "sherpa",
+    label: "셰르파",
+    icon: <Mountain className="w-5 h-5" />,
+    emoji: "🏔️",
+    description: "현지 가이드로 활동하며 여행자 안내",
+    next: "/sherpa/become",
+    color: {
+      active: "border-amber-500 bg-amber-50 ring-2 ring-amber-100",
+      inactive: "border-slate-200 hover:border-amber-300",
+    },
+  },
+  {
+    id: "business",
+    label: "파트너",
+    icon: <Building2 className="w-5 h-5" />,
+    emoji: "🏢",
+    description: "클리닉·여행사·항공·렌탈 등으로 합류",
+    next: "",
+    color: {
+      active: "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-100",
+      inactive: "border-slate-200 hover:border-emerald-300",
+    },
+  },
+];
 
 const NICKNAME_RE = /^[A-Za-z0-9가-힣]{2,12}$/;
 const PASSWORD_RE = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
@@ -36,6 +90,7 @@ export default function SignupForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/";
 
+  const [role, setRole] = useState<SignupRole>("user");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -128,6 +183,7 @@ export default function SignupForm() {
           nickname: nickname || null,
           phone: phone || null,
           avatarPreset,
+          role,
         }),
       });
       const data = await res.json();
@@ -144,7 +200,11 @@ export default function SignupForm() {
         router.push("/login");
         return;
       }
-      router.push(callbackUrl);
+      // 역할별 다음 화면 (callbackUrl이 명시됐으면 그걸 우선)
+      const roleNext = ROLE_CARDS.find((c) => c.id === role)?.next ?? "";
+      const next =
+        callbackUrl !== "/" || !roleNext ? callbackUrl : roleNext;
+      router.push(next);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "가입 중 오류가 발생했어요.");
@@ -165,6 +225,49 @@ export default function SignupForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {/* 가입 유형 선택 */}
+      <div>
+        <label className="block text-sm font-semibold text-slate-700 mb-2">
+          어떻게 시작하시겠어요? <span className="text-red-500">*</span>
+        </label>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {ROLE_CARDS.map((c) => {
+            const active = role === c.id;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setRole(c.id)}
+                className={`p-3 rounded-2xl border-2 text-left transition-all ${
+                  active ? c.color.active : c.color.inactive
+                }`}
+              >
+                <div className="flex items-center gap-1.5 mb-1">
+                  {c.icon}
+                  <span className="text-lg">{c.emoji}</span>
+                </div>
+                <p className="font-bold text-slate-900 text-sm">{c.label}</p>
+                <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                  {c.description}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+        {role === "sherpa" && (
+          <p className="text-[11px] text-amber-700 mt-2 flex items-start gap-1">
+            <Mountain className="w-3 h-3 mt-0.5 shrink-0" />
+            <span>가입 후 셰르파 신청 페이지로 이동합니다. 운영팀 검수 후 활동 가능해요.</span>
+          </p>
+        )}
+        {role === "business" && (
+          <p className="text-[11px] text-emerald-700 mt-2 flex items-start gap-1">
+            <Building2 className="w-3 h-3 mt-0.5 shrink-0" />
+            <span>가입 후 사업체 정보를 등록할 수 있어요.</span>
+          </p>
+        )}
+      </div>
+
       {/* 이메일 */}
       <div>
         <label className="block text-sm font-semibold text-slate-700 mb-2">

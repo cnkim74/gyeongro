@@ -30,7 +30,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const role = body.role === "business" ? "business" : "user";
+  const role: "user" | "business" | "sherpa" =
+    body.role === "business" || body.role === "sherpa" ? body.role : "user";
   const businessName =
     role === "business" && body.businessName?.trim()
       ? body.businessName.trim()
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
 
   if (role === "business" && !businessName) {
     return Response.json(
-      { error: "길잡이(기업회원)는 사업체 이름이 필수입니다." },
+      { error: "파트너(기업회원)는 사업체 이름이 필수입니다." },
       { status: 400 }
     );
   }
