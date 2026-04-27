@@ -4,6 +4,7 @@ import { getSupabaseServiceClient } from "@/lib/supabase";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProfileForm from "./ProfileForm";
+import { resolveUserImage } from "@/lib/avatars";
 
 export const dynamic = "force-dynamic";
 
@@ -19,11 +20,15 @@ export default async function ProfilePage() {
   const { data: user } = await supabase
     .schema("next_auth")
     .from("users")
-    .select("id, name, email, image, custom_image, phone")
+    .select("id, name, email, image, custom_image, phone, nickname, avatar_preset")
     .eq("id", session.user.id)
     .single();
 
-  const displayImage = user?.custom_image ?? user?.image ?? null;
+  const displayImage = resolveUserImage({
+    custom_image: user?.custom_image,
+    avatar_preset: user?.avatar_preset,
+    image: user?.image,
+  });
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -42,6 +47,8 @@ export default async function ProfilePage() {
               name={user?.name ?? null}
               email={user?.email ?? null}
               phone={user?.phone ?? null}
+              nickname={user?.nickname ?? null}
+              avatarPreset={user?.avatar_preset ?? null}
               currentImage={displayImage}
               hasCustomImage={!!user?.custom_image}
             />

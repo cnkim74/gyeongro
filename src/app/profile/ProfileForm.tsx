@@ -1,17 +1,31 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, Loader2, Trash2, CheckCircle, AlertCircle } from "lucide-react";
+import Image from "next/image";
+import {
+  Camera,
+  Loader2,
+  Trash2,
+  CheckCircle,
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
+import { AVATAR_PRESETS } from "@/lib/avatars";
 
 interface Props {
   userId: string;
   name: string | null;
   email: string | null;
   phone: string | null;
+  nickname: string | null;
+  avatarPreset: string | null;
   currentImage: string | null;
   hasCustomImage: boolean;
 }
+
+const NICKNAME_RE = /^[A-Za-z0-9가-힣]{2,12}$/;
 
 function formatPhone(input: string): string {
   const digits = input.replace(/[^\d]/g, "").slice(0, 11);
@@ -22,10 +36,14 @@ function formatPhone(input: string): string {
   return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
 }
 
+type CheckState = "idle" | "checking" | "available" | "taken" | "invalid";
+
 export default function ProfileForm({
   name,
   email,
   phone,
+  nickname,
+  avatarPreset,
   currentImage,
   hasCustomImage,
 }: Props) {
@@ -40,6 +58,101 @@ export default function ProfileForm({
   const [phoneInput, setPhoneInput] = useState(phone ?? "");
   const [phoneSaving, setPhoneSaving] = useState(false);
   const [phoneEdit, setPhoneEdit] = useState(false);
+
+  // 닉네임
+  const [nicknameInput, setNicknameInput] = useState(nickname ?? "");
+  const [nicknameEdit, setNicknameEdit] = useState(false);
+  const [nicknameSaving, setNicknameSaving] = useState(false);
+  type ServerResult = { value: string; result: "available" | "taken" } | null;
+  const [nicknameServer, setNicknameServer] = useState<ServerResult>(null);
+
+  // 아바타 프리셋
+  const [presetInput, setPresetInput] = useState<string | null>(avatarPreset);
+  const [presetSaving, setPresetSaving] = useState(false);
+
+  useEffect(() => {
+    if (!nicknameEdit) return;
+    if (!nicknameInput) return;
+    if (nicknameInput === nickname) return;
+    if (!NICKNAME_RE.test(nicknameInput)) return;
+    const handle = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `/api/auth/check?field=nickname&value=${encodeURIComponent(nicknameInput)}`
+        );
+        const data = await res.json();
+        setNicknameServer({
+          value: nicknameInput,
+          result: data.available ? "available" : "taken",
+        });
+      } catch {
+        setNicknameServer(null);
+      }
+    }, 400);
+    return () => clearTimeout(handle);
+  }, [nicknameInput, nicknameEdit, nickname]);
+
+  // 렌더 시 파생
+  const nicknameCheck: CheckState = !nicknameEdit
+    ? "idle"
+    : !nicknameInput
+    ? "idle"
+    : nicknameInput === nickname
+    ? "idle"
+    : !NICKNAME_RE.test(nicknameInput)
+    ? "invalid"
+    : nicknameServer?.value === nicknameInput
+    ? nicknameServer.result
+    : "checking";
+
+  const handleNicknameSave = async () => {
+    setNicknameSaving(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/profile/nickname", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nickname: nicknameInput || null }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "저장 실패");
+      setNicknameEdit(false);
+      setMessage({ type: "success", text: "닉네임이 변경됐어요." });
+      router.refresh();
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text: err instanceof Error ? err.message : "오류가 발생했어요.",
+      });
+    } finally {
+      setNicknameSaving(false);
+    }
+  };
+
+  const handlePresetSave = async (presetId: string | null) => {
+    setPresetSaving(true);
+    setMessage(null);
+    setPresetInput(presetId);
+    try {
+      const res = await fetch("/api/profile/avatar-preset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ presetId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "저장 실패");
+      setMessage({ type: "success", text: "캐릭터가 변경됐어요." });
+      router.refresh();
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text: err instanceof Error ? err.message : "오류가 발생했어요.",
+      });
+      setPresetInput(avatarPreset);
+    } finally {
+      setPresetSaving(false);
+    }
+  };
 
   const handlePhoneSave = async () => {
     setPhoneSaving(true);
@@ -113,7 +226,7 @@ export default function ProfileForm({
   };
 
   const handleRemove = async () => {
-    if (!confirm("커스텀 프로필 사진을 삭제하시겠어요? (소셜 로그인 기본 사진으로 돌아갑니다)"))
+    if (!confirm("커스텀 프로필 사진을 삭제하시겠어요?"))
       return;
 
     setRemoving(true);
@@ -134,7 +247,16 @@ export default function ProfileForm({
     }
   };
 
-  const initial = name?.charAt(0) ?? email?.charAt(0) ?? "U";
+  const initial = nickname?.charAt(0) ?? name?.charAt(0) ?? email?.charAt(0) ?? "U";
+  const renderCheckIcon = (state: CheckState) => {
+    if (state === "checking")
+      return <Loader2 className="w-4 h-4 animate-spin text-slate-400" />;
+    if (state === "available")
+      return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
+    if (state === "taken" || state === "invalid")
+      return <XCircle className="w-4 h-4 text-red-500" />;
+    return null;
+  };
 
   return (
     <div>
@@ -145,7 +267,7 @@ export default function ProfileForm({
             <img
               src={previewUrl}
               alt="프로필 사진"
-              className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+              className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg bg-white"
             />
           ) : (
             <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-5xl font-bold border-4 border-white shadow-lg">
@@ -182,7 +304,7 @@ export default function ProfileForm({
             disabled={uploading || removing}
             className="px-4 py-2 rounded-full text-sm font-medium border border-gray-200 hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
-            사진 변경
+            사진 업로드
           </button>
           {hasCustomImage && (
             <button
@@ -219,7 +341,115 @@ export default function ProfileForm({
         )}
       </div>
 
+      {/* 아바타 갤러리 */}
+      <div className="border-t border-gray-100 pt-6 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="text-sm font-bold text-slate-900">여행 캐릭터</h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              업로드한 사진이 우선 표시됩니다. 사진이 없을 때 캐릭터가 보여요.
+            </p>
+          </div>
+          {presetSaving && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
+        </div>
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+          {AVATAR_PRESETS.map((a) => (
+            <button
+              key={a.id}
+              type="button"
+              onClick={() => handlePresetSave(a.id)}
+              disabled={presetSaving}
+              className={`relative p-2 rounded-2xl border-2 transition-all ${
+                presetInput === a.id
+                  ? "border-blue-500 bg-blue-50 ring-2 ring-blue-100"
+                  : "border-slate-200 hover:border-slate-300 bg-white"
+              } disabled:opacity-60`}
+              title={a.label}
+            >
+              <Image
+                src={a.url}
+                alt={a.label}
+                width={64}
+                height={64}
+                className="w-full h-auto"
+                unoptimized
+              />
+              {presetInput === a.id && (
+                <CheckCircle2 className="absolute -top-1.5 -right-1.5 w-5 h-5 text-blue-500 bg-white rounded-full" />
+              )}
+              <p className="text-[10px] text-slate-500 mt-1 truncate">{a.label}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="space-y-5 border-t border-gray-100 pt-6">
+        {/* 닉네임 */}
+        <div>
+          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            닉네임
+          </label>
+          {nicknameEdit ? (
+            <div className="mt-1 space-y-2">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={nicknameInput}
+                  onChange={(e) => setNicknameInput(e.target.value.trim())}
+                  placeholder="한글/영문/숫자 2~12자"
+                  maxLength={12}
+                  className="w-full px-3 py-2 pr-9 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none text-gray-900"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {renderCheckIcon(nicknameCheck)}
+                </div>
+              </div>
+              {nicknameCheck === "taken" && (
+                <p className="text-xs text-red-500">이미 사용 중인 닉네임입니다.</p>
+              )}
+              {nicknameCheck === "invalid" && nicknameInput && (
+                <p className="text-xs text-red-500">한글/영문/숫자 2~12자만 가능합니다.</p>
+              )}
+              <div className="flex gap-2">
+                <button
+                  onClick={handleNicknameSave}
+                  disabled={
+                    nicknameSaving ||
+                    (nicknameInput !== "" &&
+                      nicknameInput !== nickname &&
+                      nicknameCheck !== "available")
+                  }
+                  className="px-4 py-2 rounded-xl bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 disabled:opacity-50"
+                >
+                  {nicknameSaving ? "저장 중..." : "저장"}
+                </button>
+                <button
+                  onClick={() => {
+                    setNicknameEdit(false);
+                    setNicknameInput(nickname ?? "");
+                  }}
+                  disabled={nicknameSaving}
+                  className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium hover:bg-gray-50"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-base text-gray-900">
+                {nickname ?? <span className="text-gray-400">미설정</span>}
+              </p>
+              <button
+                onClick={() => setNicknameEdit(true)}
+                className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+              >
+                {nickname ? "변경" : "설정"}
+              </button>
+            </div>
+          )}
+        </div>
+
         <div>
           <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
             이름
@@ -287,7 +517,7 @@ export default function ProfileForm({
       <p className="text-xs text-gray-400 mt-8 leading-relaxed">
         프로필 사진은 5MB 이하의 JPG, PNG, WebP, GIF 파일을 지원합니다.
         <br />
-        커스텀 사진을 삭제하면 소셜 로그인 시 제공된 기본 사진이 표시됩니다.
+        업로드 사진을 삭제하면 선택한 캐릭터, 또는 소셜 로그인 기본 사진이 표시됩니다.
       </p>
     </div>
   );
