@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
-import { LogOut, Bookmark, User, Shield, Megaphone } from "lucide-react";
+import { LogOut, Bookmark, User, Shield, Megaphone, Mountain } from "lucide-react";
 import RoleBadge from "./RoleBadge";
 import type { UserRole } from "@/lib/admin";
 
@@ -106,6 +106,14 @@ export default function UserMenu({ user, isScrolled }: UserMenuProps) {
             >
               <User className="w-4 h-4 text-gray-400" />
               프로필
+            </Link>
+            <Link
+              href="/sherpa/dashboard"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <Mountain className="w-4 h-4 text-emerald-500" />
+              셰르파 대시보드
             </Link>
             {isBusiness && (
               <Link
