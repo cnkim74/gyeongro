@@ -68,6 +68,7 @@ export default function HeaderClient({ user }: HeaderClientProps) {
             {[
               { label: "플래너", href: "/planner" },
               { label: "테마", href: "/themes" },
+              { label: "의료관광", href: "/medical" },
               { label: "동료 찾기", href: "/partners" },
               { label: "스토리", href: "/stories" },
               { label: "커뮤니티", href: "/board" },

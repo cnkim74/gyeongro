@@ -171,16 +171,22 @@ export default function TravelAdvisory({
 
   const handleGoogleCalendar = () => {
     if (events.length === 0) return;
-    // 첫 날 이벤트를 Google Calendar에 등록 (전체 .ics는 별도 다운로드 가능)
     const first = events[0];
     const last = events[events.length - 1];
+
+    // Google Calendar URL은 길이 제한이 있어 description을 짧게 유지.
+    // 자세한 일정은 .ics 다운로드에 들어 있음.
+    const dayList = events
+      .map((e, i) => `Day ${i + 1}: ${itinerary.days[i]?.title ?? ""}`)
+      .join("\n");
+    let description = `${itinerary.summary}\n\n${dayList}`;
+    if (description.length > 1000) {
+      description = description.slice(0, 1000) + "...";
+    }
+
     const merged: CalendarEvent = {
       title: `[${destination}] ${itinerary.title}`,
-      description:
-        `${itinerary.summary}\n\n` +
-        events
-          .map((e) => `${e.title}\n${e.description ?? ""}`)
-          .join("\n\n———\n\n"),
+      description,
       location: destination,
       startDate: first.startDate,
       endDate: last.endDate,
