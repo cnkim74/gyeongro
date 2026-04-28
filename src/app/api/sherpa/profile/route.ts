@@ -116,5 +116,49 @@ export async function PATCH(request: Request) {
   if (error) {
     return Response.json({ error: "저장 중 오류" }, { status: 500 });
   }
+
+  // 텍스트 필드(tagline/bio/cities)가 변경됐으면 background에서 다국어 재번역
+  const needsTranslate =
+    "tagline" in updates || "bio" in updates || "cities" in updates;
+  if (needsTranslate) {
+    void (async () => {
+      try {
+        const { translateSherpaProfile } = await import("@/lib/translate");
+        // 최신 값 사용 (updates에 없으면 NULL → 함수 내부에서 빈 문자열 반환)
+        const translations = await translateSherpaProfile({
+          tagline: ("tagline" in updates ? updates.tagline : null) as
+            | string
+            | null,
+          bio: ("bio" in updates ? updates.bio : null) as string | null,
+          cities: ("cities" in updates ? updates.cities : null) as
+            | string[]
+            | null,
+        });
+        // 변경된 필드 대응 컬럼만 업데이트
+        const partial: Record<string, unknown> = {};
+        if ("tagline" in updates) {
+          partial.tagline_en = translations.tagline_en;
+          partial.tagline_ja = translations.tagline_ja;
+          partial.tagline_zh = translations.tagline_zh;
+        }
+        if ("bio" in updates) {
+          partial.bio_en = translations.bio_en;
+          partial.bio_ja = translations.bio_ja;
+          partial.bio_zh = translations.bio_zh;
+        }
+        if ("cities" in updates) {
+          partial.cities_en = translations.cities_en;
+          partial.cities_ja = translations.cities_ja;
+          partial.cities_zh = translations.cities_zh;
+        }
+        if (Object.keys(partial).length > 0) {
+          await supabase.from("sherpas").update(partial).eq("id", sherpa.id);
+        }
+      } catch (e) {
+        console.error("[sherpa.profile] auto-translate failed:", e);
+      }
+    })();
+  }
+
   return Response.json({ ok: true });
 }

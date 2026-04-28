@@ -9,6 +9,7 @@ import {
   Save,
   Pause,
   Play,
+  Globe,
 } from "lucide-react";
 import { SHERPA_SPECIALTIES, LANGUAGES } from "@/lib/sherpa";
 
@@ -260,6 +261,71 @@ export default function ProfileEditor({ sherpa }: Props) {
         )}
         저장
       </button>
+
+      {/* 다국어 재번역 — 한 줄 소개·자기소개·도시를 영/일/중으로 다시 번역 */}
+      <RetranslateButton />
+    </div>
+  );
+}
+
+function RetranslateButton() {
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(
+    null
+  );
+  const handle = async () => {
+    if (!confirm("프로필을 영어·일본어·중국어로 다시 번역할까요?")) return;
+    setLoading(true);
+    setMsg(null);
+    try {
+      const res = await fetch("/api/sherpa/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "번역 실패");
+      setMsg({ type: "ok", text: "번역이 갱신됐어요." });
+    } catch (e) {
+      setMsg({
+        type: "err",
+        text: e instanceof Error ? e.message : "번역 실패",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  return (
+    <div className="rounded-2xl border border-dashed border-slate-200 p-4">
+      <div className="flex items-center gap-2 mb-2">
+        <Globe className="w-4 h-4 text-blue-500" />
+        <p className="text-sm font-bold text-slate-900">다국어 자동 번역</p>
+      </div>
+      <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+        한 줄 소개·자기소개·도시를 영어·일본어·중국어로 자동 번역합니다.
+        프로필 저장 시 자동 실행되지만, 결과가 어색하면 다시 번역하실 수 있어요.
+      </p>
+      <button
+        onClick={handle}
+        disabled={loading}
+        className="w-full py-2 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 font-semibold text-sm flex items-center justify-center gap-1.5 hover:bg-blue-100 transition-all disabled:opacity-40"
+      >
+        {loading ? (
+          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        ) : (
+          <Globe className="w-3.5 h-3.5" />
+        )}
+        영·일·중 번역 다시 실행
+      </button>
+      {msg && (
+        <p
+          className={`text-xs mt-2 ${
+            msg.type === "ok" ? "text-emerald-600" : "text-red-600"
+          }`}
+        >
+          {msg.text}
+        </p>
+      )}
     </div>
   );
 }

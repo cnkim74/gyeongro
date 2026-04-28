@@ -147,5 +147,24 @@ export async function POST(request: Request) {
     );
   }
 
+  // 자동 다국어 번역 (en/ja/zh) — 실패해도 신청 자체는 성공으로 두고 background에서 재시도
+  // 호출자가 응답을 기다리지 않도록 background 실행
+  void (async () => {
+    try {
+      const { translateSherpaProfile } = await import("@/lib/translate");
+      const translations = await translateSherpaProfile({
+        tagline: body.tagline?.trim() ?? null,
+        bio,
+        cities,
+      });
+      await supabase
+        .from("sherpas")
+        .update(translations)
+        .eq("id", inserted.id);
+    } catch (e) {
+      console.error("[sherpa.apply] auto-translate failed:", e);
+    }
+  })();
+
   return Response.json({ id: inserted.id, slug: inserted.slug }, { status: 201 });
 }
