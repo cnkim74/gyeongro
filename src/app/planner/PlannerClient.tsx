@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import ItineraryView, { type Itinerary } from "@/components/ItineraryView";
+import FlightSearchPanel from "@/components/FlightSearchPanel";
 import {
   Sparkles,
   MapPin,
@@ -592,6 +593,15 @@ function PlannerContent() {
             </button>
 
             <ItineraryView itinerary={itinerary} destination={destination} />
+
+            {/* 항공편 메타서치 */}
+            <div className="mt-6">
+              <FlightSearchPanel
+                toCity={destination}
+                days={days}
+                adults={people}
+              />
+            </div>
 
             <div className="flex gap-3 mt-6">
               <button
