@@ -21,6 +21,9 @@ const CATEGORY_LABELS: Record<string, string> = {
   camping: "🏕️ 캠핑",
   golf: "⛳ 골프",
   activity: "🏄 액티비티",
+  kpop: "🎤 K-POP 성지",
+  pet: "🐶 펫 동반",
+  honeymoon: "💍 허니문",
 };
 
 interface ThemeRow {
