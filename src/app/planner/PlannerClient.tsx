@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import ItineraryView, { type Itinerary } from "@/components/ItineraryView";
 import FlightSearchPanel from "@/components/FlightSearchPanel";
+import HotelSearchPanel from "@/components/HotelSearchPanel";
 import {
   Sparkles,
   MapPin,
@@ -599,6 +600,15 @@ function PlannerContent() {
               <FlightSearchPanel
                 toCity={destination}
                 days={days}
+                adults={people}
+              />
+            </div>
+
+            {/* 호텔 메타서치 */}
+            <div className="mt-4">
+              <HotelSearchPanel
+                destination={destination}
+                nights={days}
                 adults={people}
               />
             </div>

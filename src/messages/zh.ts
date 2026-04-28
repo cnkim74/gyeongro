@@ -10,6 +10,8 @@ export const zh: Record<string, string> = {
   "nav.partners": "旅伴",
   "nav.stories": "故事",
   "nav.community": "社区",
+  "nav.flights": "机票",
+  "nav.hotels": "酒店",
   "nav.login": "登录",
   "nav.signup": "注册",
   "nav.cta": "开始旅行",

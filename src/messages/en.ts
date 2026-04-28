@@ -10,6 +10,8 @@ export const en: Record<string, string> = {
   "nav.partners": "Companions",
   "nav.stories": "Stories",
   "nav.community": "Community",
+  "nav.flights": "Flights",
+  "nav.hotels": "Hotels",
   "nav.login": "Sign in",
   "nav.signup": "Sign up",
   "nav.cta": "Plan your trip",

@@ -10,6 +10,8 @@ export const ja: Record<string, string> = {
   "nav.partners": "旅仲間",
   "nav.stories": "ストーリー",
   "nav.community": "コミュニティ",
+  "nav.flights": "航空券",
+  "nav.hotels": "ホテル",
   "nav.login": "ログイン",
   "nav.signup": "登録",
   "nav.cta": "旅を計画する",
