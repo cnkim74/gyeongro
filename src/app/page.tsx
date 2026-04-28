@@ -24,6 +24,11 @@ import {
   Landmark,
   TreePalm,
   Building2,
+  Plane,
+  Hotel,
+  Car,
+  Globe,
+  MessageCircle,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -117,6 +122,7 @@ const destinations = [
     tag: "국내 인기",
     icon: Mountain,
     desc: "한라산 · 바다",
+    gradient: "from-emerald-500 to-teal-600",
   },
   {
     name: "도쿄",
@@ -124,6 +130,7 @@ const destinations = [
     tag: "해외 인기",
     icon: Building2,
     desc: "메가시티 · 미식",
+    gradient: "from-rose-500 to-pink-600",
   },
   {
     name: "부산",
@@ -131,6 +138,7 @@ const destinations = [
     tag: "주말 추천",
     icon: Anchor,
     desc: "항구 · 야경",
+    gradient: "from-blue-500 to-indigo-600",
   },
   {
     name: "오사카",
@@ -138,6 +146,7 @@ const destinations = [
     tag: "미식",
     icon: Castle,
     desc: "성 · 도톤보리",
+    gradient: "from-orange-500 to-red-600",
   },
   {
     name: "파리",
@@ -145,6 +154,7 @@ const destinations = [
     tag: "유럽",
     icon: Landmark,
     desc: "에펠탑 · 예술",
+    gradient: "from-violet-500 to-purple-600",
   },
   {
     name: "방콕",
@@ -152,6 +162,7 @@ const destinations = [
     tag: "동남아",
     icon: TreePalm,
     desc: "사원 · 야시장",
+    gradient: "from-amber-500 to-yellow-600",
   },
 ];
 
@@ -203,7 +214,7 @@ export default async function HomePage() {
           <div className="max-w-4xl">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-white/70 text-xs font-medium mb-8 tracking-wide">
               <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-              <span>AI 여행 플래너 · 동료 매칭 · 큐레이션 테마</span>
+              <span>AI 플래너 · 셰르파 매칭 · 항공·호텔·렌트카 가격 비교</span>
             </div>
 
             <h1 className="text-6xl sm:text-7xl md:text-8xl font-bold text-white leading-[1.05] tracking-tight mb-8">
@@ -217,7 +228,7 @@ export default async function HomePage() {
             <p className="text-xl sm:text-2xl text-white/60 max-w-2xl mb-12 leading-relaxed font-light">
               취향과 예산만 알려주세요. AI가 30초 만에 맞춤 일정을 설계하고,
               <br className="hidden sm:block" />
-              같은 길을 걷는 동료를 찾아드립니다.
+              현지 셰르파부터 항공·호텔까지 한 곳에서 만들어 드립니다.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
@@ -230,29 +241,30 @@ export default async function HomePage() {
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
-                href="/themes"
+                href="/sherpa"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-white/5 border border-white/10 text-white font-semibold text-base hover:bg-white/10 transition-colors backdrop-blur-md"
               >
-                테마 여행 둘러보기
+                <Mountain className="w-5 h-5" />
+                셰르파 만나기
               </Link>
             </div>
 
             <div className="flex flex-wrap items-center gap-x-8 gap-y-3 mt-16 text-white/40 text-sm">
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-emerald-400" />
-                완전 무료
+                AI 무료 (일 5회)
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-emerald-400" />
-                30초 완성
+                현지 셰르파 1:1
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-emerald-400" />
-                여행 동료 매칭
+                항공·호텔 비교
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-emerald-400" />
-                맞춤 큐레이션
+                다국어 자동 번역
               </div>
             </div>
           </div>
@@ -260,6 +272,95 @@ export default async function HomePage() {
 
         {/* Bottom gradient fade */}
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent" />
+      </section>
+
+      {/* 메타서치 4종 — 매출 채널 강조 */}
+      <section className="py-16 bg-white border-b border-slate-100">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-10">
+            <p className="text-xs font-bold text-blue-600 mb-2 tracking-widest">
+              ALL-IN-ONE
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-3">
+              항공·호텔·액티비티·렌트카
+              <br className="sm:hidden" />
+              <span className="text-slate-400"> </span>
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                한 곳에서 비교
+              </span>
+            </h2>
+            <p className="text-slate-500 text-sm">
+              Trip.com · Booking.com · Skyscanner · KKday · Klook 등 글로벌 12개 사이트 동시 비교
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {[
+              {
+                href: "/flights",
+                icon: Plane,
+                label: "항공권",
+                providers: "Trip.com · Skyscanner",
+                color: "from-sky-500 to-blue-600",
+                bg: "bg-sky-50",
+                accent: "text-sky-600",
+              },
+              {
+                href: "/hotels",
+                icon: Hotel,
+                label: "호텔",
+                providers: "Trip · Booking · Agoda",
+                color: "from-violet-500 to-purple-600",
+                bg: "bg-violet-50",
+                accent: "text-violet-600",
+              },
+              {
+                href: "/activities",
+                icon: Sparkles,
+                label: "액티비티",
+                providers: "KKday · Klook · GYG",
+                color: "from-amber-500 to-orange-600",
+                bg: "bg-amber-50",
+                accent: "text-amber-600",
+              },
+              {
+                href: "/cars",
+                icon: Car,
+                label: "렌트카",
+                providers: "Trip · Rentalcars · DiscoverCars",
+                color: "from-teal-500 to-cyan-600",
+                bg: "bg-teal-50",
+                accent: "text-teal-600",
+              },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`group relative ${item.bg} rounded-2xl p-5 border border-transparent hover:border-current transition-all hover:-translate-y-1 hover:shadow-lg`}
+                >
+                  <div
+                    className={`inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br ${item.color} text-white mb-3 group-hover:scale-110 transition-transform`}
+                  >
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-base font-bold text-slate-900 mb-1">
+                    {item.label}
+                  </h3>
+                  <p className={`text-[10px] ${item.accent} font-medium leading-tight`}>
+                    {item.providers}
+                  </p>
+                  <ArrowRight className="absolute top-5 right-5 w-4 h-4 text-slate-300 group-hover:text-slate-700 group-hover:translate-x-0.5 transition-all" />
+                </Link>
+              );
+            })}
+          </div>
+
+          <p className="text-center text-[11px] text-slate-400 mt-5">
+            💡 일정 만들면 4가지 가격 비교가 자동으로 함께 나옵니다
+          </p>
+        </div>
       </section>
 
       {/* Quick destinations */}
@@ -289,40 +390,40 @@ export default async function HomePage() {
                 <Link
                   key={d.name}
                   href={`/planner?destination=${d.name}`}
-                  className="group relative aspect-[3/4] rounded-3xl overflow-hidden bg-slate-900 hover:bg-slate-800 hover:shadow-2xl transition-all hover:-translate-y-1"
+                  className={`group relative aspect-[4/5] rounded-3xl overflow-hidden bg-gradient-to-br ${d.gradient} hover:shadow-xl transition-all hover:-translate-y-1`}
                 >
-                  {/* Subtle gradient overlay for depth */}
+                  {/* Subtle radial overlay for depth */}
                   <div
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    className="absolute inset-0 opacity-50"
                     style={{
                       backgroundImage:
-                        "radial-gradient(circle at top right, rgba(99,102,241,0.25), transparent 60%)",
+                        "radial-gradient(circle at top right, rgba(255,255,255,0.25), transparent 60%)",
                     }}
                   />
 
                   {/* Tag at top */}
-                  <span className="absolute top-4 left-4 z-10 inline-flex text-[10px] font-bold tracking-wider text-white/50 uppercase">
+                  <span className="absolute top-3 left-3 z-10 inline-flex text-[10px] font-bold tracking-wider text-white/85 uppercase bg-white/15 backdrop-blur-sm px-2 py-0.5 rounded-full">
                     {d.tag}
                   </span>
 
                   {/* Big icon centered */}
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <Icon
-                      className="w-16 h-16 sm:w-20 sm:h-20 text-white stroke-[1.25] group-hover:scale-110 transition-transform duration-500"
-                    />
+                    <Icon className="w-14 h-14 sm:w-16 sm:h-16 text-white/90 stroke-[1.5] group-hover:scale-110 transition-transform duration-500 drop-shadow-lg" />
                   </div>
 
                   {/* Bottom info */}
-                  <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                    <h3 className="text-xl font-bold leading-tight">{d.name}</h3>
-                    <p className="text-[11px] text-white/40 font-medium tracking-wide">
+                  <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+                    <h3 className="text-lg sm:text-xl font-bold leading-tight drop-shadow">
+                      {d.name}
+                    </h3>
+                    <p className="text-[10px] text-white/70 font-medium tracking-wide">
                       {d.subtitle}
                     </p>
-                    <p className="text-[10px] text-white/60 mt-1.5">{d.desc}</p>
+                    <p className="text-[10px] text-white/85 mt-1">{d.desc}</p>
                   </div>
 
                   {/* Hover arrow */}
-                  <div className="absolute top-4 right-4 w-7 h-7 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-0 translate-x-2">
+                  <div className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-0 translate-x-2">
                     <ArrowRight className="w-3.5 h-3.5 text-white" />
                   </div>
                 </Link>
@@ -337,7 +438,7 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="max-w-2xl mb-16">
             <p className="text-sm font-semibold text-blue-600 mb-3 tracking-wide">
-              WHY GYEONGRO
+              WHY POTHOS
             </p>
             <h2 className="text-4xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-4">
               여행을 다르게,
@@ -345,7 +446,7 @@ export default async function HomePage() {
               그러나 더 단순하게
             </h2>
             <p className="text-lg text-slate-500">
-              계획부터 동료 찾기, 후기 공유까지. 흩어진 여행의 모든 단계를 한 곳에 모았습니다.
+              AI 일정부터 셰르파, 항공·호텔 비교까지. 흩어진 여행의 모든 단계를 한 곳에 모았습니다.
             </p>
           </div>
 
@@ -367,6 +468,90 @@ export default async function HomePage() {
                 </div>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* 셰르파 매칭 — Pothos의 핵심 차별화 */}
+      <section className="py-24 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <p className="text-sm font-semibold text-amber-700 mb-3 tracking-wide">
+                LOCAL EXPERT
+              </p>
+              <h2 className="text-4xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-4 leading-tight">
+                현지 셰르파와
+                <br />
+                <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+                  진짜 여행을
+                </span>
+              </h2>
+              <p className="text-lg text-slate-600 leading-relaxed mb-6">
+                도쿄에서 푸드 투어, 발리에서 서핑 강습, 강남에서 의료 통역까지.
+                <br />
+                AI 매칭으로 당신에게 딱 맞는 현지 셰르파를 찾아드립니다.
+              </p>
+
+              <div className="space-y-3 mb-8">
+                {[
+                  { icon: Users, label: "1:1 직접 예약 또는 제안 매칭" },
+                  { icon: Globe, label: "다국어 자동 번역 (한·영·일·중)" },
+                  { icon: MessageCircle, label: "DM으로 일정 직접 조율" },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div
+                      key={item.label}
+                      className="flex items-center gap-3 text-slate-700"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-amber-600 shrink-0">
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <span className="text-sm font-medium">{item.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  href="/sherpa"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-amber-600 text-white font-semibold text-sm hover:bg-amber-700 transition-all hover:-translate-y-0.5"
+                >
+                  <Mountain className="w-4 h-4" />
+                  셰르파 둘러보기
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  href="/sherpa/become"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-white border border-amber-200 text-amber-700 font-semibold text-sm hover:border-amber-300 transition-all"
+                >
+                  나도 셰르파 되기
+                </Link>
+              </div>
+            </div>
+
+            {/* 카테고리 미리보기 */}
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { emoji: "🗺️", label: "도시 가이드", desc: "현지 동선·맛집" },
+                { emoji: "💬", label: "통역", desc: "한·영·일·중" },
+                { emoji: "🍜", label: "푸드 투어", desc: "현지 노포" },
+                { emoji: "📷", label: "사진가", desc: "인생샷 코스" },
+                { emoji: "🏥", label: "의료 통역", desc: "병원 동행" },
+                { emoji: "🚗", label: "차량·동행", desc: "공항·관광" },
+              ].map((c) => (
+                <div
+                  key={c.label}
+                  className="bg-white rounded-2xl p-4 border border-amber-100 hover:border-amber-300 hover:shadow-md transition-all"
+                >
+                  <p className="text-3xl mb-2">{c.emoji}</p>
+                  <p className="font-bold text-slate-900 text-sm">{c.label}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{c.desc}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -454,8 +639,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Reviews */}
-      {reviews.length > 0 && (
+      {/* Reviews — 후기 있으면 노출, 없으면 fallback 섹션 */}
+      {reviews.length > 0 ? (
         <section className="py-24 bg-slate-50">
           <div className="max-w-6xl mx-auto px-6">
             <div className="flex items-end justify-between mb-12">
@@ -516,6 +701,73 @@ export default async function HomePage() {
                   </Link>
                 );
               })}
+            </div>
+          </div>
+        </section>
+      ) : (
+        // 후기 0건 fallback — 공급자 측(셰르파/파트너) 모집 강조
+        <section className="py-24 bg-slate-50">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="text-center mb-12">
+              <p className="text-sm font-semibold text-blue-600 mb-3 tracking-wide">
+                JOIN US
+              </p>
+              <h2 className="text-4xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-4">
+                Pothos와 함께할 분을 찾습니다
+              </h2>
+              <p className="text-lg text-slate-500">
+                여행자·셰르파·파트너 — 다양한 역할로 합류하세요
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <Link
+                href="/signup"
+                className="group bg-white rounded-3xl p-7 border border-slate-100 hover:border-blue-300 hover:shadow-lg transition-all"
+              >
+                <div className="text-4xl mb-3">🧳</div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-blue-600">
+                  여행자로 시작
+                </h3>
+                <p className="text-slate-500 text-sm leading-relaxed">
+                  AI 일정 + 셰르파 매칭 + 항공·호텔 비교를 무료로 시작
+                </p>
+                <p className="mt-4 text-xs font-semibold text-blue-600 inline-flex items-center gap-1">
+                  지금 가입 <ArrowRight className="w-3 h-3" />
+                </p>
+              </Link>
+
+              <Link
+                href="/sherpa/become"
+                className="group bg-white rounded-3xl p-7 border border-slate-100 hover:border-amber-300 hover:shadow-lg transition-all"
+              >
+                <div className="text-4xl mb-3">🏔️</div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-amber-600">
+                  셰르파로 활동
+                </h3>
+                <p className="text-slate-500 text-sm leading-relaxed">
+                  현지 가이드·통역·동행으로 여행자에게 진짜 여행 경험을
+                </p>
+                <p className="mt-4 text-xs font-semibold text-amber-600 inline-flex items-center gap-1">
+                  셰르파 신청 <ArrowRight className="w-3 h-3" />
+                </p>
+              </Link>
+
+              <Link
+                href="/sponsor"
+                className="group bg-white rounded-3xl p-7 border border-slate-100 hover:border-emerald-300 hover:shadow-lg transition-all"
+              >
+                <div className="text-4xl mb-3">🏢</div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-emerald-600">
+                  파트너로 합류
+                </h3>
+                <p className="text-slate-500 text-sm leading-relaxed">
+                  병원·여행사·항공·렌탈 등 — 여행자 트래픽으로 매출 확장
+                </p>
+                <p className="mt-4 text-xs font-semibold text-emerald-600 inline-flex items-center gap-1">
+                  파트너십 문의 <ArrowRight className="w-3 h-3" />
+                </p>
+              </Link>
             </div>
           </div>
         </section>
