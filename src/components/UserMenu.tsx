@@ -10,6 +10,7 @@ import type { UserRole } from "@/lib/admin";
 interface UserMenuProps {
   user: {
     name?: string | null;
+    nickname?: string | null;
     email?: string | null;
     image?: string | null;
     role?: UserRole;
@@ -23,10 +24,14 @@ export default function UserMenu({ user, isScrolled }: UserMenuProps) {
   const isAdmin = role === "admin";
   const isBusiness = role === "business";
   const isSherpa = role === "sherpa";
+  // 표시 우선순위: 파트너의 경우 사업체명 → 그 외엔 닉네임 > name > 이메일 앞부분
   const displayName =
     isBusiness && user.businessName
       ? user.businessName
-      : user.name ?? user.email?.split("@")[0] ?? "사용자";
+      : user.nickname ??
+        user.name ??
+        user.email?.split("@")[0] ??
+        "사용자";
 
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);

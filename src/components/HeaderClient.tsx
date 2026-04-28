@@ -16,6 +16,7 @@ import type { MessageKey } from "@/messages";
 interface HeaderClientProps {
   user: {
     name?: string | null;
+    nickname?: string | null;
     email?: string | null;
     image?: string | null;
     role?: UserRole;

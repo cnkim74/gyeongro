@@ -31,6 +31,7 @@ export default async function Header() {
   const session = await auth();
   let user: {
     name?: string | null;
+    nickname?: string | null;
     email?: string | null;
     image?: string | null;
     role?: UserRole;
@@ -42,6 +43,7 @@ export default async function Header() {
 
     type UserRow = {
       name: string | null;
+      nickname?: string | null;
       email: string | null;
       image: string | null;
       custom_image: string | null;
@@ -54,7 +56,7 @@ export default async function Header() {
       const result = await supabase
         .schema("next_auth")
         .from("users")
-        .select("name, email, image, custom_image, role, business_name")
+        .select("name, nickname, email, image, custom_image, role, business_name")
         .eq("id", session.user.id)
         .maybeSingle();
       data = result.data as UserRow | null;
@@ -79,6 +81,7 @@ export default async function Header() {
 
     user = {
       name: data?.name ?? session.user.name ?? null,
+      nickname: data?.nickname ?? null,
       email: data?.email ?? session.user.email ?? null,
       image: data?.custom_image ?? data?.image ?? session.user.image ?? null,
       role,
