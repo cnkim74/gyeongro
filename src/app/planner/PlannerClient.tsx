@@ -38,6 +38,9 @@ const themes = [
   { id: "kpop", label: "K-POP 성지", emoji: "🎤" },
   { id: "pet", label: "펫 동반", emoji: "🐶" },
   { id: "honeymoon", label: "허니문", emoji: "💍" },
+  { id: "hiking", label: "하이킹", emoji: "🥾" },
+  { id: "trekking", label: "트레킹", emoji: "🏔️" },
+  { id: "onsen", label: "온천·스파", emoji: "♨️" },
 ];
 
 const popularDestinations = [
