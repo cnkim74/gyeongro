@@ -66,6 +66,20 @@ export default async function SherpaHubPage({
 
       {/* Hero */}
       <section className="relative pt-28 pb-16 bg-gradient-to-br from-emerald-50 via-white to-teal-50 overflow-hidden">
+        {/* 감성 배경 사진 (8% 투명도)
+            기본: Unsplash 산·트레킹 사진 (무료 사용 가능, 출처 표기 필요)
+            교체 방법: public/images/sherpa-hero-bg.jpg 업로드 후 src 변경 */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=2000&q=60"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover opacity-[0.08] pointer-events-none"
+          loading="lazy"
+        />
+        {/* 흐리게 처리하는 화이트 오버레이 (감성 톤 유지) */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-white/40 pointer-events-none" />
+
         <div className="absolute inset-0 opacity-40">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-200/30 rounded-full blur-3xl" />
           <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-200/30 rounded-full blur-3xl" />
