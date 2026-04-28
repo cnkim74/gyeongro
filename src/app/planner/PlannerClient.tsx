@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import ItineraryView, { type Itinerary } from "@/components/ItineraryView";
 import FlightSearchPanel from "@/components/FlightSearchPanel";
 import HotelSearchPanel from "@/components/HotelSearchPanel";
+import ActivitySearchPanel from "@/components/ActivitySearchPanel";
 import {
   Sparkles,
   MapPin,
@@ -611,6 +612,11 @@ function PlannerContent() {
                 nights={days}
                 adults={people}
               />
+            </div>
+
+            {/* 액티비티 메타서치 */}
+            <div className="mt-4">
+              <ActivitySearchPanel destination={destination} />
             </div>
 
             <div className="flex gap-3 mt-6">
