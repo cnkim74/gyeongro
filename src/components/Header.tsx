@@ -21,6 +21,7 @@ export default async function Header() {
     "nav.flights",
     "nav.hotels",
     "nav.activities",
+    "nav.cars",
     "nav.login",
     "nav.signup",
     "nav.cta",

@@ -13,6 +13,7 @@ export const zh: Record<string, string> = {
   "nav.flights": "机票",
   "nav.hotels": "酒店",
   "nav.activities": "玩乐",
+  "nav.cars": "租车",
   "nav.login": "登录",
   "nav.signup": "注册",
   "nav.cta": "开始旅行",

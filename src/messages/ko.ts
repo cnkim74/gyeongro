@@ -12,6 +12,7 @@ export const ko: Record<string, string> = {
   "nav.flights": "항공권",
   "nav.hotels": "호텔",
   "nav.activities": "액티비티",
+  "nav.cars": "렌트카",
   "nav.login": "로그인",
   "nav.signup": "회원가입",
   "nav.cta": "여행 계획 시작",
@@ -190,7 +191,7 @@ export const ko: Record<string, string> = {
 
 // 키 자동완성용 — 새 키 추가 시 여기에 추가
 export const KO_KEYS = [
-  "nav.planner","nav.themes","nav.sherpa","nav.medical","nav.partners","nav.stories","nav.community","nav.flights","nav.hotels","nav.activities","nav.login","nav.signup","nav.cta","nav.profile","nav.my_trips","nav.logout","nav.language",
+  "nav.planner","nav.themes","nav.sherpa","nav.medical","nav.partners","nav.stories","nav.community","nav.flights","nav.hotels","nav.activities","nav.cars","nav.login","nav.signup","nav.cta","nav.profile","nav.my_trips","nav.logout","nav.language",
   "hero.eyebrow","hero.title","hero.title_2","hero.subtitle","hero.cta_plan","hero.cta_sherpa",
   "features.title","features.ai.title","features.ai.desc","features.sherpa.title","features.sherpa.desc","features.medical.title","features.medical.desc",
   "medical.eyebrow","medical.title","medical.title_2","medical.subtitle","medical.badge.curated","medical.badge.bidirectional","medical.badge.no_booking","medical.procedures.eyebrow","medical.procedures.title","medical.procedures.recovery_days","medical.procedures.see_clinics","medical.inbound.eyebrow","medical.inbound.title","medical.outbound.eyebrow","medical.outbound.title","medical.empty","medical.register.title","medical.register.desc","medical.register.cta","medical.disclaimer",

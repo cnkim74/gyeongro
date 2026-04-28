@@ -13,6 +13,7 @@ export const en: Record<string, string> = {
   "nav.flights": "Flights",
   "nav.hotels": "Hotels",
   "nav.activities": "Activities",
+  "nav.cars": "Cars",
   "nav.login": "Sign in",
   "nav.signup": "Sign up",
   "nav.cta": "Plan your trip",
