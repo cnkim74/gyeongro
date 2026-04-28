@@ -24,9 +24,9 @@ const CATEGORY_LABELS: Record<string, string> = {
   kpop: "🎤 K-POP 성지",
   pet: "🐶 펫 동반",
   honeymoon: "💍 허니문",
-  hiking: "🥾 하이킹",
-  trekking: "🏔️ 트레킹",
+  hiking_trekking: "🥾 하이킹·트레킹",
   onsen: "♨️ 온천·스파",
+  roadtrip: "🚗 렌트카 여행",
 };
 
 interface ThemeRow {
