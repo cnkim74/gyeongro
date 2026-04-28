@@ -20,6 +20,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   culture: "🏛️ 역사·문화",
   camping: "🏕️ 캠핑",
   golf: "⛳ 골프",
+  activity: "🏄 액티비티",
 };
 
 interface ThemeRow {

@@ -18,6 +18,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   culture: "🏛️ 역사·문화",
   camping: "🏕️ 캠핑",
   golf: "⛳ 골프",
+  activity: "🏄 액티비티",
 };
 
 interface Spot {
@@ -29,6 +30,15 @@ interface Spot {
   anime?: string;
   signature?: string;
   tip?: string;
+  // 골프 / 액티비티용 추가 필드
+  country?: string;
+  par?: number;
+  green_fee_kr?: string;
+  tee_time?: string;
+  activity?: string;
+  level?: string;
+  cost_kr?: string;
+  season?: string;
 }
 
 export default async function ThemeDetailPage({
@@ -111,21 +121,56 @@ export default async function ThemeDetailPage({
                         <div className="flex-1">
                           <div className="flex items-center gap-2 flex-wrap mb-1">
                             <h3 className="font-bold text-gray-900">{spot.name}</h3>
-                            {spot.area && (
+                            {(spot.area || spot.country) && (
                               <span className="text-xs text-gray-400">
-                                @{spot.area}
+                                @{spot.country ?? spot.area}
                               </span>
                             )}
                           </div>
-                          {(spot.drama || spot.movie || spot.anime || spot.signature) && (
+                          {(spot.drama || spot.movie || spot.anime || spot.signature || spot.activity) && (
                             <p className="text-xs text-blue-600 font-semibold mb-1">
-                              {spot.drama || spot.movie || spot.anime || spot.signature}
+                              {spot.drama || spot.movie || spot.anime || spot.signature || spot.activity}
                             </p>
                           )}
                           {spot.desc && (
                             <p className="text-sm text-gray-600 leading-relaxed">
                               {spot.desc}
                             </p>
+                          )}
+                          {/* 골프/액티비티 메타 정보 */}
+                          {(spot.par || spot.green_fee_kr || spot.cost_kr || spot.season || spot.level || spot.tee_time) && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {spot.par && (
+                                <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">
+                                  Par {spot.par}
+                                </span>
+                              )}
+                              {spot.green_fee_kr && (
+                                <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
+                                  💰 {spot.green_fee_kr}
+                                </span>
+                              )}
+                              {spot.cost_kr && (
+                                <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
+                                  💰 {spot.cost_kr}
+                                </span>
+                              )}
+                              {spot.level && (
+                                <span className="text-[10px] bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full">
+                                  🎯 {spot.level}
+                                </span>
+                              )}
+                              {spot.season && (
+                                <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full">
+                                  📅 {spot.season}
+                                </span>
+                              )}
+                              {spot.tee_time && (
+                                <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full">
+                                  ⏰ {spot.tee_time}
+                                </span>
+                              )}
+                            </div>
                           )}
                           {spot.tip && (
                             <div className="mt-2 px-3 py-1.5 bg-amber-50 rounded-lg text-xs text-amber-700">
