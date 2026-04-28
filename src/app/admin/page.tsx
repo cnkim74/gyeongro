@@ -68,7 +68,7 @@ export default async function AdminDashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { href: "/admin/users", icon: Users, title: "사용자 관리", desc: "권한 등급 변경 (일반/기업회원/관리자)" },
+          { href: "/admin/users", icon: Users, title: "사용자 관리", desc: "권한 변경 (여행자/셰르파/파트너/운영팀)" },
           { href: "/admin/posts", icon: MessageSquare, title: "게시글 관리", desc: "게시글 검토, 삭제, 고정" },
           { href: "/admin/trips", icon: Map, title: "여행 계획", desc: "전체 여행 계획 조회" },
         ].map((item) => {

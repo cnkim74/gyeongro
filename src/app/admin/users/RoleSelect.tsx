@@ -3,13 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import type { UserRole } from "@/lib/admin";
+import { ROLE_LABELS, ROLE_EMOJIS, VALID_ROLES, type UserRole } from "@/lib/admin";
 
-const OPTIONS: { value: UserRole; label: string }[] = [
-  { value: "user", label: "일반" },
-  { value: "business", label: "기업회원" },
-  { value: "admin", label: "관리자" },
-];
+const OPTIONS: { value: UserRole; label: string; emoji: string }[] = VALID_ROLES.map(
+  (r) => ({ value: r, label: ROLE_LABELS[r], emoji: ROLE_EMOJIS[r] })
+);
 
 export default function RoleSelect({
   userId,
@@ -62,7 +60,7 @@ export default function RoleSelect({
       >
         {OPTIONS.map((o) => (
           <option key={o.value} value={o.value}>
-            {o.label}
+            {o.emoji} {o.label}
           </option>
         ))}
       </select>

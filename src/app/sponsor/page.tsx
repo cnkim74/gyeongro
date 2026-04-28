@@ -34,10 +34,10 @@ export default async function SponsorPage() {
           <div className="max-w-2xl mx-auto px-4 text-center">
             <Megaphone className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              길잡이 전용 페이지입니다
+              파트너 전용 페이지입니다
             </h1>
             <p className="text-gray-500 mb-6">
-              스폰서·홍보 메뉴는 <strong>길잡이(기업회원)</strong>만 사용할 수 있어요.
+              스폰서·홍보 메뉴는 <strong>파트너(기업회원)</strong>만 사용할 수 있어요.
               <br />
               현재 권한: <strong>{ROLE_LABELS[role]}</strong>
             </p>

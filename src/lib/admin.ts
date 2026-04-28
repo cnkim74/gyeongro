@@ -26,10 +26,10 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 };
 
 export const ROLE_LABELS_FORMAL: Record<UserRole, string> = {
-  user: "일반회원",
-  business: "기업회원",
+  user: "여행자",
+  business: "파트너",
   sherpa: "셰르파",
-  admin: "관리자",
+  admin: "운영팀",
 };
 
 export const ROLE_EMOJIS: Record<UserRole, string> = {

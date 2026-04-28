@@ -1,4 +1,10 @@
-import { requireAdmin, ROLE_LABELS, ROLE_COLORS, type UserRole } from "@/lib/admin";
+import {
+  requireAdmin,
+  ROLE_LABELS,
+  ROLE_COLORS,
+  ROLE_EMOJIS,
+  type UserRole,
+} from "@/lib/admin";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import RoleSelect from "./RoleSelect";
 
@@ -52,6 +58,7 @@ export default async function AdminUsersPage() {
   const counts = {
     total: users.length,
     user: users.filter((u) => u.role === "user").length,
+    sherpa: users.filter((u) => u.role === "sherpa").length,
     business: users.filter((u) => u.role === "business").length,
     admin: users.filter((u) => u.role === "admin").length,
   };
@@ -60,19 +67,31 @@ export default async function AdminUsersPage() {
     <div className="p-6 lg:p-10">
       <h1 className="text-2xl font-bold text-gray-900 mb-1">사용자 관리</h1>
       <p className="text-sm text-gray-500 mb-6">
-        가입자 권한 등급을 일반 / 기업회원 / 관리자로 구분하여 관리할 수 있어요.
+        가입자 권한을 {ROLE_LABELS.user} · {ROLE_LABELS.sherpa} · {ROLE_LABELS.business} · {ROLE_LABELS.admin}로 구분해 관리할 수 있어요.
       </p>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        {[
-          { label: "전체", value: counts.total, color: "bg-gray-50 border-gray-200" },
-          { label: "일반", value: counts.user, color: "bg-blue-50 border-blue-200" },
-          { label: "기업회원", value: counts.business, color: "bg-emerald-50 border-emerald-200" },
-          { label: "관리자", value: counts.admin, color: "bg-purple-50 border-purple-200" },
-        ].map((s) => (
-          <div key={s.label} className={`rounded-xl border p-4 ${s.color}`}>
-            <p className="text-xs text-gray-600 mb-1">{s.label}</p>
-            <p className="text-2xl font-bold text-gray-900">{s.value.toLocaleString()}</p>
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+          <p className="text-xs text-gray-600 mb-1">전체</p>
+          <p className="text-2xl font-bold text-gray-900">
+            {counts.total.toLocaleString()}
+          </p>
+        </div>
+        {(["user", "sherpa", "business", "admin"] as UserRole[]).map((r) => (
+          <div
+            key={r}
+            className={`rounded-xl border p-4 ${ROLE_COLORS[r].replace(
+              /text-\S+/,
+              ""
+            )} border-gray-200`}
+          >
+            <p className="text-xs text-gray-600 mb-1">
+              <span className="mr-1">{ROLE_EMOJIS[r]}</span>
+              {ROLE_LABELS[r]}
+            </p>
+            <p className="text-2xl font-bold text-gray-900">
+              {counts[r].toLocaleString()}
+            </p>
           </div>
         ))}
       </div>

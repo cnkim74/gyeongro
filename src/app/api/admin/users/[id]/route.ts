@@ -4,7 +4,7 @@ import { getSupabaseServiceClient } from "@/lib/supabase";
 
 export const runtime = "nodejs";
 
-const VALID_ROLES = ["user", "business", "admin"] as const;
+const VALID_ROLES = ["user", "business", "sherpa", "admin"] as const;
 type Role = (typeof VALID_ROLES)[number];
 
 export async function PATCH(

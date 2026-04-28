@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   const role = await getUserRole(session.user.id);
   if (role !== "business" && role !== "admin") {
     return Response.json(
-      { error: "길잡이(기업회원)만 등록할 수 있어요." },
+      { error: "파트너(기업회원)만 등록할 수 있어요." },
       { status: 403 }
     );
   }
