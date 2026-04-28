@@ -27,6 +27,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   hiking_trekking: "🥾 하이킹·트레킹",
   onsen: "♨️ 온천·스파",
   roadtrip: "🚗 렌트카 여행",
+  pilgrimage: "🛐 성지순례",
+  healing: "🧘 힐링·웰니스",
 };
 
 interface ThemeRow {

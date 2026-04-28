@@ -45,6 +45,7 @@ const themes = [
   { id: "hiking_trekking", label: "하이킹·트레킹", emoji: "🥾" },
   { id: "onsen", label: "온천·스파", emoji: "♨️" },
   { id: "roadtrip", label: "렌트카 여행", emoji: "🚗" },
+  { id: "pilgrimage", label: "성지순례", emoji: "🛐" },
 ];
 
 const popularDestinations = [
