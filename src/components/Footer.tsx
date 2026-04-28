@@ -118,6 +118,9 @@ export default function Footer() {
                 <Link href="/sherpa" className="hover:text-white transition-colors">
                   셰르파 매칭
                 </Link>
+                <span className="block text-[10px] text-slate-600 mt-0.5">
+                  현지 전문가 1:1
+                </span>
               </li>
             </ul>
           </div>

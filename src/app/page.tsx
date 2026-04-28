@@ -193,12 +193,28 @@ export default async function HomePage() {
 
       {/* Hero - 모던하고 강한 비주얼 */}
       <section className="relative min-h-[92vh] flex items-center overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950">
-        {/* Background gradient orbs */}
+        {/* Aurora — 다층 색상 그라디언트 */}
         <div className="absolute inset-0">
-          <div className="absolute top-20 left-1/4 w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[120px]" />
-          <div className="absolute bottom-20 right-1/4 w-[600px] h-[600px] bg-indigo-500/20 rounded-full blur-[120px]" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-purple-500/10 rounded-full blur-[100px]" />
+          <div className="absolute top-10 left-1/4 w-[600px] h-[400px] bg-blue-500/25 rounded-full blur-[140px]" />
+          <div className="absolute bottom-20 right-1/4 w-[700px] h-[500px] bg-indigo-500/25 rounded-full blur-[140px]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-purple-500/15 rounded-full blur-[120px]" />
+          {/* 오로라 청록 띠 */}
+          <div className="absolute top-1/3 left-0 right-0 h-[200px] bg-gradient-to-r from-transparent via-cyan-400/15 to-transparent blur-[80px] -rotate-6" />
+          {/* 오로라 그린 띠 (왼쪽 상단) */}
+          <div className="absolute top-0 left-0 w-[500px] h-[300px] bg-emerald-400/10 rounded-full blur-[120px]" />
+          {/* 오로라 핑크 점 (우하단) */}
+          <div className="absolute bottom-0 right-1/3 w-[400px] h-[300px] bg-fuchsia-500/10 rounded-full blur-[100px]" />
         </div>
+
+        {/* 별 패턴 */}
+        <div
+          className="absolute inset-0 opacity-80 mix-blend-screen pointer-events-none"
+          style={{
+            backgroundImage: "url('/patterns/stars.svg')",
+            backgroundRepeat: "repeat",
+            backgroundSize: "1200px 800px",
+          }}
+        />
 
         {/* Subtle grid pattern */}
         <div
@@ -481,16 +497,20 @@ export default async function HomePage() {
                 LOCAL EXPERT
               </p>
               <h2 className="text-4xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-4 leading-tight">
-                현지 셰르파와
+                현지 전문가,
                 <br />
                 <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
-                  진짜 여행을
+                  셰르파와 함께
                 </span>
               </h2>
+              <p className="text-base text-slate-500 leading-relaxed mb-2 italic">
+                * 셰르파 = 히말라야에서 등반가의 길을 안내하던 사람들. Pothos는
+                이 단어를 빌려 당신의 여정에 함께 걷는 모든 현지 전문가를 셰르파라고 부릅니다.
+              </p>
               <p className="text-lg text-slate-600 leading-relaxed mb-6">
                 도쿄에서 푸드 투어, 발리에서 서핑 강습, 강남에서 의료 통역까지.
                 <br />
-                AI 매칭으로 당신에게 딱 맞는 현지 셰르파를 찾아드립니다.
+                AI 매칭으로 당신에게 딱 맞는 셰르파를 찾아드립니다.
               </p>
 
               <div className="space-y-3 mb-8">
@@ -743,10 +763,11 @@ export default async function HomePage() {
               >
                 <div className="text-4xl mb-3">🏔️</div>
                 <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-amber-600">
-                  셰르파로 활동
+                  셰르파(현지 전문가)로 활동
                 </h3>
                 <p className="text-slate-500 text-sm leading-relaxed">
-                  현지 가이드·통역·동행으로 여행자에게 진짜 여행 경험을
+                  도시 가이드·통역·푸드·사진·의료 동행 — 자기 동네의 셰르파가
+                  되어보세요
                 </p>
                 <p className="mt-4 text-xs font-semibold text-amber-600 inline-flex items-center gap-1">
                   셰르파 신청 <ArrowRight className="w-3 h-3" />

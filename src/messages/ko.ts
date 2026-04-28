@@ -65,11 +65,11 @@ export const ko: Record<string, string> = {
     "※ Pothos는 의료기관·시술의 정보를 큐레이션해 제공하는 미디어 서비스로,\n의료행위·예약·결제를 직접 대행하지 않습니다. 견적·상담은 본인이 클리닉에 직접 진행하셔야 합니다.\n의료법 제27조(영리 알선·유인 금지)를 준수합니다.",
 
   // /sherpa
-  "sherpa.eyebrow": "Sherpa · Local Guide Matching",
+  "sherpa.eyebrow": "Sherpa · 여정의 동반자",
   "sherpa.title": "현지를 가장 잘 아는 사람과",
   "sherpa.title_2": "함께 떠나세요",
   "sherpa.subtitle":
-    "통역·푸드투어·사진·의료동행까지. 검증된 셰르파가 당신의 여정에 합류해\n관광객으로는 닿을 수 없는 깊이까지 안내합니다.",
+    "원래 '셰르파'는 히말라야 등반가의 길을 안내하던 네팔 사람들의 이름입니다.\nPothos에서는 도시·통역·미식·사진·의료까지 — 당신의 여정에 함께 걷는\n모든 현지 전문가를 셰르파라고 부릅니다.",
   "sherpa.count": "{count}명의 셰르파",
   "sherpa.see_open_trips": "공개된 여행 둘러보기",
   "sherpa.register_cta": "셰르파로 등록",

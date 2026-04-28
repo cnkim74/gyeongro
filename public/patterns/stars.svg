@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+  <!-- 작은 별 (다수, 흐리게) -->
+  <g fill="white">
+    <circle cx="50" cy="60" r="0.8" opacity="0.5"/>
+    <circle cx="120" cy="180" r="0.6" opacity="0.4"/>
+    <circle cx="200" cy="40" r="1.0" opacity="0.7"/>
+    <circle cx="280" cy="120" r="0.7" opacity="0.5"/>
+    <circle cx="360" cy="220" r="0.9" opacity="0.6"/>
+    <circle cx="440" cy="80" r="0.5" opacity="0.4"/>
+    <circle cx="520" cy="160" r="1.1" opacity="0.7"/>
+    <circle cx="600" cy="50" r="0.7" opacity="0.5"/>
+    <circle cx="680" cy="200" r="0.8" opacity="0.6"/>
+    <circle cx="760" cy="100" r="0.6" opacity="0.4"/>
+    <circle cx="840" cy="240" r="1.0" opacity="0.7"/>
+    <circle cx="920" cy="70" r="0.8" opacity="0.5"/>
+    <circle cx="1000" cy="180" r="0.6" opacity="0.4"/>
+    <circle cx="1080" cy="40" r="0.9" opacity="0.6"/>
+    <circle cx="1140" cy="140" r="0.7" opacity="0.5"/>
+
+    <circle cx="80" cy="320" r="0.6" opacity="0.4"/>
+    <circle cx="160" cy="380" r="1.0" opacity="0.7"/>
+    <circle cx="240" cy="280" r="0.7" opacity="0.5"/>
+    <circle cx="320" cy="420" r="0.8" opacity="0.6"/>
+    <circle cx="400" cy="340" r="0.5" opacity="0.4"/>
+    <circle cx="480" cy="380" r="0.9" opacity="0.6"/>
+    <circle cx="560" cy="280" r="1.2" opacity="0.8"/>
+    <circle cx="640" cy="440" r="0.7" opacity="0.5"/>
+    <circle cx="720" cy="320" r="0.6" opacity="0.4"/>
+    <circle cx="800" cy="380" r="1.0" opacity="0.7"/>
+    <circle cx="880" cy="280" r="0.8" opacity="0.6"/>
+    <circle cx="960" cy="420" r="0.5" opacity="0.4"/>
+    <circle cx="1040" cy="340" r="0.9" opacity="0.6"/>
+    <circle cx="1120" cy="380" r="0.7" opacity="0.5"/>
+
+    <circle cx="40" cy="540" r="0.8" opacity="0.6"/>
+    <circle cx="100" cy="620" r="0.6" opacity="0.4"/>
+    <circle cx="180" cy="500" r="1.0" opacity="0.7"/>
+    <circle cx="260" cy="640" r="0.7" opacity="0.5"/>
+    <circle cx="340" cy="560" r="0.9" opacity="0.6"/>
+    <circle cx="420" cy="700" r="0.5" opacity="0.4"/>
+    <circle cx="500" cy="580" r="0.8" opacity="0.6"/>
+    <circle cx="580" cy="660" r="1.1" opacity="0.7"/>
+    <circle cx="660" cy="520" r="0.6" opacity="0.4"/>
+    <circle cx="740" cy="600" r="0.9" opacity="0.6"/>
+    <circle cx="820" cy="680" r="0.7" opacity="0.5"/>
+    <circle cx="900" cy="540" r="1.0" opacity="0.7"/>
+    <circle cx="980" cy="640" r="0.6" opacity="0.4"/>
+    <circle cx="1060" cy="500" r="0.8" opacity="0.6"/>
+    <circle cx="1140" cy="660" r="0.5" opacity="0.4"/>
+
+    <!-- 더 작은 별들 흩뿌리기 -->
+    <circle cx="90" cy="240" r="0.4" opacity="0.3"/>
+    <circle cx="220" cy="520" r="0.4" opacity="0.3"/>
+    <circle cx="370" cy="660" r="0.4" opacity="0.3"/>
+    <circle cx="540" cy="120" r="0.4" opacity="0.3"/>
+    <circle cx="710" cy="240" r="0.4" opacity="0.3"/>
+    <circle cx="850" cy="500" r="0.4" opacity="0.3"/>
+    <circle cx="1010" cy="280" r="0.4" opacity="0.3"/>
+    <circle cx="1100" cy="440" r="0.4" opacity="0.3"/>
+    <circle cx="30" cy="430" r="0.4" opacity="0.3"/>
+    <circle cx="150" cy="700" r="0.4" opacity="0.3"/>
+
+    <!-- 빛나는 큰 별 (sparse, 강조) -->
+    <circle cx="150" cy="100" r="1.6" opacity="0.95"/>
+    <circle cx="730" cy="80" r="1.5" opacity="0.9"/>
+    <circle cx="380" cy="500" r="1.7" opacity="0.95"/>
+    <circle cx="950" cy="600" r="1.5" opacity="0.9"/>
+    <circle cx="1080" cy="280" r="1.6" opacity="0.95"/>
+    <circle cx="60" cy="660" r="1.4" opacity="0.9"/>
+  </g>
+
+  <!-- 빛나는 별에 십자가 광선 (cross-shaped sparkle, 매우 일부만) -->
+  <g stroke="white" stroke-width="0.5" opacity="0.4">
+    <line x1="150" y1="92" x2="150" y2="108"/>
+    <line x1="142" y1="100" x2="158" y2="100"/>
+
+    <line x1="380" y1="492" x2="380" y2="508"/>
+    <line x1="372" y1="500" x2="388" y2="500"/>
+
+    <line x1="1080" y1="272" x2="1080" y2="288"/>
+    <line x1="1072" y1="280" x2="1088" y2="280"/>
+  </g>
+</svg>

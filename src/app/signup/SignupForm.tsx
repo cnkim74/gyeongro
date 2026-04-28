@@ -49,7 +49,7 @@ const ROLE_CARDS: RoleCard[] = [
     label: "셰르파",
     icon: <Mountain className="w-5 h-5" />,
     emoji: "🏔️",
-    description: "현지 가이드로 활동하며 여행자 안내",
+    description: "현지 전문가로 활동 (도시·통역·미식·의료 등)",
     next: "/sherpa/become",
     color: {
       active: "border-amber-500 bg-amber-50 ring-2 ring-amber-100",

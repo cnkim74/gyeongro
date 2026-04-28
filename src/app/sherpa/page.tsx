@@ -114,6 +114,67 @@ export default async function SherpaHubPage({
         </div>
       </section>
 
+      {/* "셰르파란?" 의미 풀이 — 산악인 이미지 너머의 확장 의미 */}
+      <section className="py-12 bg-white border-y border-slate-100">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-8">
+            <p className="text-xs font-bold text-emerald-600 mb-2 tracking-widest">
+              WHAT IS SHERPA?
+            </p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+              셰르파는 산악인이 아니라,{" "}
+              <span className="text-emerald-600">여정의 동반자입니다</span>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-emerald-50/50 rounded-2xl p-5 border border-emerald-100">
+              <p className="text-sm font-bold text-emerald-700 mb-1.5">
+                왜 &lsquo;셰르파&rsquo;인가요?
+              </p>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                셰르파는 단순한 가이드가 아닙니다. 등반가가 정상에 닿을 수
+                있도록 함께 걷는 동반자죠. 우리도 같은 의미로 — 여행자가 진짜
+                여행을 경험하도록 곁에서 함께 걷는 사람을 셰르파라고 부릅니다.
+              </p>
+            </div>
+
+            <div className="bg-emerald-50/50 rounded-2xl p-5 border border-emerald-100">
+              <p className="text-sm font-bold text-emerald-700 mb-1.5">
+                어떤 분들이 활동하나요?
+              </p>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                도시 가이드 · 통역사 · 푸드 투어 호스트 · 사진가 · 의료 통역 ·
+                차량 동행 · 문화 체험 가이드 · 쇼핑 도우미 등 8개 분야의 현지
+                전문가가 활동합니다.
+              </p>
+            </div>
+
+            <div className="bg-emerald-50/50 rounded-2xl p-5 border border-emerald-100">
+              <p className="text-sm font-bold text-emerald-700 mb-1.5">
+                어떻게 매칭되나요?
+              </p>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                직접 검색해서 1:1 예약하거나, 일정·예산 조건만 알려주시면 AI가
+                적합한 셰르파를 찾아 제안서를 받아드립니다. 다국어 자동 번역으로
+                언어 장벽도 없습니다.
+              </p>
+            </div>
+
+            <div className="bg-emerald-50/50 rounded-2xl p-5 border border-emerald-100">
+              <p className="text-sm font-bold text-emerald-700 mb-1.5">
+                결제는 어떻게 하나요?
+              </p>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Pothos를 통해 안전하게 결제하고, 일정 종료 후 정산됩니다. 셰르파
+                개인 계좌로 직접 송금하지 않으니 사기 걱정 없이 이용하실 수
+                있어요.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* List */}
       <section className="py-14 bg-white">
         <div className="max-w-6xl mx-auto px-6">
