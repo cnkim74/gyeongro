@@ -6,8 +6,8 @@ export default function Footer() {
   return (
     <footer className="bg-slate-950 text-slate-400">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
-          <div className="md:col-span-2">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 md:gap-10">
+          <div className="col-span-2 md:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white">
                 <LogoMark size={18} />
@@ -81,6 +81,42 @@ export default function Footer() {
               <li>
                 <Link href="/board" className="hover:text-white transition-colors">
                   커뮤니티
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-white font-semibold mb-4 text-sm">예약·비교</h4>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <Link href="/flights" className="hover:text-white transition-colors">
+                  항공권
+                </Link>
+              </li>
+              <li>
+                <Link href="/hotels" className="hover:text-white transition-colors">
+                  호텔
+                </Link>
+              </li>
+              <li>
+                <Link href="/activities" className="hover:text-white transition-colors">
+                  액티비티·투어
+                </Link>
+              </li>
+              <li>
+                <Link href="/cars" className="hover:text-white transition-colors">
+                  렌트카
+                </Link>
+              </li>
+              <li>
+                <Link href="/medical" className="hover:text-white transition-colors">
+                  의료관광
+                </Link>
+              </li>
+              <li>
+                <Link href="/sherpa" className="hover:text-white transition-colors">
+                  셰르파 매칭
                 </Link>
               </li>
             </ul>
