@@ -261,10 +261,16 @@ export default function ItineraryView({
                 })()}
 
                 <div>
-                  <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-blue-500" />
-                    시간별 일정
-                  </h4>
+                  <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+                    <h4 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-blue-500" />
+                      시간별 일정
+                    </h4>
+                    <p className="text-[10px] text-slate-400 inline-flex items-center gap-1">
+                      <span>ℹ️</span>
+                      <span>영업시간·가격은 Google/Naver에서 최종 확인 권장</span>
+                    </p>
+                  </div>
                   <div className="space-y-1">
                     {day.schedule?.map((item, i) => {
                       const isLast = i === (day.schedule?.length ?? 0) - 1;
@@ -473,6 +479,23 @@ export default function ItineraryView({
           )}
         </div>
       )}
+
+      {/* AI 생성 일정 — 외부 검증 안내 */}
+      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 mb-6">
+        <div className="flex items-start gap-3">
+          <span className="text-xl shrink-0">ℹ️</span>
+          <div className="text-xs text-slate-600 leading-relaxed">
+            <p className="font-bold text-slate-800 mb-1.5">AI가 생성한 일정입니다</p>
+            <p>
+              본 일정의 장소·식당·교통편은 AI가 학습 시점 기준으로 추천한
+              내용입니다. <span className="font-semibold text-slate-800">실제 영업
+              시간·가격·예약 가능 여부·휴무일은 반드시 Google Maps · Naver
+              지도 · 공식 웹사이트에서 최종 확인</span>해주세요. 각 장소 옆의
+              [지도] 버튼을 누르면 즉시 확인할 수 있습니다.
+            </p>
+          </div>
+        </div>
+      </div>
     </>
   );
 }
