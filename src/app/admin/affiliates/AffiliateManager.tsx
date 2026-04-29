@@ -57,10 +57,21 @@ export default function AffiliateManager({
         if (data.title && !p.name) updateField(p.id, "name", data.title);
         return;
       }
-      // 성공: 이미지 URL + 제목 자동 채움 (기존 값 있으면 유지)
+      // 성공: 이미지·제목·가격·affiliate URL 자동 채움 (기존 값 우선 보존)
       if (data.image_url) updateField(p.id, "image_url", data.image_url);
       if (data.title && (!p.name || p.name === "신규 상품")) {
         updateField(p.id, "name", data.title);
+      }
+      if (data.price_text && !p.price_text) {
+        updateField(p.id, "price_text", data.price_text);
+      }
+      // 쿠팡 API가 정식 단축 affiliate URL 줄 때만 갱신 (link.coupang.com 형식)
+      if (
+        data.affiliate_url &&
+        data.affiliate_url !== p.affiliate_url &&
+        /link\.coupang\.com/.test(data.affiliate_url)
+      ) {
+        updateField(p.id, "affiliate_url", data.affiliate_url);
       }
       setFetchMsg((m) => ({
         ...m,

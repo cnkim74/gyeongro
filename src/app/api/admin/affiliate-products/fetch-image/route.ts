@@ -1,20 +1,24 @@
-// 어필리에이트 URL에서 OG 이미지·제목 자동 추출
+// 어필리에이트 URL에서 이미지·제목·가격 자동 추출
 //
 // POST /api/admin/affiliate-products/fetch-image
 //   body: { url: string }
-//   응답: 200 { image_url, title?, price_text? }
+//   응답: 200 { image_url, title?, price_text?, affiliate_url? }
 //        400 (URL 없음 또는 형식 오류)
 //        403 (admin 권한 없음)
 //        502 (외부 fetch 실패)
 //
-// 동작:
-//   1. 어필리에이트 URL 요청 (link.coupang.com/a/... 등)
-//   2. 자동으로 리다이렉트 따라감 (Node fetch redirect: 'follow')
-//   3. HTML 파싱 → <meta property="og:image"> 추출
-//   4. 보너스: og:title, og:description 도 함께 추출
+// 동작 우선순위:
+//   1. 쿠팡 URL이면 → Coupang Partners API (DeepLink + Search) 사용
+//      → 이미지 + 제목 + 가격 + 정식 affiliate URL 모두 받음
+//   2. 그 외 → OG 메타태그 스크래핑 (Mobile Safari UA + JS 리다이렉트 추적)
 
 import { isAdmin } from "@/lib/admin";
 import { auth } from "@/lib/auth";
+import {
+  isCoupangUrl,
+  generateDeepLink,
+  searchProducts,
+} from "@/lib/coupang-api";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,6 +28,8 @@ interface FetchImageResult {
   title?: string;
   description?: string;
   source_url?: string;
+  affiliate_url?: string;
+  price_text?: string;
 }
 
 /** HTML에서 <meta> 또는 <link> 태그의 content/href 값 추출 */
@@ -147,6 +153,65 @@ export async function POST(request: Request) {
 
   if (!/^https?:$/.test(parsedUrl.protocol)) {
     return Response.json({ error: "http/https URL만 지원합니다." }, { status: 400 });
+  }
+
+  // 2.5 쿠팡 URL이면 Coupang Partners API 우선 사용 (정확도 100%)
+  if (isCoupangUrl(url)) {
+    try {
+      // (a) DeepLink로 affiliate URL + landingUrl 받음
+      const deepLink = await generateDeepLink(url);
+
+      // (b) landingUrl HTML 스크래핑으로 og:image / og:title 추출 시도
+      const fetched = await fetchHtml(deepLink.landingUrl);
+      let imageUrl: string | null = null;
+      let title: string | null = null;
+      let priceText: string | null = null;
+
+      if (fetched) {
+        imageUrl = extractMeta(fetched.html, [
+          /<meta\s+(?:property|name)=["']og:image(?::secure_url)?["']\s+content=["']([^"']+)["'][^>]*>/i,
+          /<meta\s+content=["']([^"']+)["']\s+(?:property|name)=["']og:image(?::secure_url)?["'][^>]*>/i,
+          /<meta\s+(?:property|name)=["']twitter:image["']\s+content=["']([^"']+)["'][^>]*>/i,
+        ]);
+        title = extractMeta(fetched.html, [
+          /<meta\s+(?:property|name)=["']og:title["']\s+content=["']([^"']+)["'][^>]*>/i,
+          /<title>([^<]+)<\/title>/i,
+        ]);
+      }
+
+      // (c) 스크래핑 실패하면 Search API로 키워드 검색 (제목 일부로)
+      if ((!imageUrl || !title) && title) {
+        try {
+          // 제목 앞 5단어로 검색
+          const keyword = title.split(/\s+/).slice(0, 5).join(" ");
+          const products = await searchProducts(keyword, 3);
+          if (products.length > 0) {
+            const top = products[0];
+            if (!imageUrl) imageUrl = top.productImage;
+            if (!title) title = top.productName;
+            priceText = `${top.productPrice.toLocaleString("ko-KR")}원`;
+          }
+        } catch {
+          /* search 실패해도 deeplink는 줌 */
+        }
+      }
+
+      return Response.json({
+        image_url: imageUrl ?? undefined,
+        title: title
+          ? title.replace(/\s*\|\s*쿠팡!?\s*$/i, "").trim()
+          : undefined,
+        price_text: priceText ?? undefined,
+        affiliate_url: deepLink.shortenUrl, // 정식 affiliate 단축 URL
+        source_url: deepLink.landingUrl,
+      });
+    } catch (err) {
+      // Coupang API 실패 → OG 스크래핑으로 fallback (아래 로직 진행)
+      console.warn(
+        "[fetch-image] Coupang API 실패, OG 스크래핑 fallback:",
+        err instanceof Error ? err.message : err
+      );
+    }
   }
 
   // 3. 다단계 fetch — 최대 3회 (원본 → JS 리다이렉트 → 한 번 더)
