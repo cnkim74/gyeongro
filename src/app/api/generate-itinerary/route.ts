@@ -157,94 +157,42 @@ ${medicalCtx.clinicName ? `- 클리닉: ${medicalCtx.clinicName}${medicalCtx.cli
 6. tips 배열에 의료 주의사항 1~2개 추가.`;
   }
 
-  const prompt = `당신은 전문 여행 플래너입니다. 아래 조건에 맞는 상세한 여행 일정을 만들어주세요.
-
-여행 조건:
+  const prompt = `여행 조건
 - 목적지: ${destination}
-- 기간: ${nights}박 ${totalDays}일 (총 ${totalDays}일, 일정은 Day 1부터 Day ${totalDays}까지)
+- 기간: ${nights}박 ${totalDays}일 (Day 1~${totalDays})
 - 인원: ${people}명
-- 총 예산: ${budget.toLocaleString()}원 (1인 기준 ${Math.round(budget / people).toLocaleString()}원)
-- 여행 스타일: ${styleText}
-- 관심 테마: ${themeText}${themeDetail ? `\n  - ${themeDetail}` : ""}${medicalBlock}
+- 예산: ${budget.toLocaleString()}원 (1인 ${Math.round(budget / people).toLocaleString()}원)
+- 스타일: ${styleText}
+- 테마: ${themeText}${themeDetail ? `\n  ${themeDetail}` : ""}${medicalBlock}
 
-다중 도시·국가 처리 규칙:
-- 목적지에 화살표(→), 콤마(,), 슬래시(/), 또는 "A에서 B로/A부터 B까지" 표현이 있으면
-  여러 도시를 순서대로 방문하는 일정으로 간주.
-- 도시별 머무는 박수를 일정에 균등하거나 유명도에 따라 자동 분배.
-- 도시 간 이동 day는 transport_to_next에 ✈️ 항공 / 🚄 고속철 / 🚌 장거리 버스 등 명시 +
-  소요시간·요금 + 예약 팁 포함 (예: 'Eurail 패스 추천', '저가항공 ₩100k 이내').
-- 도시별로 day의 title 또는 theme에 도시명 명시 (예: 'Day 3 — 프라하 마지막 날',
-  'Day 4 — 베를린 도착').
-- 환승 도시·경유지가 있으면 주요 명소 1~2곳도 추천.
-- "체코+독일", "스페인 일주" 같은 광역 표현은 대표 도시 3~4개를 골라 순회 일정으로 자동 구성.
+다중 도시(→/,/'에서~까지'): 도시별 박수 자동 분배. 도시 간 이동 day의 transport_to_next에 ✈️/🚄/🚌 + 시간·요금. day title에 도시명 명시.
 
-다음 JSON 구조로 응답하세요:
-
+JSON 출력:
 {
-  "title": "여행 제목 (반드시 '박'이 '일'보다 앞)",
-  "summary": "여행 특징을 2-3문장으로",
-  "highlights": ["하이라이트 1", "하이라이트 2", "하이라이트 3"],
-  "totalBudget": {
-    "accommodation": 숫자,
-    "food": 숫자,
-    "transport": 숫자,
-    "activities": 숫자
-  },
-  "days": [
-    {
-      "day": 1,
-      "title": "Day 1 제목",
-      "theme": "이 날의 테마",
-      "schedule": [
-        {
-          "time": "09:00",
-          "place": "장소명",
-          "activity": "활동 설명",
-          "duration": "2시간",
-          "cost": 숫자,
-          "tip": "팁",
-          "transport_to_next": {
-            "mode": "🚇 지하철 4호선" | "🚌 버스 02번" | "🚶 도보" | "🚖 택시" | "🚇 메트로 1호선" | "🚊 트램" | "🚄 신칸센" 등,
-            "duration": "12분",
-            "cost_kr": "₩1,400" 또는 "무료" 또는 null
-          },
-          "nearby_alternatives": [
-            { "name": "비슷한 장소 A", "reason": "분위기/카테고리 비슷한 이유 한 줄" },
-            { "name": "비슷한 장소 B", "reason": "다른 매력 한 줄" }
-          ],
-          "nearby_food": [
-            {
-              "name": "근처 인기 카페·식당",
-              "type": "카페" | "디저트" | "현지식" | "베이커리" 등,
-              "why": "왜 SNS에 자주 노출되는지·시그니처 한 줄"
-            }
-          ]
-        }
-      ],
-      "meal": { "breakfast": "아침", "lunch": "점심 (장소명)", "dinner": "저녁 (장소명)" },
-      "accommodation": "숙소 추천",
-      "dayBudget": 숫자
-    }
-  ],
-  "tips": ["팁1", "팁2", "팁3"],
-  "bestSeason": "최적 여행 시기"
+  "title": "박X 일Y 제목",
+  "summary": "2-3문장",
+  "highlights": ["3개"],
+  "totalBudget": {"accommodation":N, "food":N, "transport":N, "activities":N},
+  "days": [{
+    "day": 1, "title": "...", "theme": "...",
+    "schedule": [{
+      "time": "09:00", "place": "장소명만(주소X)", "activity": "...",
+      "duration": "2시간", "cost": N, "tip": "...",
+      "transport_to_next": {"mode": "🚇 지하철4호선", "duration": "12분", "cost_kr": "₩1,400"},
+      "nearby_alternatives": [{"name":"...", "reason":"..."}],
+      "nearby_food": [{"name":"...", "type":"카페|디저트|현지식", "why":"SNS 인기 이유"}]
+    }],
+    "meal": {"breakfast":"...", "lunch":"...", "dinner":"..."},
+    "accommodation": "...", "dayBudget": N
+  }],
+  "tips": ["3개"],
+  "bestSeason": "..."
 }
 
-규칙:
-- schedule 항목은 최소 4개, 실제 존재하는 장소·음식점만 추천 (가공된 가게 금지).
-- place 필드에는 **장소 이름만** (도시명·상세 주소·우편번호 제외).
-  · 좋은 예: "섭지코지", "Joe's Pizza Broadway", "에펠탑"
-  · 나쁜 예: "Joe's Pizza Broadway, 1435 Broadway, NY 10018, 뉴욕"
-  · 도시 정보는 destination에 이미 있으니 중복 금지.
-- transport_to_next는 마지막 항목을 제외한 모든 항목에 포함.
-- nearby_alternatives: 메인 장소와 카테고리·분위기 비슷한 대체지 2개 (있으면).
-- nearby_food: 도보 5~15분 거리의 SNS·인스타·구글 인기 카페·디저트·식당 1개 (있으면).
-  · 한국이면 백종원·블루리본·미슐랭·핫플·인기 베이커리 위주.
-  · 해외면 식당 가이드(미슐랭·테이블링·태블호퍼·로컬 인기 SNS)에 자주 등장하는 곳.
-- 모든 장소명은 영문이면 영문, 한글이면 한글로 일관되게.`;
+규칙: schedule 4개+, 실제 존재하는 곳만, place는 이름만(주소·도시 제외), transport_to_next는 마지막 외 모두 포함, nearby_alternatives 2개·nearby_food 1개(있으면). 한국이면 백종원·미슐랭·핫플 위주, 해외면 미슐랭·로컬 SNS 인기.`;
 
   const systemContent =
-    "당신은 한국의 전문 여행 플래너입니다. 실제 존재하는 장소, 음식점, 숙소를 기반으로 현실적이고 상세한 여행 일정을 제공합니다.\n\n【언어 규칙】\n- 모든 텍스트 값은 반드시 한국어(한글)로만 작성. 러시아어/일본어 히라가나·카타카나/중국어 한자 금지.\n- 해외 고유명사는 한글 음차 + 괄호 안 영문만 허용. 예: 에펠탑(Eiffel Tower), 스시(sushi).\n\n【JSON 규칙 - 매우 중요】\n- 출력은 반드시 valid JSON object 만 반환 (단 하나의 { ... } 객체).\n- 모든 문자열 값은 \"...\" 큰따옴표로 감싸야 함. 절대 따옴표를 빼먹지 말 것.\n- 문자열 안에서 큰따옴표를 사용해야 할 때는 반드시 \\\" 로 이스케이프.\n- 숫자 값은 따옴표 없이 숫자만 (예: 50000).\n- 마크다운, 설명, 코드블록 ``` 절대 금지. JSON 만 출력.";
+    "한국 여행 플래너. 실재 장소만 추천. 모든 텍스트 한글(외국 고유명사는 '한글(영문)' 형식). 출력은 valid JSON object 1개만, 마크다운·코드블록 금지.";
 
   const encoder = new TextEncoder();
 
@@ -257,7 +205,7 @@ ${medicalCtx.clinicName ? `- 클리닉: ${medicalCtx.clinicName}${medicalCtx.cli
             { role: "system", content: systemContent },
             { role: "user", content: prompt },
           ],
-          max_tokens: 8000,
+          max_tokens: 4500,
           temperature: 0.7,
           response_format: { type: "json_object" },
         });
@@ -280,7 +228,7 @@ ${medicalCtx.clinicName ? `- 클리닉: ${medicalCtx.clinicName}${medicalCtx.cli
               },
               { role: "user", content: cleaned },
             ],
-            max_tokens: 8000,
+            max_tokens: 4500,
             temperature: 0,
             response_format: { type: "json_object" },
           });
