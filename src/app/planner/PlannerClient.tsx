@@ -242,9 +242,13 @@ function PlannerContent() {
                   type="text"
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
-                  placeholder="예: 제주도, 도쿄, 파리..."
+                  placeholder="예: 도쿄  ·  프라하 → 뮌헨 → 베를린  ·  체코+독일 7일"
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition text-gray-900 placeholder-gray-400"
                 />
+                <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+                  💡 <strong>여러 도시·국가</strong>는 화살표(→) 또는 콤마(,)로 연결하세요.
+                  예: <code className="text-blue-600">프라하 → 드레스덴 → 베를린</code> 또는 <code className="text-blue-600">체코+독일 7박 8일</code>
+                </p>
                 <div className="flex flex-wrap gap-2 mt-3">
                   {popularDestinations.map((d) => (
                     <button

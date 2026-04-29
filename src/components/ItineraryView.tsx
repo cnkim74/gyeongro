@@ -256,6 +256,49 @@ export default function ItineraryView({
                           💡 임베드 지도를 보려면 관리자가 <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> 환경변수를 설정해야 합니다. 아래 일정의 [지도] 링크는 즉시 작동합니다.
                         </div>
                       )}
+
+                      {/* 순서 있는 동선 리스트 — 지도가 경로 선 못 그려도 순서 명확 */}
+                      <ol className="space-y-1 mb-3">
+                        {places.map((place, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-xs">
+                            <span className="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold text-[10px]">
+                              {idx + 1}
+                            </span>
+                            <a
+                              href={getPlaceSearchUrl(place, destination)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-1 text-slate-700 hover:text-blue-600 leading-relaxed"
+                            >
+                              {place}
+                            </a>
+                            {idx < places.length - 1 && (
+                              <ArrowDown className="w-3 h-3 text-slate-300 mt-1 shrink-0" />
+                            )}
+                          </li>
+                        ))}
+                      </ol>
+
+                      {/* 구글맵에 저장 안내 */}
+                      {dirsUrl && (
+                        <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-2">
+                          <p className="text-xs text-blue-900 leading-relaxed">
+                            <span className="font-bold">💾 구글맵에 저장</span> —{" "}
+                            <a
+                              href={dirsUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-semibold underline decoration-blue-300 hover:text-blue-700"
+                            >
+                              구글맵에서 열기
+                            </a>{" "}
+                            → 우측 상단 ⋮ 메뉴 →{" "}
+                            <span className="font-semibold">&lsquo;경로 보내기&rsquo;</span> 또는{" "}
+                            <span className="font-semibold">&lsquo;내 지도에 저장&rsquo;</span>{" "}
+                            누르면 본인 계정에 저장됩니다.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
