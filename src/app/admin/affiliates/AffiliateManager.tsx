@@ -261,9 +261,14 @@ export default function AffiliateManager({
                   type="url"
                   value={p.image_url ?? ""}
                   onChange={(e) => updateField(p.id, "image_url", e.target.value)}
-                  placeholder="https://..."
+                  placeholder="https://thumbnail7.coupangcdn.com/..."
                   className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-mono"
                 />
+                <p className="text-[10px] text-gray-400 mt-1 leading-snug">
+                  💡 쿠팡 상품 페이지 → 이미지 우클릭 → &lsquo;이미지 주소 복사&rsquo; →
+                  여기 붙여넣기. 보통 <code>thumbnail7.coupangcdn.com</code>으로
+                  시작합니다. 비워두면 카테고리 이모지로 대체됩니다.
+                </p>
               </div>
             </div>
 
