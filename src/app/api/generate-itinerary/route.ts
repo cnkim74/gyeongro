@@ -223,6 +223,10 @@ ${medicalCtx.clinicName ? `- 클리닉: ${medicalCtx.clinicName}${medicalCtx.cli
 
 규칙:
 - schedule 항목은 최소 4개, 실제 존재하는 장소·음식점만 추천 (가공된 가게 금지).
+- place 필드에는 **장소 이름만** (도시명·상세 주소·우편번호 제외).
+  · 좋은 예: "섭지코지", "Joe's Pizza Broadway", "에펠탑"
+  · 나쁜 예: "Joe's Pizza Broadway, 1435 Broadway, NY 10018, 뉴욕"
+  · 도시 정보는 destination에 이미 있으니 중복 금지.
 - transport_to_next는 마지막 항목을 제외한 모든 항목에 포함.
 - nearby_alternatives: 메인 장소와 카테고리·분위기 비슷한 대체지 2개 (있으면).
 - nearby_food: 도보 5~15분 거리의 SNS·인스타·구글 인기 카페·디저트·식당 1개 (있으면).
