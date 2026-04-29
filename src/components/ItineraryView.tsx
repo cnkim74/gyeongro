@@ -13,13 +13,40 @@ import {
   Navigation,
   HeartPulse,
   Stethoscope,
+  ArrowDown,
+  Sparkles,
+  Coffee,
+  Hash,
 } from "lucide-react";
 import {
   getPlaceSearchUrl,
   getDirectionsUrl,
   getDirectionsEmbedUrl,
 } from "@/lib/maps";
+import {
+  googleMapsSearch,
+  naverMapSearch,
+  instagramHashtag,
+  isKoreanCity,
+} from "@/lib/search-links";
 import TravelAdvisory from "@/components/TravelAdvisory";
+
+export interface TransportLeg {
+  mode?: string;
+  duration?: string;
+  cost_kr?: string | null;
+}
+
+export interface NearbyAlternative {
+  name: string;
+  reason?: string;
+}
+
+export interface NearbyFood {
+  name: string;
+  type?: string;
+  why?: string;
+}
 
 export interface ScheduleItem {
   time: string;
@@ -28,6 +55,9 @@ export interface ScheduleItem {
   duration: string;
   cost: number;
   tip: string;
+  transport_to_next?: TransportLeg | null;
+  nearby_alternatives?: NearbyAlternative[];
+  nearby_food?: NearbyFood[];
 }
 
 export interface DayPlan {
@@ -235,45 +265,149 @@ export default function ItineraryView({
                     <Clock className="w-4 h-4 text-blue-500" />
                     시간별 일정
                   </h4>
-                  <div className="space-y-3">
-                    {day.schedule?.map((item, i) => (
-                      <div key={i} className="flex gap-4">
-                        <div className="text-sm font-mono text-blue-500 font-semibold w-14 shrink-0 pt-0.5">
-                          {item.time}
-                        </div>
-                        <div className="flex-1 pb-3 border-b border-gray-50 last:border-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <p className="font-semibold text-gray-900 text-sm">{item.place}</p>
-                            <a
-                              href={getPlaceSearchUrl(item.place, destination)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="shrink-0 inline-flex items-center gap-0.5 text-[11px] text-blue-500 hover:text-blue-700 font-medium px-2 py-0.5 rounded-full bg-blue-50 hover:bg-blue-100"
-                              title="구글맵에서 보기"
-                            >
-                              <MapIcon className="w-3 h-3" />
-                              지도
-                            </a>
+                  <div className="space-y-1">
+                    {day.schedule?.map((item, i) => {
+                      const isLast = i === (day.schedule?.length ?? 0) - 1;
+                      const inKorea = isKoreanCity(destination);
+                      return (
+                        <div key={i}>
+                          <div className="flex gap-4">
+                            <div className="text-sm font-mono text-blue-500 font-semibold w-14 shrink-0 pt-0.5">
+                              {item.time}
+                            </div>
+                            <div className="flex-1 pb-3 border-b border-gray-50 last:border-0">
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="font-semibold text-gray-900 text-sm">{item.place}</p>
+                                <a
+                                  href={getPlaceSearchUrl(item.place, destination)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="shrink-0 inline-flex items-center gap-0.5 text-[11px] text-blue-500 hover:text-blue-700 font-medium px-2 py-0.5 rounded-full bg-blue-50 hover:bg-blue-100"
+                                  title="구글맵에서 보기"
+                                >
+                                  <MapIcon className="w-3 h-3" />
+                                  지도
+                                </a>
+                              </div>
+                              <p className="text-gray-500 text-sm mt-0.5">{item.activity}</p>
+                              <div className="flex items-center gap-3 mt-1.5">
+                                <span className="text-xs text-gray-400 flex items-center gap-1">
+                                  <Clock className="w-3 h-3" /> {item.duration}
+                                </span>
+                                {item.cost > 0 && (
+                                  <span className="text-xs text-emerald-600 font-medium">
+                                    {formatCurrency(item.cost)}원
+                                  </span>
+                                )}
+                              </div>
+                              {item.tip && (
+                                <div className="mt-2 px-3 py-2 bg-amber-50 rounded-lg text-xs text-amber-700">
+                                  💡 {item.tip}
+                                </div>
+                              )}
+
+                              {/* 주변 대안 스팟 */}
+                              {item.nearby_alternatives && item.nearby_alternatives.length > 0 && (
+                                <div className="mt-2 px-3 py-2 bg-slate-50 rounded-lg">
+                                  <p className="text-[10px] font-bold text-slate-500 mb-1.5 flex items-center gap-1">
+                                    <Sparkles className="w-3 h-3 text-slate-400" />
+                                    이 곳 대신 가도 좋은 곳
+                                  </p>
+                                  <div className="space-y-1">
+                                    {item.nearby_alternatives.map((alt, j) => (
+                                      <a
+                                        key={j}
+                                        href={
+                                          inKorea
+                                            ? naverMapSearch(alt.name)
+                                            : googleMapsSearch(alt.name, destination)
+                                        }
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-start gap-1.5 text-xs text-slate-700 hover:text-blue-600"
+                                      >
+                                        <span className="text-slate-400 shrink-0">·</span>
+                                        <span className="flex-1">
+                                          <span className="font-semibold">{alt.name}</span>
+                                          {alt.reason && (
+                                            <span className="text-slate-500"> — {alt.reason}</span>
+                                          )}
+                                        </span>
+                                      </a>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* 근처 SNS 핫플 음식점 */}
+                              {item.nearby_food && item.nearby_food.length > 0 && (
+                                <div className="mt-2 px-3 py-2 bg-rose-50/60 rounded-lg">
+                                  <p className="text-[10px] font-bold text-rose-700 mb-1.5 flex items-center gap-1">
+                                    <Coffee className="w-3 h-3" />
+                                    근처 인기 카페·식당
+                                  </p>
+                                  <div className="space-y-1.5">
+                                    {item.nearby_food.map((food, j) => (
+                                      <div key={j} className="text-xs">
+                                        <p className="text-slate-800 leading-snug">
+                                          <span className="font-semibold">{food.name}</span>
+                                          {food.type && (
+                                            <span className="text-rose-600 ml-1">· {food.type}</span>
+                                          )}
+                                          {food.why && (
+                                            <span className="text-slate-500"> — {food.why}</span>
+                                          )}
+                                        </p>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                          <a
+                                            href={
+                                              inKorea
+                                                ? naverMapSearch(food.name)
+                                                : googleMapsSearch(food.name, destination)
+                                            }
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-0.5 text-[10px] text-blue-600 hover:text-blue-800"
+                                          >
+                                            <MapIcon className="w-2.5 h-2.5" />
+                                            {inKorea ? "네이버" : "Google"}
+                                          </a>
+                                          <a
+                                            href={instagramHashtag(food.name)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-0.5 text-[10px] text-pink-600 hover:text-pink-800"
+                                          >
+                                            <Hash className="w-2.5 h-2.5" />
+                                            #{food.name.replace(/[\s\-·,()]/g, "")}
+                                          </a>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <p className="text-gray-500 text-sm mt-0.5">{item.activity}</p>
-                          <div className="flex items-center gap-3 mt-1.5">
-                            <span className="text-xs text-gray-400 flex items-center gap-1">
-                              <Clock className="w-3 h-3" /> {item.duration}
-                            </span>
-                            {item.cost > 0 && (
-                              <span className="text-xs text-emerald-600 font-medium">
-                                {formatCurrency(item.cost)}원
+
+                          {/* 다음 스팟까지 교통수단 */}
+                          {!isLast && item.transport_to_next && item.transport_to_next.mode && (
+                            <div className="ml-14 my-1 flex items-center gap-2 text-[11px] text-slate-500">
+                              <ArrowDown className="w-3 h-3 shrink-0 text-slate-300" />
+                              <span className="font-medium text-slate-700">
+                                {item.transport_to_next.mode}
                               </span>
-                            )}
-                          </div>
-                          {item.tip && (
-                            <div className="mt-2 px-3 py-2 bg-amber-50 rounded-lg text-xs text-amber-700">
-                              💡 {item.tip}
+                              {item.transport_to_next.duration && (
+                                <span>· {item.transport_to_next.duration}</span>
+                              )}
+                              {item.transport_to_next.cost_kr && (
+                                <span>· {item.transport_to_next.cost_kr}</span>
+                              )}
                             </div>
                           )}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 

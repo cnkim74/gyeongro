@@ -176,7 +176,30 @@ ${medicalCtx.clinicName ? `- 클리닉: ${medicalCtx.clinicName}${medicalCtx.cli
       "title": "Day 1 제목",
       "theme": "이 날의 테마",
       "schedule": [
-        { "time": "09:00", "place": "장소명", "activity": "활동 설명", "duration": "2시간", "cost": 숫자, "tip": "팁" }
+        {
+          "time": "09:00",
+          "place": "장소명",
+          "activity": "활동 설명",
+          "duration": "2시간",
+          "cost": 숫자,
+          "tip": "팁",
+          "transport_to_next": {
+            "mode": "🚇 지하철 4호선" | "🚌 버스 02번" | "🚶 도보" | "🚖 택시" | "🚇 메트로 1호선" | "🚊 트램" | "🚄 신칸센" 등,
+            "duration": "12분",
+            "cost_kr": "₩1,400" 또는 "무료" 또는 null
+          },
+          "nearby_alternatives": [
+            { "name": "비슷한 장소 A", "reason": "분위기/카테고리 비슷한 이유 한 줄" },
+            { "name": "비슷한 장소 B", "reason": "다른 매력 한 줄" }
+          ],
+          "nearby_food": [
+            {
+              "name": "근처 인기 카페·식당",
+              "type": "카페" | "디저트" | "현지식" | "베이커리" 등,
+              "why": "왜 SNS에 자주 노출되는지·시그니처 한 줄"
+            }
+          ]
+        }
       ],
       "meal": { "breakfast": "아침", "lunch": "점심 (장소명)", "dinner": "저녁 (장소명)" },
       "accommodation": "숙소 추천",
@@ -187,7 +210,14 @@ ${medicalCtx.clinicName ? `- 클리닉: ${medicalCtx.clinicName}${medicalCtx.cli
   "bestSeason": "최적 여행 시기"
 }
 
-각 날의 schedule은 최소 4개 항목, 실제 존재하는 장소/음식점만 추천하세요.`;
+규칙:
+- schedule 항목은 최소 4개, 실제 존재하는 장소·음식점만 추천 (가공된 가게 금지).
+- transport_to_next는 마지막 항목을 제외한 모든 항목에 포함.
+- nearby_alternatives: 메인 장소와 카테고리·분위기 비슷한 대체지 2개 (있으면).
+- nearby_food: 도보 5~15분 거리의 SNS·인스타·구글 인기 카페·디저트·식당 1개 (있으면).
+  · 한국이면 백종원·블루리본·미슐랭·핫플·인기 베이커리 위주.
+  · 해외면 식당 가이드(미슐랭·테이블링·태블호퍼·로컬 인기 SNS)에 자주 등장하는 곳.
+- 모든 장소명은 영문이면 영문, 한글이면 한글로 일관되게.`;
 
   const encoder = new TextEncoder();
 
