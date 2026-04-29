@@ -1,6 +1,28 @@
 // 구글맵 URL 헬퍼
 
 /**
+ * "한글(English)" 또는 "한글(Local)" 형식이면 괄호 안 부분 추출.
+ * - "에펠탑(Eiffel Tower)" → "Eiffel Tower"
+ * - "도톤보리(Dōtonbori)" → "Dōtonbori"
+ * - "섭지코지" → "섭지코지" (그대로)
+ *
+ * Google 지오코더가 한글 음차보다 영문·현지어를 잘 인식하므로
+ * 외국 장소 검색 시 효과적.
+ */
+function extractSearchableName(place: string): string {
+  const trimmed = place.trim();
+  // "이름(서브이름)" 패턴: 마지막 괄호 안의 내용 추출
+  const match = trimmed.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+  if (!match) return trimmed;
+  const inside = match[2].trim();
+  // 괄호 내용에 라틴/일본·중국 문자가 있으면 그쪽 사용 (지오코더가 더 잘 처리)
+  if (/[A-Za-z]/.test(inside) || /[぀-ヿ一-鿿]/.test(inside)) {
+    return inside;
+  }
+  return trimmed;
+}
+
+/**
  * 장소명에 도시명을 똑똑하게 추가:
  * - 빈 도시 → 그대로
  * - 이미 콤마(주소 형식) 포함 → 그대로 (이미 충분한 정보)
@@ -8,22 +30,23 @@
  * - 짧은 장소명 → 도시 추가 (정확도 향상)
  */
 function smartAugment(place: string, destination?: string): string {
-  if (!destination) return place;
-  const trimmed = place.trim();
-  if (!trimmed) return trimmed;
+  const cleaned = extractSearchableName(place);
+  if (!destination) return cleaned;
+  const trimmedCity = destination.trim();
+  if (!trimmedCity || !cleaned) return cleaned;
 
   // 콤마 있으면 이미 주소 형식 — 도시 중복 방지
-  if (trimmed.includes(",")) return trimmed;
+  if (cleaned.includes(",")) return cleaned;
 
   // 도시명이 이미 포함되어 있으면 그대로 (대소문자 무시)
-  const lowerPlace = trimmed.toLowerCase();
-  const lowerDest = destination.trim().toLowerCase();
-  if (lowerDest && lowerPlace.includes(lowerDest)) return trimmed;
+  const lowerPlace = cleaned.toLowerCase();
+  const lowerDest = trimmedCity.toLowerCase();
+  if (lowerPlace.includes(lowerDest)) return cleaned;
 
   // 다중 도시 destination인 경우 (콤마/화살표 포함) → 추가 안 함
-  if (/[,→/]|에서|부터|까지/.test(destination)) return trimmed;
+  if (/[,→/]|에서|부터|까지/.test(trimmedCity)) return cleaned;
 
-  return `${trimmed}, ${destination}`;
+  return `${cleaned}, ${trimmedCity}`;
 }
 
 /**

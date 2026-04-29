@@ -189,7 +189,7 @@ JSON 출력:
   "bestSeason": "..."
 }
 
-규칙: schedule 4개+, 실제 존재하는 곳만, place는 이름만(주소·도시 제외), transport_to_next는 마지막 외 모두 포함, nearby_alternatives 2개·nearby_food 1개(있으면). 한국이면 백종원·미슐랭·핫플 위주, 해외면 미슐랭·로컬 SNS 인기.`;
+규칙: schedule 4개+, 실제 존재하는 곳만, place는 이름만(주소·도시 제외). **외국 장소는 반드시 '한글(English/Local)' 형식** (예: 카를교(Charles Bridge), 카프카 박물관(Kafka Museum), 도톤보리(Dōtonbori), 에펠탑(Eiffel Tower)). 한국 장소는 한글만 OK. transport_to_next는 마지막 외 모두 포함, nearby_alternatives 2개·nearby_food 1개(있으면). 한국이면 백종원·미슐랭·핫플 위주, 해외면 미슐랭·로컬 SNS 인기.`;
 
   const systemContent =
     "한국 여행 플래너. 실재 장소만 추천. 모든 텍스트 한글(외국 고유명사는 '한글(영문)' 형식). 출력은 valid JSON object 1개만, 마크다운·코드블록 금지.";
