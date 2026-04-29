@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2, Save, Loader2, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, Save, Loader2, Eye, EyeOff, Wand2 } from "lucide-react";
 
 interface Product {
   id: string;
@@ -34,6 +34,47 @@ export default function AffiliateManager({
   const [products, setProducts] = useState(initialProducts);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [fetchingId, setFetchingId] = useState<string | null>(null);
+  const [fetchMsg, setFetchMsg] = useState<Record<string, string>>({});
+
+  const fetchImage = async (p: Product) => {
+    if (!p.affiliate_url || p.affiliate_url === "#") {
+      setFetchMsg((m) => ({ ...m, [p.id]: "어필리에이트 URL을 먼저 입력해주세요." }));
+      return;
+    }
+    setFetchingId(p.id);
+    setFetchMsg((m) => ({ ...m, [p.id]: "가져오는 중..." }));
+    try {
+      const res = await fetch("/api/admin/affiliate-products/fetch-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: p.affiliate_url }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setFetchMsg((m) => ({ ...m, [p.id]: data.error ?? "가져오기 실패" }));
+        // 제목·설명만이라도 받으면 일부 필드 채움
+        if (data.title && !p.name) updateField(p.id, "name", data.title);
+        return;
+      }
+      // 성공: 이미지 URL + 제목 자동 채움 (기존 값 있으면 유지)
+      if (data.image_url) updateField(p.id, "image_url", data.image_url);
+      if (data.title && (!p.name || p.name === "신규 상품")) {
+        updateField(p.id, "name", data.title);
+      }
+      setFetchMsg((m) => ({
+        ...m,
+        [p.id]: "✅ 가져왔습니다. 저장 버튼 누르세요.",
+      }));
+    } catch (err) {
+      setFetchMsg((m) => ({
+        ...m,
+        [p.id]: err instanceof Error ? err.message : "오류 발생",
+      }));
+    } finally {
+      setFetchingId(null);
+    }
+  };
 
   const updateField = (id: string, field: keyof Product, value: unknown) => {
     setProducts((prev) =>
@@ -257,17 +298,44 @@ export default function AffiliateManager({
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">
                   이미지 URL (선택)
                 </label>
-                <input
-                  type="url"
-                  value={p.image_url ?? ""}
-                  onChange={(e) => updateField(p.id, "image_url", e.target.value)}
-                  placeholder="https://thumbnail7.coupangcdn.com/..."
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-mono"
-                />
+                <div className="flex gap-1.5">
+                  <input
+                    type="url"
+                    value={p.image_url ?? ""}
+                    onChange={(e) => updateField(p.id, "image_url", e.target.value)}
+                    placeholder="https://thumbnail7.coupangcdn.com/..."
+                    className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fetchImage(p)}
+                    disabled={fetchingId === p.id}
+                    className="shrink-0 inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-purple-100 text-purple-700 text-xs font-semibold hover:bg-purple-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                    title="어필리에이트 URL에서 이미지·제목 자동 가져오기"
+                  >
+                    {fetchingId === p.id ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Wand2 className="w-3.5 h-3.5" />
+                    )}
+                    자동
+                  </button>
+                </div>
+                {fetchMsg[p.id] && (
+                  <p
+                    className={`text-[10px] mt-1 leading-snug ${
+                      fetchMsg[p.id].startsWith("✅")
+                        ? "text-emerald-600"
+                        : "text-amber-600"
+                    }`}
+                  >
+                    {fetchMsg[p.id]}
+                  </p>
+                )}
                 <p className="text-[10px] text-gray-400 mt-1 leading-snug">
-                  💡 쿠팡 상품 페이지 → 이미지 우클릭 → &lsquo;이미지 주소 복사&rsquo; →
-                  여기 붙여넣기. 보통 <code>thumbnail7.coupangcdn.com</code>으로
-                  시작합니다. 비워두면 카테고리 이모지로 대체됩니다.
+                  🪄 <strong>자동 버튼</strong> 누르면 어필리에이트 URL에서 이미지·제목을
+                  추출합니다. 실패 시 쿠팡 상품 페이지 → 이미지 우클릭 → &lsquo;이미지
+                  주소 복사&rsquo;로 수동 입력하세요. 비워두면 카테고리 이모지로 대체.
                 </p>
               </div>
             </div>
