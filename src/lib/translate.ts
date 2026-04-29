@@ -1,10 +1,10 @@
-// 다국어 자동 번역 (Gemini Flash + DB 캐싱)
+// 다국어 자동 번역 (Groq Llama + DB 캐싱)
 //
 // 정책:
 //   - 마스터 언어는 한국어 (ko). 모든 콘텐츠는 ko로 작성 → en/ja/zh 자동 생성
 //   - DB 캐시: 동일 (text, target) 조합은 LLM 호출 안 함 → 비용 절감 + 일관성
-//   - Gemini Flash 2.0 사용 (월 무료 티어 + 빠름)
-//   - 환경변수: GEMINI_API_KEY 필수
+//   - Groq Llama 3.1 8B Instant (무료 티어 + TPD 6M)
+//   - 환경변수: GROQ_API_KEY 필수
 //
 // 사용:
 //   import { translateText, translateBatch } from "@/lib/translate";
@@ -12,7 +12,7 @@
 //   const [en, ja, zh] = await translateBatch(ko, ["en", "ja", "zh"]);
 
 import crypto from "node:crypto";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 import { getSupabaseServiceClient } from "./supabase";
 
 export type TargetLang = "en" | "ja" | "zh";
@@ -25,7 +25,7 @@ const LANG_NAMES: Record<SourceLang, string> = {
   zh: "Simplified Chinese",
 };
 
-const MODEL = "gemini-2.0-flash";
+const MODEL = "llama-3.1-8b-instant";
 
 /** 안정적인 hash (sha256 prefix) */
 function makeHash(text: string, sourceLang: SourceLang): string {
@@ -76,30 +76,36 @@ async function saveCache(
   );
 }
 
-/** Gemini로 실제 번역 호출 */
-async function callGemini(
+/** Groq로 실제 번역 호출 */
+async function callLLM(
   text: string,
   sourceLang: SourceLang,
   targetLang: TargetLang
 ): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("GEMINI_API_KEY 환경변수가 설정되지 않았습니다.");
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) throw new Error("GROQ_API_KEY 환경변수가 설정되지 않았습니다.");
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: MODEL });
+  const groq = new Groq({ apiKey });
 
-  const prompt = `Translate the following text from ${LANG_NAMES[sourceLang]} to ${LANG_NAMES[targetLang]}.
+  const completion = await groq.chat.completions.create({
+    model: MODEL,
+    messages: [
+      {
+        role: "system",
+        content: `You are a professional translator. Translate from ${LANG_NAMES[sourceLang]} to ${LANG_NAMES[targetLang]}.
 Rules:
 - Output ONLY the translated text. No explanations, no quotes, no markdown.
 - Preserve numbers, URLs, brand names, and proper nouns as-is.
 - Keep the tone natural and idiomatic in the target language.
-- If the input contains line breaks, preserve them.
+- If the input contains line breaks, preserve them.`,
+      },
+      { role: "user", content: text },
+    ],
+    max_tokens: 2000,
+    temperature: 0.3,
+  });
 
-Input:
-${text}`;
-
-  const result = await model.generateContent(prompt);
-  return result.response.text().trim();
+  return (completion.choices[0]?.message?.content ?? "").trim();
 }
 
 /**
@@ -120,7 +126,7 @@ export async function translateText(
   const cached = await lookupCache(trimmed, sourceLang, targetLang);
   if (cached) return cached;
 
-  const translated = await callGemini(trimmed, sourceLang, targetLang);
+  const translated = await callLLM(trimmed, sourceLang, targetLang);
   await saveCache(trimmed, sourceLang, targetLang, translated);
   return translated;
 }

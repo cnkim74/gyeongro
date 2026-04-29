@@ -8,7 +8,7 @@
 
 import { requireAdmin } from "@/lib/admin";
 import { getSupabaseServiceClient } from "@/lib/supabase";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 import { SHERPA_SPECIALTIES, LANGUAGES } from "@/lib/sherpa";
 
 export const runtime = "nodejs";
@@ -92,12 +92,12 @@ export async function POST(request: Request) {
     return Response.json({ error: "도시를 입력해주세요." }, { status: 400 });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     return Response.json({ error: "AI 키가 설정되지 않았어요." }, { status: 500 });
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey);
+  const groq = new Groq({ apiKey });
 
   const specialtyHint =
     specialties.length > 0
@@ -133,18 +133,21 @@ JSON 출력 (이 구조 정확히):
 
   let candidates: CandidateSherpa[] = [];
   try {
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
-      systemInstruction:
-        "당신은 셰르파 큐레이터. JSON object만 반환. 모든 한글은 정확한 한국어, 영문은 정확한 영어. 자연스럽고 차별화된 프로필 작성. 마크다운/설명 절대 금지.",
-      generationConfig: {
-        temperature: 0.8,
-        maxOutputTokens: 6000,
-        responseMimeType: "application/json",
-      },
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.1-8b-instant",
+      messages: [
+        {
+          role: "system",
+          content:
+            "당신은 셰르파 큐레이터. JSON object만 반환. 모든 한글은 정확한 한국어, 영문은 정확한 영어. 자연스럽고 차별화된 프로필 작성. 마크다운/설명 절대 금지.",
+        },
+        { role: "user", content: prompt },
+      ],
+      max_tokens: 6000,
+      temperature: 0.8,
+      response_format: { type: "json_object" },
     });
-    const result = await model.generateContent(prompt);
-    const raw = result.response.text() ?? "{}";
+    const raw = completion.choices[0]?.message?.content ?? "{}";
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed?.sherpas)) {
       candidates = parsed.sherpas as CandidateSherpa[];

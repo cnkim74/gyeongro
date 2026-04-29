@@ -1,10 +1,12 @@
 import { NextRequest } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 import { auth } from "@/lib/auth";
 import { consumeQuota, QuotaExceededError } from "@/lib/ai-quota";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const MODEL = "llama-3.1-8b-instant";
 
 function tryRepairJson(text: string): string {
   let t = text.trim();
@@ -81,14 +83,14 @@ export async function POST(req: NextRequest) {
     throw err;
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     return Response.json(
-      { error: "GEMINI_API_KEY 환경변수가 설정되지 않았습니다." },
+      { error: "GROQ_API_KEY 환경변수가 설정되지 않았습니다." },
       { status: 500 }
     );
   }
-  const genAI = new GoogleGenerativeAI(apiKey);
+  const groq = new Groq({ apiKey });
 
   const themeText = themes?.length > 0 ? themes.join(", ") : "일반 관광";
   const themeHints: Record<string, string> = {
@@ -241,52 +243,50 @@ ${medicalCtx.clinicName ? `- 클리닉: ${medicalCtx.clinicName}${medicalCtx.cli
   · 해외면 식당 가이드(미슐랭·테이블링·태블호퍼·로컬 인기 SNS)에 자주 등장하는 곳.
 - 모든 장소명은 영문이면 영문, 한글이면 한글로 일관되게.`;
 
-  const systemInstruction =
+  const systemContent =
     "당신은 한국의 전문 여행 플래너입니다. 실제 존재하는 장소, 음식점, 숙소를 기반으로 현실적이고 상세한 여행 일정을 제공합니다.\n\n【언어 규칙】\n- 모든 텍스트 값은 반드시 한국어(한글)로만 작성. 러시아어/일본어 히라가나·카타카나/중국어 한자 금지.\n- 해외 고유명사는 한글 음차 + 괄호 안 영문만 허용. 예: 에펠탑(Eiffel Tower), 스시(sushi).\n\n【JSON 규칙 - 매우 중요】\n- 출력은 반드시 valid JSON object 만 반환 (단 하나의 { ... } 객체).\n- 모든 문자열 값은 \"...\" 큰따옴표로 감싸야 함. 절대 따옴표를 빼먹지 말 것.\n- 문자열 안에서 큰따옴표를 사용해야 할 때는 반드시 \\\" 로 이스케이프.\n- 숫자 값은 따옴표 없이 숫자만 (예: 50000).\n- 마크다운, 설명, 코드블록 ``` 절대 금지. JSON 만 출력.";
-
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
-    systemInstruction,
-    generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: 8000,
-      responseMimeType: "application/json",
-    },
-  });
 
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        // Gemini 스트리밍 호출
-        const result = await model.generateContentStream(prompt);
+        const completion = await groq.chat.completions.create({
+          model: MODEL,
+          messages: [
+            { role: "system", content: systemContent },
+            { role: "user", content: prompt },
+          ],
+          max_tokens: 8000,
+          temperature: 0.7,
+          response_format: { type: "json_object" },
+        });
 
-        let raw = "";
-        for await (const chunk of result.stream) {
-          const text = chunk.text();
-          if (text) raw += text;
-        }
-
+        const raw = completion.choices[0]?.message?.content ?? "";
         const cleaned = tryRepairJson(raw);
 
         // 서버에서 valid JSON 파싱 시도
         try {
           JSON.parse(cleaned);
         } catch {
-          // 1차 실패 → 같은 모델에게 수정 요청 (단발 호출)
-          const repairModel = genAI.getGenerativeModel({
-            model: "gemini-2.0-flash",
-            systemInstruction:
-              "다음 JSON 문자열에 문법 오류가 있습니다. 오류를 수정해서 valid JSON 만 반환하세요. 다른 텍스트 절대 추가하지 마세요.",
-            generationConfig: {
-              temperature: 0,
-              maxOutputTokens: 8000,
-              responseMimeType: "application/json",
-            },
+          // 1차 실패 → 수정 요청
+          const repair = await groq.chat.completions.create({
+            model: MODEL,
+            messages: [
+              {
+                role: "system",
+                content:
+                  "다음 JSON 문자열에 문법 오류가 있습니다. 오류를 수정해서 valid JSON 만 반환하세요. 다른 텍스트 절대 추가하지 마세요.",
+              },
+              { role: "user", content: cleaned },
+            ],
+            max_tokens: 8000,
+            temperature: 0,
+            response_format: { type: "json_object" },
           });
-          const repairResult = await repairModel.generateContent(cleaned);
-          const repaired = tryRepairJson(repairResult.response.text() ?? "");
+          const repaired = tryRepairJson(
+            repair.choices[0]?.message?.content ?? ""
+          );
           try {
             JSON.parse(repaired);
             controller.enqueue(
@@ -298,7 +298,7 @@ ${medicalCtx.clinicName ? `- 클리닉: ${medicalCtx.clinicName}${medicalCtx.cli
             controller.close();
             return;
           } catch {
-            // fallthrough — 원본 cleaned 그대로 보내 클라이언트가 에러 처리
+            // fall through — cleaned 그대로 (클라이언트가 에러 처리)
           }
         }
 
