@@ -233,7 +233,7 @@ export default async function HomePage() {
               <span>AI 플래너 · 셰르파 매칭 · 항공·호텔·렌트카 가격 비교</span>
             </div>
 
-            <h1 className="text-6xl sm:text-7xl md:text-8xl font-bold text-white leading-[1.05] tracking-tight mb-8">
+            <h1 className="text-5xl sm:text-7xl md:text-8xl font-bold text-white leading-[1.05] tracking-tight mb-8">
               여행은,
               <br />
               <span className="bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-300 bg-clip-text text-transparent">
@@ -241,7 +241,7 @@ export default async function HomePage() {
               </span>
             </h1>
 
-            <p className="text-xl sm:text-2xl text-white/60 max-w-2xl mb-12 leading-relaxed font-light">
+            <p className="text-base sm:text-2xl text-white/60 max-w-2xl mb-10 leading-relaxed font-light">
               취향과 예산만 알려주세요. AI가 30초 만에 맞춤 일정을 설계하고,
               <br className="hidden sm:block" />
               현지 셰르파부터 항공·호텔까지 한 곳에서 만들어 드립니다.
@@ -364,10 +364,10 @@ export default async function HomePage() {
                   <h3 className="text-base font-bold text-slate-900 mb-1">
                     {item.label}
                   </h3>
-                  <p className={`text-[10px] ${item.accent} font-medium leading-tight`}>
+                  <p className={`text-[10px] sm:text-xs ${item.accent} font-medium leading-tight break-keep`}>
                     {item.providers}
                   </p>
-                  <ArrowRight className="absolute top-5 right-5 w-4 h-4 text-slate-300 group-hover:text-slate-700 group-hover:translate-x-0.5 transition-all" />
+                  <ArrowRight className="absolute top-4 right-4 sm:top-5 sm:right-5 w-4 h-4 text-slate-300 group-hover:text-slate-700 group-hover:translate-x-0.5 transition-all" />
                 </Link>
               );
             })}
@@ -797,7 +797,7 @@ export default async function HomePage() {
       {/* Final CTA */}
       <section className="py-32 bg-white">
         <div className="max-w-3xl mx-auto px-6 text-center">
-          <h2 className="text-5xl sm:text-6xl font-bold text-slate-900 tracking-tight mb-6">
+          <h2 className="text-4xl sm:text-6xl font-bold text-slate-900 tracking-tight mb-6">
             이번 여행은,
             <br />
             <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">

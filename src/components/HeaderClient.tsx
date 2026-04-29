@@ -142,7 +142,7 @@ export default function HeaderClient({ user, locale, labels }: HeaderClientProps
       </div>
 
       {menuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-100 shadow-lg">
+        <div className="md:hidden bg-white border-t border-gray-100 shadow-lg max-h-[80vh] overflow-y-auto">
           <div className="px-4 py-4 space-y-3">
             {[
               { label: t("nav.planner"), href: "/planner" },
@@ -162,6 +162,32 @@ export default function HeaderClient({ user, locale, labels }: HeaderClientProps
                 {item.label}
               </a>
             ))}
+
+            {/* 예약·비교 (메타서치) — 모바일에선 푸터까지 가지 않게 메뉴에서 바로 접근 */}
+            <div className="pt-3 border-t border-slate-100">
+              <p className="text-[10px] font-bold text-slate-400 tracking-widest mb-2">
+                예약·비교
+              </p>
+              <div className="grid grid-cols-2 gap-1.5">
+                {[
+                  { emoji: "✈️", label: t("nav.flights"), href: "/flights" },
+                  { emoji: "🏨", label: t("nav.hotels"), href: "/hotels" },
+                  { emoji: "✨", label: t("nav.activities"), href: "/activities" },
+                  { emoji: "🚗", label: t("nav.cars"), href: "/cars" },
+                ].map((item) => (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-50 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <span>{item.emoji}</span>
+                    {item.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+
             <div className="py-2 border-t border-slate-100">
               <LanguageSwitcher current={locale} variant="dark" />
             </div>

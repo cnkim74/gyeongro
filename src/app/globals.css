@@ -22,6 +22,23 @@ html {
   scroll-behavior: smooth;
 }
 
+/* iOS Safari 입력 필드 자동 zoom 방지 — 16px 미만이면 zoom 트리거.
+   디자인은 text-xs/text-sm 그대로 두되, 모바일 input만 16px로 강제. */
+@media (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  input[type="number"],
+  input[type="date"],
+  input[type="time"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-12px); }
