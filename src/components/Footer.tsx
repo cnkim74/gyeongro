@@ -137,10 +137,14 @@ export default function Footer() {
                 <a href="#" className="hover:text-white transition-colors">채용</a>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">이용약관</a>
+                <Link href="/terms" className="hover:text-white transition-colors">
+                  이용약관
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">개인정보처리방침</a>
+                <Link href="/privacy" className="hover:text-white transition-colors">
+                  개인정보처리방침
+                </Link>
               </li>
             </ul>
           </div>
