@@ -78,19 +78,18 @@ export default async function GlobalCoupangBanner() {
 
   return (
     <div className="bg-orange-50/40 border-t border-orange-100">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3">
         {/* 쿠팡 파트너스 필수 표기 */}
-        <p className="text-[10px] text-orange-900/70 mb-2">
-          <strong>쿠팡 파트너스</strong> · 이 포스팅에 일부 링크는 쿠팡
-          파트너스 활동의 일환으로, Pothos는 이에 따른 일정액의 수수료를 제공받습니다.
+        <p className="text-[10px] text-orange-900/70 mb-1.5 text-center">
+          <strong>쿠팡 파트너스</strong> · 일부 링크는 쿠팡 파트너스 활동의 일환으로, Pothos는 일정액의 수수료를 제공받습니다.
         </p>
 
-        <div className="space-y-2">
+        <div className="flex flex-wrap items-center justify-center gap-2">
           {products.map((p) =>
             p.html_snippet?.trim() ? (
               <div
                 key={p.id}
-                className="rounded-xl overflow-hidden bg-white"
+                className="rounded-lg overflow-hidden bg-white [&_iframe]:max-w-full [&_iframe]:block"
                 dangerouslySetInnerHTML={{
                   __html: sanitizeSnippet(p.html_snippet),
                 }}
@@ -101,32 +100,29 @@ export default async function GlobalCoupangBanner() {
                 href={p.affiliate_url}
                 target="_blank"
                 rel="noopener noreferrer sponsored"
-                className="flex items-center gap-3 bg-white rounded-xl p-3 hover:shadow-md transition-shadow border border-orange-100"
+                className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 hover:shadow-md transition-shadow border border-orange-100 max-w-xs"
               >
                 {p.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={p.image_url}
                     alt={p.name}
-                    className="w-16 h-16 rounded-lg object-cover bg-slate-50 shrink-0"
+                    className="w-10 h-10 rounded-md object-cover bg-slate-50 shrink-0"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-lg bg-orange-100 flex items-center justify-center text-2xl shrink-0">
+                  <div className="w-10 h-10 rounded-md bg-orange-100 flex items-center justify-center text-lg shrink-0">
                     🛍️
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 line-clamp-1">
+                  <p className="text-xs font-semibold text-slate-900 line-clamp-1">
                     {p.name}
                   </p>
                   {p.price_text && (
-                    <p className="text-sm text-orange-600 font-bold mt-0.5">
+                    <p className="text-xs text-orange-600 font-bold">
                       {p.price_text}
                     </p>
                   )}
-                  <p className="text-[10px] text-slate-400 mt-0.5">
-                    쿠팡에서 보기 →
-                  </p>
                 </div>
               </a>
             )
