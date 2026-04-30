@@ -12,17 +12,19 @@ interface AffiliateProduct {
   html_snippet: string | null;
 }
 
-// 허용 iframe 도메인 (쿠팡 파트너스 + 추가 가능)
-const ALLOWED_IFRAME_HOSTS = [
-  "ads-partners.coupang.com",
-  "link.coupang.com",
-  "www.coupang.com",
-  "coupang.com",
-];
+// 허용 iframe 호스트 — coupang.com 모든 서브도메인 + coupangcdn.com 허용
+const ALLOWED_IFRAME_DOMAINS = ["coupang.com", "coupangcdn.com"];
+
+function isAllowedIframeHost(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  return ALLOWED_IFRAME_DOMAINS.some(
+    (d) => h === d || h.endsWith("." + d)
+  );
+}
 
 /**
  * HTML 스니펫에서 허용된 도메인의 iframe·a·img·br·span만 통과시킴.
- * 단순 정규식 화이트리스트 — admin 입력만 받으니 보수적으로.
+ * 원본 iframe 태그는 그대로 유지(속성 보존), src 도메인만 검증.
  */
 function sanitizeSnippet(html: string): string {
   if (!html) return "";
@@ -37,17 +39,17 @@ function sanitizeSnippet(html: string): string {
     .replace(/<input[^>]*>/gi, "")
     .replace(/<meta[^>]*>/gi, "");
 
-  // 2. iframe 도메인 화이트리스트 검증
-  cleaned = cleaned.replace(/<iframe([^>]*)>/gi, (full, attrs: string) => {
-    const srcMatch = attrs.match(/src\s*=\s*["']([^"']+)["']/i);
+  // 2. iframe 도메인 검증 — 원본 태그 그대로 유지 (속성 보존)
+  cleaned = cleaned.replace(/<iframe[^>]*>/gi, (full: string) => {
+    const srcMatch = full.match(/src\s*=\s*["']([^"']+)["']/i);
     if (!srcMatch) return ""; // src 없으면 제거
     try {
       const u = new URL(srcMatch[1]);
-      if (!ALLOWED_IFRAME_HOSTS.includes(u.hostname)) return ""; // 허용 도메인 아니면 제거
+      if (!isAllowedIframeHost(u.hostname)) return ""; // 허용 도메인 아니면 제거
     } catch {
       return "";
     }
-    return `<iframe${attrs} loading="lazy" referrerpolicy="no-referrer-when-downgrade">`;
+    return full; // 원본 그대로
   });
 
   return cleaned;
