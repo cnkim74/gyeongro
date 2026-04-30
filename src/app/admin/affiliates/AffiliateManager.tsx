@@ -12,6 +12,7 @@ interface Product {
   image_url: string | null;
   affiliate_url: string;
   price_text: string | null;
+  html_snippet: string | null;
   display_order: number;
   is_active: boolean;
 }
@@ -106,6 +107,7 @@ export default function AffiliateManager({
           image_url: p.image_url,
           affiliate_url: p.affiliate_url,
           price_text: p.price_text,
+          html_snippet: p.html_snippet,
           display_order: p.display_order,
           is_active: p.is_active,
         }),
@@ -157,6 +159,7 @@ export default function AffiliateManager({
           image_url: "",
           affiliate_url: "https://link.coupang.com/",
           price_text: "",
+          html_snippet: "",
           display_order: prev.length + 1,
           is_active: true,
         },
@@ -361,6 +364,33 @@ export default function AffiliateManager({
                 onChange={(e) => updateField(p.id, "description", e.target.value)}
                 className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
               />
+            </div>
+
+            <div className="mt-3">
+              <label className="text-xs font-semibold text-gray-500 mb-1 block flex items-center gap-1.5">
+                🪄 HTML 스니펫 (선택, 최우선 노출)
+                {p.html_snippet ? (
+                  <span className="text-[10px] bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded">
+                    HTML 모드
+                  </span>
+                ) : null}
+              </label>
+              <textarea
+                value={p.html_snippet ?? ""}
+                onChange={(e) =>
+                  updateField(p.id, "html_snippet", e.target.value)
+                }
+                rows={4}
+                placeholder='쿠팡 파트너스 다이나믹 배너 iframe을 여기에 붙여넣기. 예:&#10;&lt;iframe src="https://ads-partners.coupang.com/widgets.html?id=..." width="680" height="140" frameborder="0"&gt;&lt;/iframe&gt;'
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs font-mono leading-relaxed"
+              />
+              <p className="text-[10px] text-gray-400 mt-1 leading-snug">
+                💡 <strong>HTML이 입력되면 위 image/제목/가격 무시되고 이 코드만 노출</strong>됩니다.
+                쿠팡 파트너스 → ''링크 만들기'' → ''다이나믹 배너'' 또는 ''위젯'' 메뉴에서
+                생성된 iframe 코드를 그대로 붙여넣으세요. 안전을 위해 허용 도메인:
+                <code>ads-partners.coupang.com</code>, <code>link.coupang.com</code>,
+                <code>image*.coupangcdn.com</code>.
+              </p>
             </div>
           </div>
         ))}

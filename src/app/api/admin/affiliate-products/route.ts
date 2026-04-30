@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
       image_url: body.image_url ?? null,
       affiliate_url: body.affiliate_url ?? "#",
       price_text: body.price_text ?? null,
+      html_snippet: body.html_snippet ?? null,
       display_order: body.display_order ?? 0,
       is_active: body.is_active ?? true,
     })

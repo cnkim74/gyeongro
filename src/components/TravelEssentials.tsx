@@ -9,6 +9,48 @@ interface AffiliateProduct {
   image_url: string | null;
   affiliate_url: string;
   price_text: string | null;
+  html_snippet: string | null;
+}
+
+// 허용 iframe 도메인 (쿠팡 파트너스 + 추가 가능)
+const ALLOWED_IFRAME_HOSTS = [
+  "ads-partners.coupang.com",
+  "link.coupang.com",
+  "www.coupang.com",
+  "coupang.com",
+];
+
+/**
+ * HTML 스니펫에서 허용된 도메인의 iframe·a·img·br·span만 통과시킴.
+ * 단순 정규식 화이트리스트 — admin 입력만 받으니 보수적으로.
+ */
+function sanitizeSnippet(html: string): string {
+  if (!html) return "";
+
+  // 1. 위험한 태그·속성 우선 제거
+  let cleaned = html
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, "") // onclick, onload 등
+    .replace(/javascript:/gi, "")
+    .replace(/<form[\s\S]*?<\/form>/gi, "")
+    .replace(/<input[^>]*>/gi, "")
+    .replace(/<meta[^>]*>/gi, "");
+
+  // 2. iframe 도메인 화이트리스트 검증
+  cleaned = cleaned.replace(/<iframe([^>]*)>/gi, (full, attrs: string) => {
+    const srcMatch = attrs.match(/src\s*=\s*["']([^"']+)["']/i);
+    if (!srcMatch) return ""; // src 없으면 제거
+    try {
+      const u = new URL(srcMatch[1]);
+      if (!ALLOWED_IFRAME_HOSTS.includes(u.hostname)) return ""; // 허용 도메인 아니면 제거
+    } catch {
+      return "";
+    }
+    return `<iframe${attrs} loading="lazy" referrerpolicy="no-referrer-when-downgrade">`;
+  });
+
+  return cleaned;
 }
 
 const CATEGORIES: Record<string, { label: string; emoji: string }> = {
@@ -25,7 +67,7 @@ async function getActiveProducts(): Promise<AffiliateProduct[]> {
     const supabase = getSupabaseServiceClient();
     const { data } = await supabase
       .from("affiliate_products")
-      .select("id, category, name, description, image_url, affiliate_url, price_text")
+      .select("id, category, name, description, image_url, affiliate_url, price_text, html_snippet")
       .eq("is_active", true)
       .order("display_order")
       .order("created_at");
@@ -67,13 +109,34 @@ export default async function TravelEssentials() {
       <div className="space-y-5">
         {Object.entries(grouped).map(([cat, items]) => {
           const c = CATEGORIES[cat] ?? { label: cat, emoji: "🎒" };
+          // HTML 스니펫과 일반 카드 분리
+          const htmlItems = items.filter((p) => p.html_snippet?.trim());
+          const cardItems = items.filter((p) => !p.html_snippet?.trim());
           return (
             <div key={cat}>
               <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
                 {c.emoji} {c.label}
               </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                {items.map((p) => (
+
+              {/* HTML 스니펫 (쿠팡 다이나믹 배너 등) — 위에 풀-와이드로 표시 */}
+              {htmlItems.length > 0 && (
+                <div className="space-y-2 mb-3">
+                  {htmlItems.map((p) => (
+                    <div
+                      key={p.id}
+                      className="rounded-xl overflow-hidden bg-gray-50"
+                      dangerouslySetInnerHTML={{
+                        __html: sanitizeSnippet(p.html_snippet ?? ""),
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* 일반 상품 카드 */}
+              {cardItems.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                  {cardItems.map((p) => (
                   <a
                     key={p.id}
                     href={p.affiliate_url}
@@ -110,7 +173,8 @@ export default async function TravelEssentials() {
                     </div>
                   </a>
                 ))}
-              </div>
+                </div>
+              )}
             </div>
           );
         })}

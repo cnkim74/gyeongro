@@ -22,6 +22,7 @@ export async function PATCH(
     "image_url",
     "affiliate_url",
     "price_text",
+    "html_snippet",
     "display_order",
     "is_active",
   ]) {
