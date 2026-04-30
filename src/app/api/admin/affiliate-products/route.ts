@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
       html_snippet: body.html_snippet ?? null,
       display_order: body.display_order ?? 0,
       is_active: body.is_active ?? true,
+      is_global: body.is_global ?? false,
     })
     .select("id")
     .single();

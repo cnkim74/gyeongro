@@ -15,6 +15,7 @@ interface Product {
   html_snippet: string | null;
   display_order: number;
   is_active: boolean;
+  is_global: boolean;
 }
 
 const CATEGORIES = [
@@ -110,6 +111,7 @@ export default function AffiliateManager({
           html_snippet: p.html_snippet,
           display_order: p.display_order,
           is_active: p.is_active,
+          is_global: p.is_global,
         }),
       });
       if (!res.ok) throw new Error();
@@ -162,6 +164,7 @@ export default function AffiliateManager({
           html_snippet: "",
           display_order: prev.length + 1,
           is_active: true,
+          is_global: false,
         },
       ]);
       router.refresh();
@@ -388,8 +391,33 @@ export default function AffiliateManager({
                 💡 <strong>HTML이 입력되면 위 image/제목/가격 무시되고 이 코드만 노출</strong>됩니다.
                 쿠팡 파트너스 → ''링크 만들기'' → ''다이나믹 배너'' 또는 ''위젯'' 메뉴에서
                 생성된 iframe 코드를 그대로 붙여넣으세요. 안전을 위해 허용 도메인:
-                <code>ads-partners.coupang.com</code>, <code>link.coupang.com</code>,
-                <code>image*.coupangcdn.com</code>.
+                <code>*.coupang.com</code>, <code>*.coupangcdn.com</code>.
+              </p>
+            </div>
+
+            <div className="mt-3">
+              <label className="inline-flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={p.is_global}
+                  onChange={(e) =>
+                    updateField(p.id, "is_global", e.target.checked)
+                  }
+                  className="w-4 h-4 rounded border-gray-300"
+                />
+                <span className="text-sm font-semibold text-slate-900">
+                  🌐 전체 페이지 노출
+                </span>
+                {p.is_global && (
+                  <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+                    ON
+                  </span>
+                )}
+              </label>
+              <p className="text-[10px] text-gray-400 mt-1 leading-snug">
+                체크하면 <strong>모든 공개 페이지 푸터 위</strong>에 이 상품이 노출됩니다.
+                보통 1개 상품만 ON 권장 (여러 개면 모두 노출되어 페이지가 무거워짐).
+                HTML 스니펫이 있으면 iframe 그대로, 없으면 image+제목+링크로.
               </p>
             </div>
           </div>

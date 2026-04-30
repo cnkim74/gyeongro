@@ -25,6 +25,7 @@ export async function PATCH(
     "html_snippet",
     "display_order",
     "is_active",
+    "is_global",
   ]) {
     if (key in body) update[key] = body[key];
   }
