@@ -19,7 +19,11 @@ interface GlobalProduct {
   html_snippet: string | null;
 }
 
-const ALLOWED_IFRAME_DOMAINS = ["coupang.com", "coupangcdn.com"];
+const ALLOWED_IFRAME_DOMAINS = [
+  "coupang.com", // www.coupang.com, link.coupang.com 등
+  "coupangcdn.com", // 이미지 CDN
+  "coupa.ng", // 쿠팡 단축 URL (https://coupa.ng/...)
+];
 
 function isAllowedIframeHost(hostname: string): boolean {
   const h = hostname.toLowerCase();

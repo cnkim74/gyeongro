@@ -12,8 +12,12 @@ interface AffiliateProduct {
   html_snippet: string | null;
 }
 
-// 허용 iframe 호스트 — coupang.com 모든 서브도메인 + coupangcdn.com 허용
-const ALLOWED_IFRAME_DOMAINS = ["coupang.com", "coupangcdn.com"];
+// 허용 iframe 호스트 — 쿠팡 관련 모든 도메인
+const ALLOWED_IFRAME_DOMAINS = [
+  "coupang.com", // www.coupang.com, link.coupang.com 등
+  "coupangcdn.com", // 이미지 CDN
+  "coupa.ng", // 쿠팡 단축 URL (https://coupa.ng/...)
+];
 
 function isAllowedIframeHost(hostname: string): boolean {
   const h = hostname.toLowerCase();
