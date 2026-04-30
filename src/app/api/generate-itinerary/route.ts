@@ -189,10 +189,10 @@ JSON 출력:
   "bestSeason": "..."
 }
 
-규칙: schedule 4개+, 실제 존재하는 곳만, place는 이름만(주소·도시 제외). **외국 장소는 반드시 '한글(English/Local)' 형식** (예: 카를교(Charles Bridge), 카프카 박물관(Kafka Museum), 도톤보리(Dōtonbori), 에펠탑(Eiffel Tower)). 한국 장소는 한글만 OK. transport_to_next는 마지막 외 모두 포함, nearby_alternatives 2개·nearby_food 1개(있으면). 한국이면 백종원·미슐랭·핫플 위주, 해외면 미슐랭·로컬 SNS 인기.`;
+규칙: schedule 4개+, **모든 장소는 반드시 ''${destination}'' 내부 또는 인접 지역에 실제 존재해야 함**. 다른 도시·국가의 장소 추천 금지. place는 이름만(주소·도시 제외). **외국 장소는 반드시 '한글(English/Local)' 형식** (예: 카를교(Charles Bridge), 카프카 박물관(Kafka Museum)). 한국 장소는 한글만 OK. **테마가 destination과 충돌하면 destination 우선** (예: ''강릉'' + ''anime'' 테마 → 강릉의 만화·웹툰 카페·한국 애니 관련 장소 추천. 일본 애니 성지(스가신사·가마쿠라) 등 destination 밖은 절대 금지). transport_to_next는 마지막 외 모두 포함, nearby_alternatives 2개·nearby_food 1개(있으면). 한국이면 백종원·미슐랭·핫플 위주, 해외면 미슐랭·로컬 SNS 인기.`;
 
   const systemContent =
-    "한국 여행 플래너. 실재 장소만 추천. 모든 텍스트 한글(외국 고유명사는 '한글(영문)' 형식). 출력은 valid JSON object 1개만, 마크다운·코드블록 금지.";
+    "한국 여행 플래너. 실재 장소만 추천. **모든 장소는 사용자가 입력한 destination 안에 있어야 함** (다른 도시·국가 장소 절대 금지). 모든 텍스트 한글(외국 고유명사는 '한글(영문)' 형식). 출력은 valid JSON object 1개만, 마크다운·코드블록 금지.";
 
   const encoder = new TextEncoder();
 
