@@ -126,7 +126,7 @@ export default async function TravelEssentials() {
                   p.html_snippet?.trim() ? (
                     <div
                       key={p.id}
-                      className="rounded-xl overflow-hidden bg-gray-50 flex items-center justify-center [&_iframe]:max-w-full [&_iframe]:w-full"
+                      className="col-span-2 rounded-xl overflow-hidden bg-gray-50 flex items-start justify-center [&_iframe]:max-w-full"
                       dangerouslySetInnerHTML={{
                         __html: sanitizeSnippet(p.html_snippet),
                       }}
