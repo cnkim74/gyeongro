@@ -115,72 +115,61 @@ export default async function TravelEssentials() {
       <div className="space-y-5">
         {Object.entries(grouped).map(([cat, items]) => {
           const c = CATEGORIES[cat] ?? { label: cat, emoji: "🎒" };
-          // HTML 스니펫과 일반 카드 분리
-          const htmlItems = items.filter((p) => p.html_snippet?.trim());
-          const cardItems = items.filter((p) => !p.html_snippet?.trim());
           return (
             <div key={cat}>
               <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
                 {c.emoji} {c.label}
               </h3>
 
-              {/* HTML 스니펫 (쿠팡 다이나믹 배너 등) — 위에 풀-와이드로 표시 */}
-              {htmlItems.length > 0 && (
-                <div className="space-y-2 mb-3">
-                  {htmlItems.map((p) => (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                {items.map((p) =>
+                  p.html_snippet?.trim() ? (
                     <div
                       key={p.id}
                       className="rounded-xl overflow-hidden bg-gray-50"
                       dangerouslySetInnerHTML={{
-                        __html: sanitizeSnippet(p.html_snippet ?? ""),
+                        __html: sanitizeSnippet(p.html_snippet),
                       }}
                     />
-                  ))}
-                </div>
-              )}
-
-              {/* 일반 상품 카드 */}
-              {cardItems.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                  {cardItems.map((p) => (
-                  <a
-                    key={p.id}
-                    href={p.affiliate_url}
-                    target="_blank"
-                    rel="noopener noreferrer sponsored"
-                    className="group bg-gray-50 rounded-xl p-3 hover:bg-orange-50 hover:shadow-md transition-all"
-                  >
-                    {p.image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={p.image_url}
-                        alt={p.name}
-                        className="w-full aspect-square object-cover rounded-lg mb-2 bg-white"
-                      />
-                    ) : (
-                      <div className="w-full aspect-square rounded-lg bg-gradient-to-br from-orange-100 to-amber-100 flex flex-col items-center justify-center mb-2 relative overflow-hidden">
-                        <div className="text-4xl mb-1 opacity-90">{c.emoji}</div>
-                        <p className="text-[9px] text-orange-700/70 font-medium tracking-wide">
-                          이미지 준비중
-                        </p>
-                      </div>
-                    )}
-                    <p className="text-xs font-semibold text-gray-900 line-clamp-2 group-hover:text-orange-600 transition-colors">
-                      {p.name}
-                    </p>
-                    {p.price_text && (
-                      <p className="text-xs text-orange-600 font-bold mt-1">
-                        {p.price_text}
+                  ) : (
+                    <a
+                      key={p.id}
+                      href={p.affiliate_url}
+                      target="_blank"
+                      rel="noopener noreferrer sponsored"
+                      className="group bg-gray-50 rounded-xl p-3 hover:bg-orange-50 hover:shadow-md transition-all"
+                    >
+                      {p.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={p.image_url}
+                          alt={p.name}
+                          className="w-full aspect-square object-cover rounded-lg mb-2 bg-white"
+                        />
+                      ) : (
+                        <div className="w-full aspect-square rounded-lg bg-gradient-to-br from-orange-100 to-amber-100 flex flex-col items-center justify-center mb-2 relative overflow-hidden">
+                          <div className="text-4xl mb-1 opacity-90">{c.emoji}</div>
+                          <p className="text-[9px] text-orange-700/70 font-medium tracking-wide">
+                            이미지 준비중
+                          </p>
+                        </div>
+                      )}
+                      <p className="text-xs font-semibold text-gray-900 line-clamp-2 group-hover:text-orange-600 transition-colors">
+                        {p.name}
                       </p>
-                    )}
-                    <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
-                      <ExternalLink className="w-3 h-3" />
-                      쿠팡
-                    </div>
-                  </a>
-                ))}
-                </div>
-              )}
+                      {p.price_text && (
+                        <p className="text-xs text-orange-600 font-bold mt-1">
+                          {p.price_text}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
+                        <ExternalLink className="w-3 h-3" />
+                        쿠팡
+                      </div>
+                    </a>
+                  )
+                )}
+              </div>
             </div>
           );
         })}

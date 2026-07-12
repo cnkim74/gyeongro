@@ -6,7 +6,7 @@ import { consumeQuota, QuotaExceededError } from "@/lib/ai-quota";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const MODEL = "llama-3.1-8b-instant";
+const MODEL = "llama-3.3-70b-versatile";
 
 function tryRepairJson(text: string): string {
   let t = text.trim();
