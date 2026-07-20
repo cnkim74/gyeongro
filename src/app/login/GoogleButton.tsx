@@ -5,12 +5,12 @@ import { useState } from "react";
 
 interface SocialLoginPlugin {
   initialize: (opts: {
-    google?: { webClientId?: string; iOSClientId?: string; mode?: string };
+    google?: { webClientId?: string; iOSClientId?: string };
   }) => Promise<void>;
   login: (opts: {
     provider: "google";
     options: { scopes?: string[] };
-  }) => Promise<{ result?: { idToken?: string; accessToken?: { token?: string } } }>;
+  }) => Promise<{ result?: { idToken?: string } }>;
 }
 interface CapacitorBridge {
   isNativePlatform?: () => boolean;
@@ -38,16 +38,13 @@ export default function GoogleButton({ target }: { target: string }) {
       try {
         const plugin = cap.Plugins?.SocialLogin;
         if (!plugin) {
+          alert("SocialLogin 플러그인을 찾을 수 없습니다.");
           setLoading(false);
           return;
         }
         if (!socialInitialized) {
           await plugin.initialize({
-            google: {
-              webClientId: WEB_CLIENT_ID,
-              iOSClientId: IOS_CLIENT_ID,
-              mode: "offline",
-            },
+            google: { webClientId: WEB_CLIENT_ID, iOSClientId: IOS_CLIENT_ID },
           });
           socialInitialized = true;
         }
@@ -57,16 +54,19 @@ export default function GoogleButton({ target }: { target: string }) {
         });
         const idToken = res?.result?.idToken;
         if (!idToken) {
+          alert("구글 idToken 없음: " + JSON.stringify(res));
           setLoading(false);
           return;
         }
         const authResult = await signIn("google-native", { idToken, redirect: false });
-        if (!authResult?.error) {
-          window.location.href = target;
-        } else {
+        if (authResult?.error) {
+          alert("서버 로그인 실패: " + authResult.error);
           setLoading(false);
+          return;
         }
-      } catch {
+        window.location.href = target;
+      } catch (e) {
+        alert("구글 로그인 오류: " + (e instanceof Error ? e.message : String(e)));
         setLoading(false);
       }
       return;
