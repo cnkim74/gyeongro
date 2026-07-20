@@ -83,6 +83,86 @@ const credentialsProvider = Credentials({
   },
 });
 
+const ALLOWED_GOOGLE_AUD = [
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_IOS_CLIENT_ID,
+  process.env.GOOGLE_ANDROID_CLIENT_ID,
+].filter(Boolean) as string[];
+
+interface GoogleTokenInfo {
+  aud: string;
+  sub: string;
+  email?: string;
+  email_verified?: string | boolean;
+  name?: string;
+  picture?: string;
+  exp?: string;
+}
+
+const googleNativeProvider = Credentials({
+  id: "google-native",
+  name: "Google (Native)",
+  credentials: {
+    idToken: { label: "idToken", type: "text" },
+  },
+  async authorize(creds) {
+    const idToken = (creds?.idToken ?? "").toString();
+    if (!idToken) return null;
+    if (!supabaseUrl || !supabaseServiceKey) return null;
+
+    let info: GoogleTokenInfo;
+    try {
+      const res = await fetch(
+        `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`
+      );
+      if (!res.ok) return null;
+      info = (await res.json()) as GoogleTokenInfo;
+    } catch {
+      return null;
+    }
+
+    if (!info.aud || !ALLOWED_GOOGLE_AUD.includes(info.aud)) return null;
+    if (info.exp && Number(info.exp) * 1000 < Date.now()) return null;
+    const email = info.email?.trim().toLowerCase();
+    const verified = info.email_verified === true || info.email_verified === "true";
+    if (!email || !verified) return null;
+
+    const sb = createClient(supabaseUrl, supabaseServiceKey, {
+      db: { schema: "next_auth" },
+      auth: { persistSession: false },
+    });
+
+    const { data: existing } = await sb
+      .from("users")
+      .select("id, email, name, image, custom_image, nickname")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (existing) {
+      return {
+        id: existing.id,
+        email: existing.email,
+        name: existing.nickname ?? existing.name ?? info.name ?? null,
+        image: existing.custom_image ?? existing.image ?? info.picture ?? null,
+      };
+    }
+
+    const { data: created, error } = await sb
+      .from("users")
+      .insert({ email, name: info.name ?? null, image: info.picture ?? null })
+      .select("id, email, name, image")
+      .single();
+    if (error || !created) return null;
+
+    return {
+      id: created.id,
+      email: created.email,
+      name: created.name,
+      image: created.image,
+    };
+  },
+});
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Google({
@@ -95,9 +175,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientSecret: process.env.KAKAO_CLIENT_SECRET,
     }),
     credentialsProvider,
+    googleNativeProvider,
   ],
-  // Credentials provider 호환을 위해 JWT 세션 사용.
-  // Supabase Adapter는 OAuth 사용자/계정 저장용으로 유지 (세션만 JWT).
   ...(hasSupabase
     ? {
         adapter: SupabaseAdapter({
