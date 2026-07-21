@@ -391,7 +391,7 @@ function PlannerContent() {
                 <label className="text-sm font-semibold text-gray-700 mb-3 block">
                   관심 테마 (복수 선택 가능)
                 </label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                   {themes.map((t) => (
                     <button
                       key={t.id}
