@@ -82,6 +82,8 @@ export const AVATAR_PRESETS: AvatarPreset[] = [
     url: "/avatars/penguin.svg",
     category: "animal",
   },
+  { id: "owl", label: "야행성 부엉이", emoji: "🦉", url: "/avatars/owl.svg", category: "animal" },
+  { id: "koala", label: "느긋한 코알라", emoji: "🐨", url: "/avatars/koala.svg", category: "animal" },
 ];
 
 export const AVATAR_BY_ID = Object.fromEntries(
