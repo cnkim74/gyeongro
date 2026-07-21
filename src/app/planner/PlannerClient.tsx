@@ -210,6 +210,7 @@ function PlannerContent() {
   const handleSubmit = async () => {
     if (!destination.trim()) return;
     setStep(2);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
     await generateItinerary();
   };
 
