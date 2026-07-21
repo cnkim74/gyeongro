@@ -24,7 +24,6 @@ export default function UserMenu({ user, isScrolled }: UserMenuProps) {
   const isAdmin = role === "admin";
   const isBusiness = role === "business";
   const isSherpa = role === "sherpa";
-  // 표시 우선순위: 파트너의 경우 사업체명 → 그 외엔 닉네임 > name > 이메일 앞부분
   const displayName =
     isBusiness && user.businessName
       ? user.businessName
@@ -66,15 +65,15 @@ export default function UserMenu({ user, isScrolled }: UserMenuProps) {
             {initial.toUpperCase()}
           </div>
         )}
-        <div className="hidden sm:flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5">
           <span
-            className={`text-sm font-semibold max-w-[8rem] truncate ${
+            className={`hidden sm:inline text-sm font-semibold max-w-[8rem] truncate ${
               isScrolled ? "text-gray-900" : "text-white"
             }`}
           >
             {displayName}
           </span>
-          <RoleBadge role={role} size="xs" />
+          <RoleBadge role={role} size="xs" showTraveler />
         </div>
       </button>
 
