@@ -544,7 +544,7 @@ function PlannerContent() {
 
         {/* Step 2: Loading */}
         {step === 2 && (
-          <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="flex items-center justify-center min-h-[85vh]">
             <div className="text-center px-4">
               {isLoading ? (
                 <>

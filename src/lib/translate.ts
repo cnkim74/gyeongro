@@ -12,7 +12,7 @@
 //   const [en, ja, zh] = await translateBatch(ko, ["en", "ja", "zh"]);
 
 import crypto from "node:crypto";
-import Groq from "groq-sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getSupabaseServiceClient } from "./supabase";
 
 export type TargetLang = "en" | "ja" | "zh";
@@ -25,7 +25,7 @@ const LANG_NAMES: Record<SourceLang, string> = {
   zh: "Simplified Chinese",
 };
 
-const MODEL = "llama-3.1-8b-instant";
+const MODEL = "gemini-2.0-flash";
 
 /** 안정적인 hash (sha256 prefix) */
 function makeHash(text: string, sourceLang: SourceLang): string {
@@ -82,30 +82,18 @@ async function callLLM(
   sourceLang: SourceLang,
   targetLang: TargetLang
 ): Promise<string> {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) throw new Error("GROQ_API_KEY 환경변수가 설정되지 않았습니다.");
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY 환경변수가 설정되지 않았습니다.");
 
-  const groq = new Groq({ apiKey });
-
-  const completion = await groq.chat.completions.create({
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({
     model: MODEL,
-    messages: [
-      {
-        role: "system",
-        content: `You are a professional translator. Translate from ${LANG_NAMES[sourceLang]} to ${LANG_NAMES[targetLang]}.
-Rules:
-- Output ONLY the translated text. No explanations, no quotes, no markdown.
-- Preserve numbers, URLs, brand names, and proper nouns as-is.
-- Keep the tone natural and idiomatic in the target language.
-- If the input contains line breaks, preserve them.`,
-      },
-      { role: "user", content: text },
-    ],
-    max_tokens: 2000,
-    temperature: 0.3,
+    systemInstruction: `You are a professional translator. Translate from ${LANG_NAMES[sourceLang]} to ${LANG_NAMES[targetLang]}.\nRules:\n- Output ONLY the translated text. No explanations, no quotes, no markdown.\n- Preserve numbers, URLs, brand names, and proper nouns as-is.\n- Keep the tone natural and idiomatic in the target language.\n- If the input contains line breaks, preserve them.`,
+    generationConfig: { maxOutputTokens: 2000, temperature: 0.3 },
   });
 
-  return (completion.choices[0]?.message?.content ?? "").trim();
+  const completion = await model.generateContent(text);
+  return (completion.response.text() ?? "").trim();
 }
 
 /**

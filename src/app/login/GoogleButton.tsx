@@ -38,7 +38,6 @@ export default function GoogleButton({ target }: { target: string }) {
       try {
         const plugin = cap.Plugins?.SocialLogin;
         if (!plugin) {
-          alert("SocialLogin 플러그인을 찾을 수 없습니다.");
           setLoading(false);
           return;
         }
@@ -54,19 +53,16 @@ export default function GoogleButton({ target }: { target: string }) {
         });
         const idToken = res?.result?.idToken;
         if (!idToken) {
-          alert("구글 idToken 없음: " + JSON.stringify(res));
           setLoading(false);
           return;
         }
         const authResult = await signIn("google-native", { idToken, redirect: false });
-        if (authResult?.error) {
-          alert("서버 로그인 실패: " + authResult.error);
+        if (!authResult?.error) {
+          window.location.href = target;
+        } else {
           setLoading(false);
-          return;
         }
-        window.location.href = target;
-      } catch (e) {
-        alert("구글 로그인 오류: " + (e instanceof Error ? e.message : String(e)));
+      } catch {
         setLoading(false);
       }
       return;
