@@ -205,7 +205,7 @@ JSON 출력:
             { role: "system", content: systemContent },
             { role: "user", content: prompt },
           ],
-          max_tokens: 4500,
+          max_tokens: 8000,
           temperature: 0.7,
           response_format: { type: "json_object" },
         });
@@ -228,7 +228,7 @@ JSON 출력:
               },
               { role: "user", content: cleaned },
             ],
-            max_tokens: 4500,
+            max_tokens: 8000,
             temperature: 0,
             response_format: { type: "json_object" },
           });
