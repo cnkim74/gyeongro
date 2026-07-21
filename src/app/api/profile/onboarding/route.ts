@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 
 export const runtime = "nodejs";
@@ -56,5 +57,6 @@ export async function POST(req: NextRequest) {
     .eq("id", session.user.id);
 
   if (error) return Response.json({ error: error.message }, { status: 500 });
+  revalidatePath("/", "layout");
   return Response.json({ phone, role });
 }

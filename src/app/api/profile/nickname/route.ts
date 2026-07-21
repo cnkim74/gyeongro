@@ -5,6 +5,7 @@
 //   -> 400 (형식 오류), 409 (중복), 401, 500
 
 import { auth } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
@@ -69,6 +70,8 @@ export async function POST(request: Request) {
     }
     return Response.json({ error: "저장 중 오류가 발생했습니다." }, { status: 500 });
   }
+
+  revalidatePath("/", "layout");
 
   return Response.json({ nickname });
 }

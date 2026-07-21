@@ -5,6 +5,7 @@
 //   -> 400 (잘못된 프리셋), 401, 500
 
 import { auth } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
 import { AVATAR_BY_ID } from "@/lib/avatars";
 
@@ -48,6 +49,8 @@ export async function POST(request: Request) {
   if (error) {
     return Response.json({ error: "저장 중 오류가 발생했습니다." }, { status: 500 });
   }
+
+  revalidatePath("/", "layout");
 
   return Response.json({
     avatarPreset: presetId,
