@@ -15,7 +15,7 @@ function tryRepairJson(text: string): string {
   // <think> 블록 제거
   t = t.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
   // 키릴/히라가나/카타카나 제거
-  t = t.replace(/[Ѐ-ӿ぀-ゟ゠-ヿ]/g, "");
+  t = t.replace(/[\u0400-\u04FF\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\u0900-\u097F\u0E00-\u0E7F\u3040-\u309F\u30A0-\u30FF\uFB50-\uFDFF\uFE70-\uFEFF]/g, "");
 
   // 첫 { 와 마지막 } 사이만 추출
   const firstBrace = t.indexOf("{");
