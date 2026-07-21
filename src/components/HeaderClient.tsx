@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut } from "lucide-react";
+import { signOut } from "next-auth/react";
 import { LogoMark } from "./Logo";
 import UserMenu from "./UserMenu";
 import LanguageSwitcher from "./LanguageSwitcher";
@@ -32,7 +33,6 @@ export default function HeaderClient({ user, locale, labels }: HeaderClientProps
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // 메인 페이지(/)는 어두운 hero가 있어 투명 헤더 + 흰 글씨, 그 외는 항상 밝은 헤더
   const isLanding = pathname === "/";
   const useDarkBg = !isLanding || scrolled;
 
@@ -130,14 +130,17 @@ export default function HeaderClient({ user, locale, labels }: HeaderClientProps
             )}
           </div>
 
-          <button
-            className={`md:hidden p-2 rounded-lg transition-colors ${
-              useDarkBg ? "text-gray-700" : "text-white"
-            }`}
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+          <div className="flex items-center gap-1 md:hidden">
+            {user && <UserMenu user={user} isScrolled={useDarkBg} />}
+            <button
+              className={`p-2 rounded-lg transition-colors ${
+                useDarkBg ? "text-gray-700" : "text-white"
+              }`}
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
+              {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -163,7 +166,6 @@ export default function HeaderClient({ user, locale, labels }: HeaderClientProps
               </a>
             ))}
 
-            {/* 예약·비교 (메타서치) — 모바일에선 푸터까지 가지 않게 메뉴에서 바로 접근 */}
             <div className="pt-3 border-t border-slate-100">
               <p className="text-[10px] font-bold text-slate-400 tracking-widest mb-2">
                 예약·비교
@@ -194,6 +196,13 @@ export default function HeaderClient({ user, locale, labels }: HeaderClientProps
             {user ? (
               <>
                 <Link
+                  href="/profile"
+                  className="block text-sm font-medium text-gray-600 py-2"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {t("nav.profile")}
+                </Link>
+                <Link
                   href="/my-trips"
                   className="block text-sm font-medium text-gray-600 py-2"
                   onClick={() => setMenuOpen(false)}
@@ -207,6 +216,16 @@ export default function HeaderClient({ user, locale, labels }: HeaderClientProps
                 >
                   {t("nav.cta")}
                 </Link>
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    signOut({ callbackUrl: "/" });
+                  }}
+                  className="w-full flex items-center gap-2 justify-center text-sm font-medium text-red-600 py-2.5 mt-1"
+                >
+                  <LogOut className="w-4 h-4" />
+                  {t("nav.logout")}
+                </button>
               </>
             ) : (
               <>
