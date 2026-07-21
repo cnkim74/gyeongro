@@ -265,7 +265,7 @@ export default async function HomePage() {
               </Link>
             </div>
 
-            <div className="flex flex-wrap items-center gap-x-8 gap-y-3 mt-16 text-white/40 text-sm">
+            <div className="grid grid-cols-2 gap-x-5 gap-y-4 mt-12 text-white/50 text-[15px] sm:flex sm:flex-wrap sm:items-center sm:gap-x-8 sm:gap-y-3 sm:mt-16 sm:text-sm">
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-emerald-400" />
                 AI 무료 (일 5회)

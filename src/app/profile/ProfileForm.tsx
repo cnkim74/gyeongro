@@ -59,6 +59,14 @@ export default function ProfileForm({
   const [phoneSaving, setPhoneSaving] = useState(false);
   const [phoneEdit, setPhoneEdit] = useState(false);
 
+  const [nameInput, setNameInput] = useState(name ?? "");
+  const [nameEdit, setNameEdit] = useState(false);
+  const [nameSaving, setNameSaving] = useState(false);
+
+  const [emailInput, setEmailInput] = useState(email ?? "");
+  const [emailEdit, setEmailEdit] = useState(false);
+  const [emailSaving, setEmailSaving] = useState(false);
+
   // 닉네임
   const [nicknameInput, setNicknameInput] = useState(nickname ?? "");
   const [nicknameEdit, setNicknameEdit] = useState(false);
@@ -177,6 +185,30 @@ export default function ProfileForm({
     } finally {
       setPhoneSaving(false);
     }
+  };
+
+  const handleNameSave = async () => {
+    setNameSaving(true); setMessage(null);
+    try {
+      const res = await fetch("/api/profile/name", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: nameInput }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "저장 실패");
+      setNameInput(data.name); setNameEdit(false);
+      setMessage({ type: "success", text: "이름이 변경됐어요." }); router.refresh();
+    } catch (err) { setMessage({ type: "error", text: err instanceof Error ? err.message : "오류가 발생했어요." }); }
+    finally { setNameSaving(false); }
+  };
+
+  const handleEmailSave = async () => {
+    setEmailSaving(true); setMessage(null);
+    try {
+      const res = await fetch("/api/profile/email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: emailInput }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "저장 실패");
+      setEmailInput(data.email); setEmailEdit(false);
+      setMessage({ type: "success", text: "이메일이 변경됐어요." }); router.refresh();
+    } catch (err) { setMessage({ type: "error", text: err instanceof Error ? err.message : "오류가 발생했어요." }); }
+    finally { setEmailSaving(false); }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -454,14 +486,36 @@ export default function ProfileForm({
           <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
             이름
           </label>
-          <p className="text-base text-gray-900 mt-1">{name ?? "이름 없음"}</p>
+          {nameEdit ? (
+            <div className="flex gap-2 mt-1">
+              <input type="text" value={nameInput} onChange={(e) => setNameInput(e.target.value)} placeholder="이름" maxLength={30} className="flex-1 px-3 py-2 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none text-gray-900" />
+              <button onClick={handleNameSave} disabled={nameSaving || !nameInput.trim()} className="px-4 py-2 rounded-xl bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 disabled:opacity-50">{nameSaving ? "저장 중..." : "저장"}</button>
+              <button onClick={() => { setNameEdit(false); setNameInput(name ?? ""); }} disabled={nameSaving} className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium hover:bg-gray-50">취소</button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-base text-gray-900">{nameInput || <span className="text-gray-400">이름 없음</span>}</p>
+              <button onClick={() => setNameEdit(true)} className="text-sm font-semibold text-blue-600 hover:text-blue-700">변경</button>
+            </div>
+          )}
         </div>
 
         <div>
           <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
             이메일
           </label>
-          <p className="text-base text-gray-900 mt-1">{email ?? "이메일 없음"}</p>
+          {emailEdit ? (
+            <div className="flex gap-2 mt-1">
+              <input type="email" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} placeholder="example@email.com" className="flex-1 px-3 py-2 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none text-gray-900" />
+              <button onClick={handleEmailSave} disabled={emailSaving || !emailInput.trim()} className="px-4 py-2 rounded-xl bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 disabled:opacity-50">{emailSaving ? "저장 중..." : "저장"}</button>
+              <button onClick={() => { setEmailEdit(false); setEmailInput(email ?? ""); }} disabled={emailSaving} className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium hover:bg-gray-50">취소</button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-base text-gray-900">{emailInput || <span className="text-gray-400">이메일 없음</span>}</p>
+              <button onClick={() => setEmailEdit(true)} className="text-sm font-semibold text-blue-600 hover:text-blue-700">변경</button>
+            </div>
+          )}
         </div>
 
         <div>
