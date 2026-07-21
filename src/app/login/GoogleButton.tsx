@@ -49,7 +49,7 @@ export default function GoogleButton({ target }: { target: string }) {
         }
         const res = await plugin.login({
           provider: "google",
-          options: { scopes: ["email", "profile"] },
+          options: {},
         });
         const idToken = res?.result?.idToken;
         if (!idToken) {
