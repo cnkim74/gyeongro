@@ -1,7 +1,4 @@
-// 여행 컨셉 아바타 갤러리 — 10종 (사람 3 + 동물 7), 5×2 그리드
-// 사용처:
-//   - 회원가입/프로필에서 선택
-//   - 사용자에게 표시할 이미지 우선순위: custom_image > avatar_preset URL > OAuth image > fallback
+// 여행 컨셉 아바타 갤러리 — 15종 (사람 3 + 동물 12)
 
 export interface AvatarPreset {
   id: string;
@@ -12,78 +9,21 @@ export interface AvatarPreset {
 }
 
 export const AVATAR_PRESETS: AvatarPreset[] = [
-  {
-    id: "wanderer",
-    label: "탐험가",
-    emoji: "🧳",
-    url: "/avatars/wanderer.svg",
-    category: "human",
-  },
-  {
-    id: "explorer",
-    label: "백패커",
-    emoji: "🎒",
-    url: "/avatars/explorer.svg",
-    category: "human",
-  },
-  {
-    id: "journalist",
-    label: "수첩 여행가",
-    emoji: "📓",
-    url: "/avatars/journalist.svg",
-    category: "human",
-  },
-  {
-    id: "bear",
-    label: "여행하는 곰",
-    emoji: "🐻",
-    url: "/avatars/bear.svg",
-    category: "animal",
-  },
-  {
-    id: "fox",
-    label: "사진가 여우",
-    emoji: "🦊",
-    url: "/avatars/fox.svg",
-    category: "animal",
-  },
-  {
-    id: "panda",
-    label: "여행자 판다",
-    emoji: "🐼",
-    url: "/avatars/panda.svg",
-    category: "animal",
-  },
-  {
-    id: "rabbit",
-    label: "지도쟁이 토끼",
-    emoji: "🐰",
-    url: "/avatars/rabbit.svg",
-    category: "animal",
-  },
-  {
-    id: "cat",
-    label: "휴양 고양이",
-    emoji: "🐱",
-    url: "/avatars/cat.svg",
-    category: "animal",
-  },
-  {
-    id: "dog",
-    label: "골퍼 강아지",
-    emoji: "🐶",
-    url: "/avatars/dog.svg",
-    category: "animal",
-  },
-  {
-    id: "penguin",
-    label: "겨울 펭귄",
-    emoji: "🐧",
-    url: "/avatars/penguin.svg",
-    category: "animal",
-  },
+  { id: "wanderer", label: "탐험가", emoji: "🧳", url: "/avatars/wanderer.svg", category: "human" },
+  { id: "explorer", label: "백패커", emoji: "🎒", url: "/avatars/explorer.svg", category: "human" },
+  { id: "journalist", label: "수첩 여행가", emoji: "📓", url: "/avatars/journalist.svg", category: "human" },
+  { id: "bear", label: "여행하는 곰", emoji: "🐻", url: "/avatars/bear.svg", category: "animal" },
+  { id: "fox", label: "사진가 여우", emoji: "🦊", url: "/avatars/fox.svg", category: "animal" },
+  { id: "panda", label: "여행자 판다", emoji: "🐼", url: "/avatars/panda.svg", category: "animal" },
+  { id: "rabbit", label: "지도쟁이 토끼", emoji: "🐰", url: "/avatars/rabbit.svg", category: "animal" },
+  { id: "cat", label: "휴양 고양이", emoji: "🐱", url: "/avatars/cat.svg", category: "animal" },
+  { id: "dog", label: "골퍼 강아지", emoji: "🐶", url: "/avatars/dog.svg", category: "animal" },
+  { id: "penguin", label: "겨울 펭귄", emoji: "🐧", url: "/avatars/penguin.svg", category: "animal" },
   { id: "owl", label: "야행성 부엉이", emoji: "🦉", url: "/avatars/owl.svg", category: "animal" },
   { id: "koala", label: "느긋한 코알라", emoji: "🐨", url: "/avatars/koala.svg", category: "animal" },
+  { id: "turtle", label: "느림보 거북", emoji: "🐢", url: "/avatars/turtle.svg", category: "animal" },
+  { id: "lion", label: "모험가 사자", emoji: "🦁", url: "/avatars/lion.svg", category: "animal" },
+  { id: "monkey", label: "장난꾸러기 원숭이", emoji: "🐵", url: "/avatars/monkey.svg", category: "animal" },
 ];
 
 export const AVATAR_BY_ID = Object.fromEntries(
@@ -99,7 +39,6 @@ export function pickRandomAvatar(): AvatarPreset {
   return AVATAR_PRESETS[Math.floor(Math.random() * AVATAR_PRESETS.length)];
 }
 
-// 사용자 표시용 최종 이미지 URL 결정
 export function resolveUserImage(user: {
   custom_image?: string | null;
   avatar_preset?: string | null;
