@@ -169,7 +169,7 @@ ${medicalCtx.clinicName ? `- 클리닉: ${medicalCtx.clinicName}${medicalCtx.cli
 
 JSON 출력:
 {
-  "title": "박X 일Y 제목",
+  "title": "${nights}박 ${totalDays}일 + 여행 특징 (예: ${nights}박 ${totalDays}일 낭만적인 파리 여행)",
   "summary": "2-3문장",
   "highlights": ["3개"],
   "totalBudget": {"accommodation":N, "food":N, "transport":N, "activities":N},
