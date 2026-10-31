@@ -3,7 +3,8 @@
 
 import Link from "next/link";
 import { ArrowRight, CheckCircle, Sparkles } from "lucide-react";
-import { AURORA_PRESETS, type HeroConfig } from "@/lib/hero";
+import { AURORA_PRESETS, BUNDLED_HERO_VIDEO, type HeroConfig } from "@/lib/hero";
+import HeroVideo from "./HeroVideo";
 
 // 서버·클라이언트에서 같은 별 배치가 나오도록 고정 시드 난수
 function seeded(seed: number) {
@@ -37,7 +38,9 @@ export default function HeroSection({
 }) {
   const preset = AURORA_PRESETS[config.auroraPreset];
   const [c1, c2, c3, c4] = preset.colors;
-  const hasMedia = config.background !== "aurora" && !!config.mediaUrl;
+  // 영상: 주소가 비어 있으면 내장 오로라 영상 / 사진: 주소가 있어야 표시
+  const isVideo = config.background === "video";
+  const hasMedia = isVideo || (config.background === "image" && !!config.mediaUrl);
   const showAurora = !hasMedia;
 
   return (
@@ -46,18 +49,21 @@ export default function HeroSection({
       style={{ background: preset.base }}
     >
       {/* ── 배경: 영상 / 사진 ─────────────────── */}
-      {hasMedia && config.background === "video" && (
-        <video
-          className="absolute inset-0 w-full h-full object-cover"
-          src={config.mediaUrl}
-          poster={config.posterUrl || undefined}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-        />
-      )}
+      {isVideo &&
+        (config.mediaUrl ? (
+          <HeroVideo
+            desktopSrc={config.mediaUrl}
+            mobileSrc={config.mediaUrl}
+            desktopPoster={config.posterUrl || undefined}
+          />
+        ) : (
+          <HeroVideo
+            desktopSrc={BUNDLED_HERO_VIDEO.desktop}
+            mobileSrc={BUNDLED_HERO_VIDEO.mobile}
+            desktopPoster={BUNDLED_HERO_VIDEO.poster}
+            mobilePoster={BUNDLED_HERO_VIDEO.mobilePoster}
+          />
+        ))}
       {hasMedia && config.background === "image" && (
         // eslint-disable-next-line @next/next/no-img-element
         <img className="absolute inset-0 w-full h-full object-cover" src={config.mediaUrl} alt="" />
