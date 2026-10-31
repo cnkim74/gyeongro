@@ -10,7 +10,7 @@ export interface HeroConfig {
   auroraPreset: AuroraPreset;
   /** 반짝이는 별 표시 */
   stars: boolean;
-  /** 영상(mp4·webm) 또는 사진 주소 */
+  /** 영상(mp4·webm) 또는 사진 주소 — 사진 배경용 (영상은 videos 목록 사용) */
   mediaUrl: string;
   /** 영상 로딩 전 보여줄 사진 (선택) */
   posterUrl: string;
@@ -26,32 +26,44 @@ export interface HeroConfig {
   secondaryHref: string;
   /** 하단 체크 문구 (최대 4개) */
   checks: string[];
+  /** 관리자가 올린 히어로 영상 목록 — 방문할 때마다 랜덤 재생 (최대 10개) */
+  videos: { url: string; poster: string }[];
+  /** Pothos 기본 영상도 랜덤 후보에 포함 */
+  includeBundled: boolean;
+}
+
+/** 히어로 영상 한 편 (PC·휴대폰용 주소와 포스터) */
+export interface HeroVideoSources {
+  desktop: string;
+  mobile: string;
+  poster?: string;
+  mobilePoster?: string;
 }
 
 /**
- * 기본 내장 영상 (public/hero) — 영상 배경인데 주소가 비어 있으면 시간대에 맞춰 자동 선택
- *   낮(06~18시): 공항에서 이륙하는 비행기 · 밤: 오로라
+ * Pothos 기본 내장 영상 (public/hero) — 방문할 때마다 이 중 하나를 랜덤 재생
+ * 새 영상을 추가하면 이 목록에만 넣으면 됨
  */
-export const BUNDLED_HERO_VIDEOS = {
-  day: {
-    desktop: "/hero/day-1080.mp4",
-    mobile: "/hero/day-mobile.mp4",
-    poster: "/hero/day-poster.jpg",
-    mobilePoster: "/hero/day-poster-mobile.jpg",
-  },
-  night: {
+export const BUNDLED_HERO_VIDEOS: HeroVideoSources[] = [
+  {
     desktop: "/hero/aurora-1080.mp4",
     mobile: "/hero/aurora-mobile.mp4",
     poster: "/hero/aurora-poster.jpg",
     mobilePoster: "/hero/aurora-poster-mobile.jpg",
   },
-};
+  {
+    desktop: "/hero/day-1080.mp4",
+    mobile: "/hero/day-mobile.mp4",
+    poster: "/hero/day-poster.jpg",
+    mobilePoster: "/hero/day-poster-mobile.jpg",
+  },
+];
 
-export type DayPart = "day" | "night";
-
-/** 06~18시는 낮, 나머지는 밤 (서버·화면 공용) */
-export function dayPartOf(hour: number): DayPart {
-  return hour >= 6 && hour < 18 ? "day" : "night";
+/** 이번 방문에 재생할 영상 후보 목록 */
+export function heroVideoOptions(c: HeroConfig): HeroVideoSources[] {
+  const mine = c.videos.map((v) => ({ desktop: v.url, mobile: v.url, poster: v.poster || undefined }));
+  const all = [...(c.includeBundled ? BUNDLED_HERO_VIDEOS : []), ...mine];
+  return all.length > 0 ? all : BUNDLED_HERO_VIDEOS;
 }
 
 /** 월별 여행 시즌 문구 (히어로 상단 — 날짜에 맞춰 자동) */
@@ -87,6 +99,8 @@ export const DEFAULT_HERO: HeroConfig = {
   secondaryLabel: "축제 보러 가기",
   secondaryHref: "/festivals",
   checks: ["실제 장소 지도 확인", "동선·길찾기 연결", "공식 축제 데이터", "외교부 여행경보"],
+  videos: [],
+  includeBundled: true,
 };
 
 export const AURORA_PRESETS: Record<AuroraPreset, { label: string; base: string; colors: [string, string, string, string] }> = {
@@ -133,6 +147,17 @@ export function normalizeHero(input: unknown): HeroConfig {
   const auroraPreset: AuroraPreset =
     v.auroraPreset === "sunset" || v.auroraPreset === "ocean" ? v.auroraPreset : "northern";
   const overlay = Math.min(80, Math.max(0, Math.round(Number(v.overlay ?? d.overlay)) || 0));
+  // 영상 목록 (예전 설정의 단일 mediaUrl 영상도 목록으로 옮김)
+  let videos: HeroConfig["videos"] = Array.isArray(v.videos)
+    ? (v.videos as unknown[])
+        .map((x) => (x && typeof x === "object" ? (x as Record<string, unknown>) : {}))
+        .map((x) => ({ url: safeMedia(x.url), poster: safeMedia(x.poster) }))
+        .filter((x) => x.url)
+        .slice(0, 10)
+    : [];
+  if (videos.length === 0 && background === "video" && safeMedia(v.mediaUrl)) {
+    videos = [{ url: safeMedia(v.mediaUrl), poster: safeMedia(v.posterUrl) }];
+  }
   const checks = Array.isArray(v.checks)
     ? v.checks.filter((c): c is string => typeof c === "string" && !!c.trim()).map((c) => c.slice(0, 20)).slice(0, 4)
     : d.checks;
@@ -152,5 +177,7 @@ export function normalizeHero(input: unknown): HeroConfig {
     secondaryLabel: str(v.secondaryLabel, 24, d.secondaryLabel),
     secondaryHref: safeHref(v.secondaryHref, d.secondaryHref),
     checks,
+    videos,
+    includeBundled: typeof v.includeBundled === "boolean" ? v.includeBundled : true,
   };
 }
