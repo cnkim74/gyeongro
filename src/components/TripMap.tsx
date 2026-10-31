@@ -407,7 +407,7 @@ export default function TripMap({
 
   if (!apiKey) {
     return (
-      <div className="bg-blue-50 rounded-2xl p-4 text-xs text-blue-700">
+      <div className="bg-blue-50 rounded-2xl p-4 text-sm text-blue-700">
         지도를 표시하려면 관리자가 <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> 를 설정해야 해요.
       </div>
     );
@@ -419,7 +419,7 @@ export default function TripMap({
         <div className="flex gap-1.5 overflow-x-auto pb-2 -mx-1 px-1">
           <button
             onClick={() => setSelected("all")}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+            className={`shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
               selected === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
@@ -429,7 +429,7 @@ export default function TripMap({
             <button
               key={di}
               onClick={() => setSelected(di)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors inline-flex items-center gap-1.5 ${
+              className={`shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-colors inline-flex items-center gap-1.5 ${
                 selected === di ? "text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
               style={selected === di ? { backgroundColor: dayColor(di) } : undefined}
@@ -447,19 +447,19 @@ export default function TripMap({
       <div className="relative rounded-2xl overflow-hidden border border-gray-100 bg-slate-100">
         <div ref={containerRef} style={{ width: "100%", height }} />
         {!mapReady && !loadError && (
-          <div className="absolute inset-0 flex items-center justify-center text-xs text-slate-400">
+          <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-400">
             지도를 불러오는 중…
           </div>
         )}
         {loadError && (
-          <div className="absolute inset-0 flex items-center justify-center text-xs text-slate-500">
+          <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-500">
             {loadError}
           </div>
         )}
       </div>
 
       {mapReady && shownSig && (
-        <p className="text-[11px] text-slate-500 mt-1.5">
+        <p className="text-sm text-slate-500 mt-1.5">
           {shownRoute === undefined
             ? "도로 경로를 불러오는 중…"
             : shownRoute
@@ -468,7 +468,7 @@ export default function TripMap({
         </p>
       )}
       {mapReady && total > 0 && located < total && (
-        <p className="text-[11px] text-slate-400 mt-1.5">
+        <p className="text-sm text-slate-400 mt-1.5">
           {located === 0
             ? "장소 위치를 찾는 중이에요…"
             : `${total}곳 중 ${located}곳을 지도에 표시했어요. 위치를 찾지 못한 곳은 목록의 [지도] 버튼으로 확인하세요.`}
@@ -484,17 +484,17 @@ function buildInfoContent(name: string, time: string | undefined, geo: PlaceGeo,
   root.style.cssText = "font-family:inherit;max-width:220px;padding:2px 2px 4px";
 
   const meta = document.createElement("div");
-  meta.style.cssText = "font-size:11px;color:#64748b;margin-bottom:2px";
+  meta.style.cssText = "font-size:13px;color:#64748b;margin-bottom:2px";
   meta.textContent = `Day ${dayNo}${time ? ` · ${time}` : ""}`;
   root.appendChild(meta);
 
   const title = document.createElement("div");
-  title.style.cssText = "font-size:14px;font-weight:700;color:#0f172a;margin-bottom:8px;line-height:1.3";
+  title.style.cssText = "font-size:16px;font-weight:700;color:#0f172a;margin-bottom:8px;line-height:1.3";
   title.textContent = name;
   root.appendChild(title);
 
   const links = document.createElement("div");
-  links.style.cssText = "display:flex;gap:10px;font-size:12px;font-weight:600";
+  links.style.cssText = "display:flex;gap:12px;font-size:14px;font-weight:600";
   const add = (label: string, href: string) => {
     const a = document.createElement("a");
     a.href = href;
