@@ -176,7 +176,6 @@ JSON 출력 형식 (이 구조 정확히 준수):
     const completion = await anthropic.messages.create({
       model: CURATE_MODEL,
       max_tokens: 6000,
-      temperature: 0.6,
       system:
         "당신은 의료관광 클리닉 큐레이터. JSON object만 반환하세요. 모든 한글은 정확한 한국어, 영문은 정확한 영어로. 환각 금지: 모르면 일반적 명칭이나 null 사용. 마크다운/설명·코드블록 절대 금지. 반드시 '{' 로 시작해 '}' 로 끝나야 함.",
       messages: [{ role: "user", content: prompt }],

@@ -153,7 +153,6 @@ JSON 출력 (이 구조 정확히):
     const completion = await anthropic.messages.create({
       model: CURATE_MODEL,
       max_tokens: 6000,
-      temperature: 0.8,
       system:
         "당신은 셰르파 큐레이터. JSON object만 반환. 모든 한글은 정확한 한국어, 영문은 정확한 영어. 자연스럽고 차별화된 프로필 작성. 마크다운/설명·코드블록 절대 금지. 반드시 '{' 로 시작해 '}' 로 끝나야 함.",
       messages: [{ role: "user", content: prompt }],

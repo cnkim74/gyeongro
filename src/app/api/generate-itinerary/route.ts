@@ -214,7 +214,6 @@ JSON 출력:
           .stream({
             model: MODEL,
             max_tokens: 8000,
-            temperature: 0.7,
             system: systemContent,
             messages: [{ role: "user", content: prompt }],
           })
@@ -232,7 +231,6 @@ JSON 출력:
             .stream({
               model: MODEL,
               max_tokens: 8000,
-              temperature: 0,
               system:
                 "다음 JSON 문자열에 문법 오류가 있습니다. 오류를 수정해서 valid JSON 만 반환하세요. 다른 텍스트·마크다운·코드블록 절대 추가하지 마세요. 반드시 '{' 로 시작해서 '}' 로 끝나야 함.",
               messages: [{ role: "user", content: cleaned }],
