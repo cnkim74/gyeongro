@@ -79,9 +79,18 @@ export default function PlannerLoading({
             <path d="M290 72 c-9 0 -15 7 -15 15 c0 11 15 25 15 25 s15 -14 15 -25 c0 -8 -6 -15 -15 -15z" fill="#e11d48" />
             <circle cx="290" cy="87" r="5" fill="white" />
           </g>
-          {/* 비행기 */}
+          {/* 비행기 — 기수가 +x 방향(오른쪽)을 향하도록 직접 그림 → rotate="auto" 로 점선 방향과 정확히 일치
+              (✈️ 이모지는 원래 45° 기울어진 그림이라 옆으로 나는 것처럼 보였음) */}
           <g>
-            <text fontSize="26" textAnchor="middle" dominantBaseline="central">✈️</text>
+            <g transform="scale(1.25)">
+              <path
+                d="M15 0 C15 -1.4 13.6 -2 12 -2 L4 -2 L-3 -12 L-6.5 -12 L-2 -2 L-9 -2 L-12 -6 L-14.5 -6 L-12.5 0 L-14.5 6 L-12 6 L-9 2 L-2 2 L-6.5 12 L-3 12 L4 2 L12 2 C13.6 2 15 1.4 15 0 Z"
+                fill="#ffffff"
+                stroke="#1d4ed8"
+                strokeWidth="1.2"
+                strokeLinejoin="round"
+              />
+            </g>
             <animateMotion dur="5s" repeatCount="indefinite" rotate="auto">
               <mpath href="#pothos-route" />
             </animateMotion>
