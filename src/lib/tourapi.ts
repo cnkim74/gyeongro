@@ -90,7 +90,11 @@ async function fetchTourText(op: string, paramsJson: string): Promise<string> {
   }
   if (!ok) {
     // 키 미등록·트래픽 초과 등 — 원본 일부를 남겨 원인 확인 (키는 포함되지 않음)
-    throw new Error(`status=${res.status} raw=${text.slice(0, 300)}`);
+    // 키 값은 남기지 않고 형식만 (길이·문자 종류) — 복사 오류 진단용
+    const raw = process.env.TOURAPI_SERVICE_KEY ?? "";
+    const keyInfo = `len=${key.length} rawLen=${raw.length} hex=${/^[0-9a-f]+$/i.test(key)} ` +
+      `pct=${/%[0-9A-Fa-f]{2}/.test(key)} special=${/[+/=]/.test(key)} quote=${/["']/.test(raw)} space=${/\s/.test(key)}`;
+    throw new Error(`status=${res.status} key(${keyInfo}) raw=${text.slice(0, 300)}`);
   }
   return text;
 }
