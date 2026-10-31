@@ -144,12 +144,19 @@ async function googleSegment(points: RoutePoint[], key: string) {
     }),
     cache: "no-store",
   });
-  if (!res.ok) return null;
+  if (!res.ok) {
+    // Routes API 미사용 설정·키 제한·지원 지역 아님 등 원인 확인용
+    console.log(`[route] google status=${res.status} body=${(await res.text()).slice(0, 300)}`);
+    return null;
+  }
   const data = (await res.json()) as {
     routes?: { polyline?: { encodedPolyline?: string }; distanceMeters?: number; duration?: string }[];
   };
   const r = data.routes?.[0];
-  if (!r?.polyline?.encodedPolyline) return null;
+  if (!r?.polyline?.encodedPolyline) {
+    console.log(`[route] google no route: ${JSON.stringify(data).slice(0, 200)}`);
+    return null;
+  }
   return {
     path: decodePolyline(r.polyline.encodedPolyline),
     distanceM: r.distanceMeters ?? 0,

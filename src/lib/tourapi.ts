@@ -104,6 +104,10 @@ async function tourGetPage(
       return empty;
     }
     const totalCount = Number(body?.body?.totalCount ?? 0) || 0;
+    if (!body?.header || totalCount === 0) {
+      // 예상과 다른 형식(게이트웨이 인증 오류 등)이나 0건이면 원본 일부를 남겨 원인 확인 (키는 포함되지 않음)
+      console.log(`[tourapi] ${op} status=${res.status} total=${totalCount} raw=${text.slice(0, 300)}`);
+    }
     const items = body?.body?.items;
     if (!items || typeof items === "string" || !items.item) return { items: [], totalCount };
     return { items: Array.isArray(items.item) ? items.item : [items.item], totalCount };

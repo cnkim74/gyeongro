@@ -1,5 +1,21 @@
 @import "tailwindcss";
 
+/* 제목 폰트 — 지마켓 산스 (Gmarket 무료 배포, 상업 이용 가능). public/fonts 에 자체 호스팅 */
+@font-face {
+  font-family: "GmarketSans";
+  src: url("/fonts/GmarketSansMedium.woff") format("woff");
+  font-weight: 100 599;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "GmarketSans";
+  src: url("/fonts/GmarketSansBold.woff") format("woff");
+  font-weight: 600 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #0a0a0a;
@@ -22,6 +38,14 @@ body {
 
 html {
   scroll-behavior: smooth;
+  /* 전체 글자·버튼·여백 크기 상향 (기본 16px → 17px, rem 기반이라 버튼도 함께 커짐) */
+  font-size: 106.25%;
+}
+
+/* 제목은 지마켓 산스 */
+h1, h2, h3, .font-title {
+  font-family: "GmarketSans", "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif;
+  letter-spacing: -0.01em;
 }
 
 /* iOS Safari 입력 필드 자동 zoom 방지 — 16px 미만이면 zoom 트리거.

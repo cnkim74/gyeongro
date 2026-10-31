@@ -380,7 +380,7 @@ function PlannerContent() {
               </p>
             </div>
 
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 space-y-8">
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 sm:p-8 space-y-8">
               {festival && (
                 <div className="flex items-start gap-3 rounded-2xl bg-gradient-to-r from-rose-50 to-orange-50 border border-rose-100 p-4">
                   <PartyPopper className="w-6 h-6 text-rose-500 shrink-0 mt-0.5" />
@@ -404,8 +404,8 @@ function PlannerContent() {
 
               {/* Destination */}
               <div>
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
-                  <MapPin className="w-4 h-4 text-blue-500" />
+                <label className="flex items-center gap-2 text-base font-bold text-gray-800 mb-3">
+                  <MapPin className="w-5 h-5 text-blue-500" />
                   어디로 떠나고 싶으세요?
                 </label>
                 <input
@@ -413,9 +413,9 @@ function PlannerContent() {
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
                   placeholder="예: 도쿄  ·  프라하 → 뮌헨 → 베를린  ·  체코+독일 7일"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition text-gray-900 placeholder-gray-400"
+                  className="w-full px-4 py-4 text-lg rounded-2xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition text-gray-900 placeholder-gray-400"
                 />
-                <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+                <p className="text-sm text-slate-500 mt-1.5 leading-relaxed">
                   💡 <strong>여러 도시·국가</strong>는 화살표(→) 또는 콤마(,)로 연결하세요.
                   예: <code className="text-blue-600">프라하 → 드레스덴 → 베를린</code> 또는 <code className="text-blue-600">체코+독일 7박 8일</code>
                 </p>
@@ -424,7 +424,7 @@ function PlannerContent() {
                     <button
                       key={d}
                       onClick={() => setDestination(d)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
                         destination === d
                           ? "bg-blue-500 text-white"
                           : "bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600"
@@ -437,16 +437,16 @@ function PlannerContent() {
               </div>
 
               {/* Days & People */}
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
-                    <Calendar className="w-4 h-4 text-blue-500" />
+                  <label className="flex items-center gap-2 text-base font-bold text-gray-800 mb-3">
+                    <Calendar className="w-5 h-5 text-blue-500" />
                     여행 기간
                   </label>
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setDays(Math.max(1, days - 1))}
-                      className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 font-bold text-gray-700"
+                      className="w-12 h-12 text-xl rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 font-bold text-gray-700"
                     >
                       -
                     </button>
@@ -455,23 +455,22 @@ function PlannerContent() {
                     </span>
                     <button
                       onClick={() => setDays(Math.min(14, days + 1))}
-                      className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 font-bold text-gray-700"
+                      className="w-12 h-12 text-xl rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 font-bold text-gray-700"
                     >
                       +
                     </button>
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">{days}박 {days + 1}일</p>
                 </div>
 
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
-                    <Users className="w-4 h-4 text-blue-500" />
+                  <label className="flex items-center gap-2 text-base font-bold text-gray-800 mb-3">
+                    <Users className="w-5 h-5 text-blue-500" />
                     인원
                   </label>
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setPeople(Math.max(1, people - 1))}
-                      className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 font-bold text-gray-700"
+                      className="w-12 h-12 text-xl rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 font-bold text-gray-700"
                     >
                       -
                     </button>
@@ -480,7 +479,7 @@ function PlannerContent() {
                     </span>
                     <button
                       onClick={() => setPeople(Math.min(20, people + 1))}
-                      className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 font-bold text-gray-700"
+                      className="w-12 h-12 text-xl rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 font-bold text-gray-700"
                     >
                       +
                     </button>
@@ -490,8 +489,8 @@ function PlannerContent() {
 
               {/* 출발일 */}
               <div>
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
-                  <Calendar className="w-4 h-4 text-blue-500" />
+                <label className="flex items-center gap-2 text-base font-bold text-gray-800 mb-3">
+                  <Calendar className="w-5 h-5 text-blue-500" />
                   출발일 <span className="text-gray-400 font-normal">(선택)</span>
                 </label>
                 <div className="flex items-center gap-3">
@@ -499,7 +498,7 @@ function PlannerContent() {
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none text-gray-900"
+                    className="flex-1 px-4 py-4 text-lg rounded-2xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none text-gray-900"
                   />
                   {startDate && (
                     <button onClick={() => setStartDate("")} className="text-sm text-gray-500 hover:text-gray-800">
@@ -514,8 +513,8 @@ function PlannerContent() {
 
               {/* Budget */}
               <div>
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
-                  <Wallet className="w-4 h-4 text-blue-500" />
+                <label className="flex items-center gap-2 text-base font-bold text-gray-800 mb-3">
+                  <Wallet className="w-5 h-5 text-blue-500" />
                   1인 예산 (교통비 제외)
                 </label>
                 <div className="space-y-3">
@@ -538,7 +537,7 @@ function PlannerContent() {
                       <button
                         key={b}
                         onClick={() => setBudget(b)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                        className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
                           budget === b
                             ? "bg-blue-500 text-white"
                             : "bg-gray-100 text-gray-600 hover:bg-blue-50"
@@ -553,7 +552,7 @@ function PlannerContent() {
 
               {/* Travel Style */}
               <div>
-                <label className="text-sm font-semibold text-gray-700 mb-3 block">
+                <label className="text-base font-bold text-gray-800 mb-3 block">
                   여행 스타일
                 </label>
                 <div className="grid grid-cols-3 gap-3">
@@ -565,15 +564,15 @@ function PlannerContent() {
                     <button
                       key={s.id}
                       onClick={() => setTravelStyle(s.id)}
-                      className={`p-4 rounded-xl border-2 text-center transition-all ${
+                      className={`px-2 py-4 rounded-2xl border-2 text-center transition-all ${
                         travelStyle === s.id
                           ? "border-blue-500 bg-blue-50"
                           : "border-gray-200 hover:border-gray-300"
                       }`}
                     >
                       <div className="text-2xl mb-1">{s.emoji}</div>
-                      <div className="text-sm font-semibold text-gray-900">{s.label}</div>
-                      <div className="text-xs text-gray-400">{s.desc}</div>
+                      <div className="text-base font-bold text-gray-900 whitespace-nowrap">{s.label}</div>
+                      <div className="text-sm text-gray-500 whitespace-nowrap">{s.desc}</div>
                     </button>
                   ))}
                 </div>
@@ -581,7 +580,7 @@ function PlannerContent() {
 
               {/* Themes */}
               <div>
-                <label className="text-sm font-semibold text-gray-700 mb-3 block">
+                <label className="text-base font-bold text-gray-800 mb-3 block">
                   관심 테마 (복수 선택 가능)
                 </label>
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
@@ -596,7 +595,7 @@ function PlannerContent() {
                       }`}
                     >
                       <span className="text-xl">{t.emoji}</span>
-                      <span className="text-xs font-medium">{t.label}</span>
+                      <span className="text-sm font-medium">{t.label}</span>
                     </button>
                   ))}
                 </div>
@@ -618,7 +617,7 @@ function PlannerContent() {
                         의료관광 일정 포함
                       </span>
                     </div>
-                    <p className="text-xs text-slate-500 mt-0.5">
+                    <p className="text-sm text-slate-500 mt-0.5">
                       시술·검진을 일정에 포함하면 AI가 회복 기간을 고려해 부담 없는 코스를 짜요.
                     </p>
                   </div>
@@ -628,7 +627,7 @@ function PlannerContent() {
                   <div className="mt-5 space-y-4 pl-7">
                     {/* 시술 선택 */}
                     <div>
-                      <label className="text-xs font-semibold text-slate-700 mb-2 block">
+                      <label className="text-sm font-semibold text-slate-700 mb-2 block">
                         시술 종류
                       </label>
                       <div className="grid grid-cols-3 gap-2">
@@ -648,11 +647,11 @@ function PlannerContent() {
                             }`}
                           >
                             <div className="text-2xl mb-1">{p.emoji}</div>
-                            <div className="text-xs font-semibold text-slate-900">
+                            <div className="text-sm font-semibold text-slate-900">
                               {p.name_ko}
                             </div>
                             {p.recovery_days && (
-                              <div className="text-[10px] text-slate-500 mt-0.5">
+                              <div className="text-sm text-slate-500 mt-0.5">
                                 회복 {p.recovery_days}일
                               </div>
                             )}
@@ -664,7 +663,7 @@ function PlannerContent() {
                     {/* 클리닉 선택 (있으면) */}
                     {medicalProcedure && clinics.length > 0 && (
                       <div>
-                        <label className="text-xs font-semibold text-slate-700 mb-2 block">
+                        <label className="text-sm font-semibold text-slate-700 mb-2 block">
                           클리닉 선택{" "}
                           <span className="text-slate-400 font-normal">
                             (선택, 미선택 시 도시만 반영)
@@ -688,7 +687,7 @@ function PlannerContent() {
                     {/* 시술일 선택 */}
                     {medicalProcedure && (
                       <div>
-                        <label className="text-xs font-semibold text-slate-700 mb-2 block">
+                        <label className="text-sm font-semibold text-slate-700 mb-2 block">
                           시술 받는 날
                         </label>
                         <div className="flex gap-2 flex-wrap">
@@ -698,7 +697,7 @@ function PlannerContent() {
                                 key={d}
                                 type="button"
                                 onClick={() => setMedicalTreatmentDay(d)}
-                                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                                className={`px-3 py-1.5 rounded-full text-sm font-semibold transition-all ${
                                   medicalTreatmentDay === d
                                     ? "bg-rose-500 text-white"
                                     : "bg-white border border-slate-200 text-slate-600 hover:border-rose-300"
@@ -709,7 +708,7 @@ function PlannerContent() {
                             )
                           )}
                         </div>
-                        <p className="text-[11px] text-slate-500 mt-2">
+                        <p className="text-sm text-slate-500 mt-2">
                           <Stethoscope className="w-3 h-3 inline mr-0.5" />
                           시술일 이후 회복 기간은 가벼운 일정으로 자동 조정됩니다.
                         </p>
