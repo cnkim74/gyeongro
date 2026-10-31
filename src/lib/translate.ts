@@ -98,7 +98,6 @@ Rules:
   const msg = await anthropic.messages.create({
     model: MODEL,
     max_tokens: 2000,
-    temperature: 0.3,
     system: systemInstruction,
     messages: [{ role: "user", content: text }],
   });
