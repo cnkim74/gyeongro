@@ -5,13 +5,13 @@ import { consumeQuota, QuotaExceededError } from "@/lib/ai-quota";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 // Anthropic Claude 모델 — 사용자 본인 ANTHROPIC_API_KEY 크레딧으로 과금됨.
 // 비용/속도/품질 조절은 이 한 줄만 바꾸면 됩니다:
 //   - "claude-haiku-5-5"  : 가장 저렴·빠름 (품질 보통)
-//   - "claude-sonnet-5-5" : 균형 (현재 기본) — Vercel Hobby 60초 제한에 안전
-//   - "claude-opus-5-5"   : 최고 품질 (느리고 비쌈, 60초 초과 위험)
+//   - "claude-sonnet-5-5" : 균형 (현재 기본, 보통 1~2분 소요)
+//   - "claude-opus-5-5"   : 최고 품질 (느리고 비쌈, 300초 초과 위험)
 const MODEL = "claude-sonnet-5-5";
 
 /** Anthropic 응답에서 text 블록만 뽑아 합침 */

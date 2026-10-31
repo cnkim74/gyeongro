@@ -632,7 +632,7 @@ function PlannerContent() {
                   <p className="text-gray-500 mb-2">
                     <span className="font-semibold text-blue-600">{destination}</span> {days + 1}일 일정을 분석 중...
                   </p>
-                  <p className="text-gray-400 text-sm">보통 15-30초 정도 소요됩니다</p>
+                  <p className="text-gray-400 text-sm">보통 1~2분 정도 소요됩니다. 화면을 닫지 말고 기다려주세요</p>
                   <div className="flex justify-center gap-2 mt-6">
                     {["숙소 검색 중", "맛집 탐색 중", "동선 최적화 중"].map((t, i) => (
                       <div
