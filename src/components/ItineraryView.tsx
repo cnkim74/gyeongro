@@ -13,13 +13,14 @@ import {
   Navigation,
   HeartPulse,
   Stethoscope,
-  ArrowDown,
   Sparkles,
   Coffee,
   Hash,
+  Wallet,
+  Loader2,
 } from "lucide-react";
 import { getPlaceSearchUrl, getDirectionsUrl } from "@/lib/maps";
-import TripMap, { useResolvedDays, googlePlaceUrl, legDirectionsUrl } from "@/components/TripMap";
+import TripMap, { useResolvedDays, googlePlaceUrl, legDirectionsUrl, dayColor } from "@/components/TripMap";
 import PlaceInfo from "@/components/PlaceInfo";
 import {
   googleMapsSearch,
@@ -77,6 +78,10 @@ export interface DayPlan {
   meal: { breakfast: string; lunch: string; dinner: string };
   accommodation: string;
   dayBudget: number;
+  /** 뼈대 단계의 하루 요약 (상세 일정 도착 전 표시) */
+  plan?: string;
+  /** 상세 일정 작성 중 (뼈대만 도착한 상태) */
+  pending?: boolean;
 }
 
 export interface Itinerary {
@@ -108,461 +113,484 @@ function detectMedicalDayType(day: DayPlan): "treatment" | "recovery" | null {
 export default function ItineraryView({
   itinerary,
   destination,
+  generating = false,
 }: {
   itinerary: Itinerary;
   destination: string;
+  /** AI가 아직 Day 상세를 채우는 중 */
+  generating?: boolean;
 }) {
   const [expandedDay, setExpandedDay] = useState<number | null>(0);
   // 좌표 없는(예전 저장) 일정은 여기서 한 번만 채움 → 지도·장소 정보가 공유
   const days = useResolvedDays(itinerary.days ?? [], destination);
 
+  const budget = itinerary.totalBudget;
+  const totalBudget = budget
+    ? (budget.accommodation ?? 0) + (budget.food ?? 0) + (budget.transport ?? 0) + (budget.activities ?? 0)
+    : 0;
+
   return (
     <>
-      {/* Header card */}
-      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-8 text-white mb-6">
-        <div className="flex items-center gap-2 mb-3">
-          <MapPin className="w-5 h-5 text-blue-200" />
-          <span className="text-blue-200 text-sm">{destination}</span>
+      {/* ── 상단 요약 카드 ───────────────────────────── */}
+      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-6 sm:p-8 text-white mb-6">
+        <div className="inline-flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1 mb-4">
+          <MapPin className="w-4 h-4" />
+          <span className="text-sm font-semibold">{destination}</span>
         </div>
-        <h1 className="text-3xl font-bold mb-3">{itinerary.title}</h1>
-        <p className="text-blue-100 text-sm leading-relaxed mb-5">{itinerary.summary}</p>
+        <h1 className="text-[26px] sm:text-3xl font-extrabold leading-snug mb-3">{itinerary.title}</h1>
+        <p className="text-base text-blue-50 leading-relaxed mb-5">{itinerary.summary}</p>
 
-        <div className="flex flex-wrap gap-2 mb-6">
-          {itinerary.highlights?.map((h, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1.5 text-xs"
-            >
-              <CheckCircle className="w-3.5 h-3.5 text-green-300" />
-              {h}
-            </div>
-          ))}
-        </div>
-
-        {itinerary.totalBudget && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[
-              { label: "숙박", value: itinerary.totalBudget.accommodation, icon: "🏨" },
-              { label: "식비", value: itinerary.totalBudget.food, icon: "🍽️" },
-              { label: "교통", value: itinerary.totalBudget.transport, icon: "🚌" },
-              { label: "액티비티", value: itinerary.totalBudget.activities, icon: "🎯" },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="bg-white/10 rounded-2xl p-3 text-center backdrop-blur-sm"
-              >
-                <div className="text-xl mb-1">{item.icon}</div>
-                <div className="text-xs text-blue-200 mb-1">{item.label}</div>
-                <div className="text-sm font-bold">{formatCurrency(item.value)}원</div>
-              </div>
+        {itinerary.highlights?.length > 0 && (
+          <ul className="space-y-2 mb-6">
+            {itinerary.highlights.map((h, i) => (
+              <li key={i} className="flex items-start gap-2 text-[15px] leading-snug">
+                <CheckCircle className="w-5 h-5 text-green-300 shrink-0 mt-0.5" />
+                {h}
+              </li>
             ))}
+          </ul>
+        )}
+
+        {totalBudget > 0 && (
+          <div className="bg-white/10 rounded-2xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <span className="inline-flex items-center gap-1.5 text-[15px] text-blue-100">
+                <Wallet className="w-4 h-4" /> 예상 총 경비
+              </span>
+              <span className="text-xl font-extrabold">{formatCurrency(totalBudget)}원</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                { label: "숙박", value: budget.accommodation, icon: "🏨" },
+                { label: "식비", value: budget.food, icon: "🍽️" },
+                { label: "교통", value: budget.transport, icon: "🚌" },
+                { label: "즐길거리", value: budget.activities, icon: "🎯" },
+              ].map((item) => (
+                <div key={item.label} className="bg-white/10 rounded-xl px-3 py-2">
+                  <div className="text-sm text-blue-100">
+                    {item.icon} {item.label}
+                  </div>
+                  <div className="text-[15px] font-bold">{formatCurrency(item.value)}원</div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
 
-      {/* 전체 여행 지도 */}
+      {/* ── 전체 여행 지도 ─────────────────────────── */}
       {days.length > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
-          <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-            <MapIcon className="w-5 h-5 text-blue-500" />
+        <section className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <MapIcon className="w-6 h-6 text-blue-500" />
             여행 지도
-          </h3>
+          </h2>
           <TripMap days={days} height={360} />
-        </div>
+        </section>
       )}
 
+      {/* ── Day 별 일정 ────────────────────────────── */}
       <div className="space-y-4 mb-6">
-        {days.map((day, idx) => {
-          const medType = detectMedicalDayType(day);
-          const dayBgGradient =
-            medType === "treatment"
-              ? "from-rose-500 to-pink-600"
-              : medType === "recovery"
-              ? "from-rose-300 to-rose-400"
-              : "from-blue-500 to-indigo-600";
-          return (
-          <div
-            key={day.day}
-            className={`bg-white rounded-2xl border overflow-hidden shadow-sm ${
-              medType ? "border-rose-200" : "border-gray-100"
-            }`}
-          >
-            <button
-              onClick={() => setExpandedDay(expandedDay === idx ? null : idx)}
-              className="w-full flex items-center justify-between p-5 hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${dayBgGradient} flex items-center justify-center text-white font-bold shrink-0`}>
-                  D{day.day}
-                </div>
-                <div className="text-left">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-bold text-gray-900">{day.title}</p>
-                    {medType === "treatment" && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[10px] font-bold tracking-wide uppercase">
-                        <HeartPulse className="w-2.5 h-2.5" /> 시술일
-                      </span>
-                    )}
-                    {medType === "recovery" && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[10px] font-bold tracking-wide uppercase">
-                        <Stethoscope className="w-2.5 h-2.5" /> 회복일
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-400">{day.theme}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-semibold text-blue-600 hidden sm:block">
-                  {formatCurrency(day.dayBudget)}원
-                </span>
-                {expandedDay === idx ? (
-                  <ChevronUp className="w-5 h-5 text-gray-400" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-gray-400" />
-                )}
-              </div>
-            </button>
-
-            {expandedDay === idx && (
-              <div className="border-t border-gray-100 p-5 space-y-6">
-                {/* 일자별 동선 - 임베드 지도 (B) + 전체 경로 보기 버튼 (A) */}
-                {(() => {
-                  const places = (day.schedule ?? [])
-                    .map((s) => s.place)
-                    .filter(Boolean);
-                  if (places.length < 2) return null;
-
-                  const dirsUrl = getDirectionsUrl(places, destination, "transit");
-
-                  return (
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                          <Navigation className="w-4 h-4 text-blue-500" />
-                          오늘의 동선 ({places.length}곳)
-                        </h4>
-                        {dirsUrl && (
-                          <a
-                            href={dirsUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1"
-                          >
-                            구글맵에서 열기 →
-                          </a>
-                        )}
-                      </div>
-                      <div className="mb-3">
-                        <TripMap days={days} initialDayIndex={idx} showTabs={false} height={260} />
-                      </div>
-
-                      {/* 순서 있는 동선 리스트 — 지도가 경로 선 못 그려도 순서 명확 */}
-                      <ol className="space-y-1 mb-3">
-                        {places.map((place, idx) => (
-                          <li key={idx} className="flex items-start gap-2 text-xs">
-                            <span className="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold text-[10px]">
-                              {idx + 1}
-                            </span>
-                            <a
-                              href={getPlaceSearchUrl(place, destination)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex-1 text-slate-700 hover:text-blue-600 leading-relaxed"
-                            >
-                              {place}
-                            </a>
-                            {idx < places.length - 1 && (
-                              <ArrowDown className="w-3 h-3 text-slate-300 mt-1 shrink-0" />
-                            )}
-                          </li>
-                        ))}
-                      </ol>
-
-                      {/* 구글맵에 저장 안내 */}
-                      {dirsUrl && (
-                        <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-2">
-                          <p className="text-xs text-blue-900 leading-relaxed">
-                            <span className="font-bold">💾 구글맵에 저장</span> —{" "}
-                            <a
-                              href={dirsUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="font-semibold underline decoration-blue-300 hover:text-blue-700"
-                            >
-                              구글맵에서 열기
-                            </a>{" "}
-                            → 우측 상단 ⋮ 메뉴 →{" "}
-                            <span className="font-semibold">&lsquo;경로 보내기&rsquo;</span> 또는{" "}
-                            <span className="font-semibold">&lsquo;내 지도에 저장&rsquo;</span>{" "}
-                            누르면 본인 계정에 저장됩니다.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
-
-                <div>
-                  <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
-                    <h4 className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-blue-500" />
-                      시간별 일정
-                    </h4>
-                    <p className="text-[10px] text-slate-400 inline-flex items-center gap-1">
-                      <span>ℹ️</span>
-                      <span>영업시간·가격은 Google/Naver에서 최종 확인 권장</span>
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    {day.schedule?.map((item, i) => {
-                      const isLast = i === (day.schedule?.length ?? 0) - 1;
-                      const inKorea = isKoreanCity(destination);
-                      return (
-                        <div key={i}>
-                          <div className="flex gap-4">
-                            <div className="text-sm font-mono text-blue-500 font-semibold w-14 shrink-0 pt-0.5">
-                              {item.time}
-                            </div>
-                            <div className="flex-1 pb-3 border-b border-gray-50 last:border-0">
-                              <div className="flex items-start justify-between gap-2">
-                                <p className="font-semibold text-gray-900 text-sm">{item.place}</p>
-                                <a
-                                  href={
-                                    item.geo
-                                      ? googlePlaceUrl(item.place, item.geo)
-                                      : getPlaceSearchUrl(item.place, destination)
-                                  }
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="shrink-0 inline-flex items-center gap-0.5 text-[11px] text-blue-500 hover:text-blue-700 font-medium px-2 py-0.5 rounded-full bg-blue-50 hover:bg-blue-100"
-                                  title="구글맵에서 보기"
-                                >
-                                  <MapIcon className="w-3 h-3" />
-                                  지도
-                                </a>
-                              </div>
-                              <p className="text-gray-500 text-sm mt-0.5">{item.activity}</p>
-                              <PlaceInfo name={item.place} geo={item.geo} city={day.city || destination} />
-                              <div className="flex items-center gap-3 mt-1.5">
-                                <span className="text-xs text-gray-400 flex items-center gap-1">
-                                  <Clock className="w-3 h-3" /> {item.duration}
-                                </span>
-                                {item.cost > 0 && (
-                                  <span className="text-xs text-emerald-600 font-medium">
-                                    {formatCurrency(item.cost)}원
-                                  </span>
-                                )}
-                              </div>
-                              {item.tip && (
-                                <div className="mt-2 px-3 py-2 bg-amber-50 rounded-lg text-xs text-amber-700">
-                                  💡 {item.tip}
-                                </div>
-                              )}
-
-                              {/* 주변 대안 스팟 */}
-                              {item.nearby_alternatives && item.nearby_alternatives.length > 0 && (
-                                <div className="mt-2 px-3 py-2 bg-slate-50 rounded-lg">
-                                  <p className="text-[10px] font-bold text-slate-500 mb-1.5 flex items-center gap-1">
-                                    <Sparkles className="w-3 h-3 text-slate-400" />
-                                    이 곳 대신 가도 좋은 곳
-                                  </p>
-                                  <div className="space-y-1">
-                                    {item.nearby_alternatives.map((alt, j) => (
-                                      <a
-                                        key={j}
-                                        href={
-                                          inKorea
-                                            ? naverMapSearch(alt.name)
-                                            : googleMapsSearch(alt.name, destination)
-                                        }
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-start gap-1.5 text-xs text-slate-700 hover:text-blue-600"
-                                      >
-                                        <span className="text-slate-400 shrink-0">·</span>
-                                        <span className="flex-1">
-                                          <span className="font-semibold">{alt.name}</span>
-                                          {alt.reason && (
-                                            <span className="text-slate-500"> — {alt.reason}</span>
-                                          )}
-                                        </span>
-                                      </a>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* 근처 SNS 핫플 음식점 */}
-                              {item.nearby_food && item.nearby_food.length > 0 && (
-                                <div className="mt-2 px-3 py-2 bg-rose-50/60 rounded-lg">
-                                  <p className="text-[10px] font-bold text-rose-700 mb-1.5 flex items-center gap-1">
-                                    <Coffee className="w-3 h-3" />
-                                    근처 인기 카페·식당
-                                  </p>
-                                  <div className="space-y-1.5">
-                                    {item.nearby_food.map((food, j) => (
-                                      <div key={j} className="text-xs">
-                                        <p className="text-slate-800 leading-snug">
-                                          <span className="font-semibold">{food.name}</span>
-                                          {food.type && (
-                                            <span className="text-rose-600 ml-1">· {food.type}</span>
-                                          )}
-                                          {food.why && (
-                                            <span className="text-slate-500"> — {food.why}</span>
-                                          )}
-                                        </p>
-                                        <div className="flex items-center gap-2 mt-0.5">
-                                          <a
-                                            href={
-                                              inKorea
-                                                ? naverMapSearch(food.name)
-                                                : googleMapsSearch(food.name, destination)
-                                            }
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-0.5 text-[10px] text-blue-600 hover:text-blue-800"
-                                          >
-                                            <MapIcon className="w-2.5 h-2.5" />
-                                            {inKorea ? "네이버" : "Google"}
-                                          </a>
-                                          <a
-                                            href={instagramHashtag(food.name)}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-0.5 text-[10px] text-pink-600 hover:text-pink-800"
-                                          >
-                                            <Hash className="w-2.5 h-2.5" />
-                                            #{food.name.replace(/[\s\-·,()]/g, "")}
-                                          </a>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* 다음 스팟까지 교통수단 */}
-                          {!isLast && item.transport_to_next && item.transport_to_next.mode && (
-                            <div className="ml-14 my-1 flex items-center gap-2 text-[11px] text-slate-500">
-                              <ArrowDown className="w-3 h-3 shrink-0 text-slate-300" />
-                              <span className="font-medium text-slate-700">
-                                {item.transport_to_next.mode}
-                              </span>
-                              {item.transport_to_next.duration && (
-                                <span>· {item.transport_to_next.duration}</span>
-                              )}
-                              {item.transport_to_next.cost_kr && (
-                                <span>· {item.transport_to_next.cost_kr}</span>
-                              )}
-                              {(() => {
-                                const next = day.schedule?.[i + 1];
-                                const url = next
-                                  ? legDirectionsUrl(
-                                      { name: item.place, geo: item.geo },
-                                      { name: next.place, geo: next.geo }
-                                    )
-                                  : null;
-                                return url ? (
-                                  <a
-                                    href={url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="ml-1 font-semibold text-blue-600 hover:text-blue-800"
-                                  >
-                                    길찾기 →
-                                  </a>
-                                ) : null;
-                              })()}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {day.meal && (
-                  <div>
-                    <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                      <Utensils className="w-4 h-4 text-orange-500" />
-                      식사 추천
-                    </h4>
-                    <div className="grid grid-cols-3 gap-3">
-                      {[
-                        { label: "아침", value: day.meal.breakfast, emoji: "🌅" },
-                        { label: "점심", value: day.meal.lunch, emoji: "☀️" },
-                        { label: "저녁", value: day.meal.dinner, emoji: "🌙" },
-                      ].map((m) => (
-                        <div key={m.label} className="bg-orange-50 rounded-xl p-3">
-                          <p className="text-xs text-orange-400 font-medium mb-1">
-                            {m.emoji} {m.label}
-                          </p>
-                          <p className="text-xs text-gray-700 font-medium">{m.value}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {day.accommodation && (
-                  <div className="flex items-start gap-3 bg-blue-50 rounded-xl p-4">
-                    <Home className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs font-bold text-blue-600 mb-0.5">숙소 추천</p>
-                      <p className="text-sm text-gray-700">{day.accommodation}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-          );
-        })}
+        {days.map((day, idx) => (
+          <DayCard
+            key={idx}
+            day={day}
+            idx={idx}
+            days={days}
+            destination={destination}
+            expanded={expandedDay === idx}
+            onToggle={() => setExpandedDay(expandedDay === idx ? null : idx)}
+            generating={generating}
+          />
+        ))}
       </div>
 
-      <TravelAdvisory itinerary={itinerary} destination={destination} />
+      {!generating && <TravelAdvisory itinerary={itinerary} destination={destination} />}
 
       {itinerary.tips?.length > 0 && (
-        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 mb-6 border border-amber-100">
-          <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <span className="text-xl">💡</span>
-            여행 꿀팁
-          </h3>
-          <ul className="space-y-2">
+        <section className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-6 mb-6 border border-amber-100">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">💡 여행 꿀팁</h2>
+          <ul className="space-y-3">
             {itinerary.tips.map((tip, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                <CheckCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+              <li key={i} className="flex items-start gap-2 text-[15px] text-gray-800 leading-relaxed">
+                <CheckCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                 {tip}
               </li>
             ))}
           </ul>
           {itinerary.bestSeason && (
-            <p className="text-sm text-amber-700 mt-4 pt-4 border-t border-amber-200">
-              🗓️ <span className="font-semibold">최적 여행 시기:</span> {itinerary.bestSeason}
+            <p className="text-[15px] text-amber-800 mt-4 pt-4 border-t border-amber-200">
+              🗓️ <span className="font-bold">추천 여행 시기</span> · {itinerary.bestSeason}
             </p>
+          )}
+        </section>
+      )}
+
+      {/* AI 생성 일정 — 외부 검증 안내 */}
+      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 mb-6 text-sm text-slate-600 leading-relaxed">
+        <p className="font-bold text-slate-800 mb-1">ℹ️ AI가 만든 일정이에요</p>
+        영업시간·가격·휴무일은 바뀔 수 있어요. 출발 전에 각 장소의{" "}
+        <span className="font-semibold text-slate-800">[지도]</span>·
+        <span className="font-semibold text-slate-800">[평점·사진·후기]</span> 버튼으로 꼭 확인해주세요.
+      </div>
+    </>
+  );
+}
+
+// ── 하루 카드 ─────────────────────────────────────────────
+function DayCard({
+  day,
+  idx,
+  days,
+  destination,
+  expanded,
+  onToggle,
+  generating,
+}: {
+  day: DayPlan;
+  idx: number;
+  days: DayPlan[];
+  destination: string;
+  expanded: boolean;
+  onToggle: () => void;
+  generating: boolean;
+}) {
+  const medType = detectMedicalDayType(day);
+  const color = medType ? "#e11d48" : dayColor(idx);
+  const pending = !!day.pending;
+  const places = (day.schedule ?? []).map((s) => s.place).filter(Boolean);
+  const dirsUrl = places.length >= 2 ? getDirectionsUrl(places, day.city || destination, "transit") : null;
+
+  return (
+    <div
+      className={`bg-white rounded-3xl border overflow-hidden shadow-sm ${
+        medType ? "border-rose-200" : "border-gray-100"
+      }`}
+    >
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between gap-3 p-5 text-left hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex items-center gap-4 min-w-0">
+          <div
+            className="w-14 h-14 rounded-2xl flex flex-col items-center justify-center text-white shrink-0"
+            style={{ backgroundColor: color }}
+          >
+            <span className="text-[11px] font-semibold opacity-90 leading-none">DAY</span>
+            <span className="text-xl font-extrabold leading-tight">{day.day}</span>
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-lg font-bold text-gray-900 leading-snug">{day.title}</p>
+              {medType === "treatment" && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-xs font-bold">
+                  <HeartPulse className="w-3 h-3" /> 시술일
+                </span>
+              )}
+              {medType === "recovery" && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 text-xs font-bold">
+                  <Stethoscope className="w-3 h-3" /> 회복일
+                </span>
+              )}
+            </div>
+            <p className="text-[15px] text-gray-500 mt-0.5">
+              {day.city ? `${day.city} · ` : ""}
+              {day.theme}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {pending ? (
+            <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+          ) : (
+            day.dayBudget > 0 && (
+              <span className="text-[15px] font-bold text-blue-600 hidden sm:block">
+                {formatCurrency(day.dayBudget)}원
+              </span>
+            )
+          )}
+          {expanded ? (
+            <ChevronUp className="w-6 h-6 text-gray-400" />
+          ) : (
+            <ChevronDown className="w-6 h-6 text-gray-400" />
+          )}
+        </div>
+      </button>
+
+      {expanded && pending && (
+        <div className="border-t border-gray-100 p-5">
+          {day.plan && <p className="text-[15px] text-gray-700 leading-relaxed mb-4">🗺️ {day.plan}</p>}
+          <p className="text-[15px] font-semibold text-blue-600 mb-3 inline-flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            {generating ? "상세 일정을 작성하고 있어요…" : "상세 일정을 불러오지 못했어요."}
+          </p>
+          {generating && (
+            <div className="space-y-3">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="pothos-shimmer h-16 rounded-2xl" />
+              ))}
+            </div>
           )}
         </div>
       )}
 
-      {/* AI 생성 일정 — 외부 검증 안내 */}
-      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 mb-6">
+      {expanded && !pending && (
+        <div className="border-t border-gray-100 p-5 space-y-6">
+          {/* 오늘의 지도 */}
+          {places.length >= 2 && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-base font-bold text-gray-800 flex items-center gap-2">
+                  <Navigation className="w-5 h-5 text-blue-500" />
+                  오늘의 동선 · {places.length}곳
+                </h3>
+                {dirsUrl && (
+                  <a
+                    href={dirsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+                  >
+                    구글맵으로 보기 →
+                  </a>
+                )}
+              </div>
+              <TripMap days={days} initialDayIndex={idx} showTabs={false} height={260} />
+            </div>
+          )}
+
+          {/* 시간별 일정 */}
+          <div>
+            <h3 className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+              <Clock className="w-5 h-5 text-blue-500" />
+              시간별 일정
+            </h3>
+            <ol className="space-y-2">
+              {day.schedule?.map((item, i) => (
+                <ScheduleRow
+                  key={i}
+                  item={item}
+                  order={i + 1}
+                  color={color}
+                  next={day.schedule?.[i + 1]}
+                  city={day.city || destination}
+                  destination={destination}
+                />
+              ))}
+            </ol>
+          </div>
+
+          {/* 식사 */}
+          {day.meal && (
+            <div>
+              <h3 className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+                <Utensils className="w-5 h-5 text-orange-500" />
+                식사 추천
+              </h3>
+              <div className="bg-orange-50 rounded-2xl divide-y divide-orange-100">
+                {[
+                  { label: "아침", value: day.meal.breakfast, emoji: "🌅" },
+                  { label: "점심", value: day.meal.lunch, emoji: "☀️" },
+                  { label: "저녁", value: day.meal.dinner, emoji: "🌙" },
+                ]
+                  .filter((m) => m.value)
+                  .map((m) => (
+                    <div key={m.label} className="flex gap-3 px-4 py-3 text-[15px]">
+                      <span className="shrink-0 font-semibold text-orange-600 w-14">
+                        {m.emoji} {m.label}
+                      </span>
+                      <span className="text-gray-800">{m.value}</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* 숙소 */}
+          {day.accommodation && (
+            <div className="flex items-start gap-3 bg-blue-50 rounded-2xl p-4">
+              <Home className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-blue-700 mb-0.5">숙소 추천</p>
+                <p className="text-[15px] text-gray-800">{day.accommodation}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── 일정 한 줄 (장소) ─────────────────────────────────────
+function ScheduleRow({
+  item,
+  order,
+  color,
+  next,
+  city,
+  destination,
+}: {
+  item: ScheduleItem;
+  order: number;
+  color: string;
+  next?: ScheduleItem;
+  city: string;
+  destination: string;
+}) {
+  const [more, setMore] = useState(false);
+  const inKorea = isKoreanCity(destination);
+  const hasMore =
+    (item.nearby_alternatives?.length ?? 0) > 0 || (item.nearby_food?.length ?? 0) > 0;
+  const legUrl = next
+    ? legDirectionsUrl({ name: item.place, geo: item.geo }, { name: next.place, geo: next.geo })
+    : null;
+
+  return (
+    <li>
+      <div className="rounded-2xl border border-gray-100 bg-white p-4">
         <div className="flex items-start gap-3">
-          <span className="text-xl shrink-0">ℹ️</span>
-          <div className="text-xs text-slate-600 leading-relaxed">
-            <p className="font-bold text-slate-800 mb-1.5">AI가 생성한 일정입니다</p>
-            <p>
-              본 일정의 장소·식당·교통편은 AI가 학습 시점 기준으로 추천한
-              내용입니다. <span className="font-semibold text-slate-800">실제 영업
-              시간·가격·예약 가능 여부·휴무일은 반드시 Google Maps · Naver
-              지도 · 공식 웹사이트에서 최종 확인</span>해주세요. 각 장소 옆의
-              [지도] 버튼을 누르면 즉시 확인할 수 있습니다.
-            </p>
+          <span
+            className="shrink-0 w-7 h-7 rounded-full text-white text-sm font-bold flex items-center justify-center mt-0.5"
+            style={{ backgroundColor: color }}
+          >
+            {order}
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold" style={{ color }}>
+                  {item.time}
+                </p>
+                <p className="text-[17px] font-bold text-gray-900 leading-snug">{item.place}</p>
+              </div>
+              <a
+                href={item.geo ? googlePlaceUrl(item.place, item.geo) : getPlaceSearchUrl(item.place, destination)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 inline-flex items-center gap-1 text-sm font-semibold text-blue-600 px-3 py-1.5 rounded-full bg-blue-50 hover:bg-blue-100"
+              >
+                <MapIcon className="w-4 h-4" />
+                지도
+              </a>
+            </div>
+
+            <p className="text-[15px] text-gray-700 leading-relaxed mt-1">{item.activity}</p>
+
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-sm text-gray-500">
+              {item.duration && <span>⏱ {item.duration}</span>}
+              {item.cost > 0 && <span className="font-semibold text-emerald-600">💰 {formatCurrency(item.cost)}원</span>}
+            </div>
+
+            {item.tip && (
+              <p className="mt-2 px-3 py-2 bg-amber-50 rounded-xl text-sm text-amber-800 leading-relaxed">💡 {item.tip}</p>
+            )}
+
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+              <PlaceInfo name={item.place} geo={item.geo} city={city} />
+              {hasMore && (
+                <button
+                  onClick={() => setMore(!more)}
+                  className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-slate-600 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200"
+                >
+                  {more ? "접기" : "근처 대안·맛집"}
+                  {more ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+              )}
+            </div>
+
+            {more && (
+              <div className="mt-3 space-y-3">
+                {item.nearby_alternatives && item.nearby_alternatives.length > 0 && (
+                  <div className="px-4 py-3 bg-slate-50 rounded-xl">
+                    <p className="text-sm font-bold text-slate-600 mb-2 flex items-center gap-1">
+                      <Sparkles className="w-4 h-4 text-slate-400" />
+                      대신 가도 좋은 곳
+                    </p>
+                    <ul className="space-y-1.5">
+                      {item.nearby_alternatives.map((alt, j) => (
+                        <li key={j}>
+                          <a
+                            href={inKorea ? naverMapSearch(alt.name) : googleMapsSearch(alt.name, destination)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[15px] text-slate-800 hover:text-blue-600"
+                          >
+                            <span className="font-semibold">{alt.name}</span>
+                            {alt.reason && <span className="text-slate-500"> — {alt.reason}</span>}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {item.nearby_food && item.nearby_food.length > 0 && (
+                  <div className="px-4 py-3 bg-rose-50/70 rounded-xl">
+                    <p className="text-sm font-bold text-rose-700 mb-2 flex items-center gap-1">
+                      <Coffee className="w-4 h-4" />
+                      근처 인기 카페·식당
+                    </p>
+                    <ul className="space-y-2">
+                      {item.nearby_food.map((food, j) => (
+                        <li key={j} className="text-[15px]">
+                          <p className="text-slate-800 leading-snug">
+                            <span className="font-semibold">{food.name}</span>
+                            {food.type && <span className="text-rose-600"> · {food.type}</span>}
+                            {food.why && <span className="text-slate-500"> — {food.why}</span>}
+                          </p>
+                          <div className="flex items-center gap-3 mt-1 text-sm">
+                            <a
+                              href={inKorea ? naverMapSearch(food.name) : googleMapsSearch(food.name, destination)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                            >
+                              <MapIcon className="w-3.5 h-3.5" />
+                              {inKorea ? "네이버 지도" : "구글 지도"}
+                            </a>
+                            <a
+                              href={instagramHashtag(food.name)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-pink-600 hover:text-pink-800"
+                            >
+                              <Hash className="w-3.5 h-3.5" />
+                              인스타그램
+                            </a>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
-    </>
+
+      {/* 다음 장소까지 이동 */}
+      {next && (item.transport_to_next?.mode || legUrl) && (
+        <div className="flex items-center gap-2 pl-6 py-2 text-sm text-slate-600">
+          <span className="text-slate-300">│</span>
+          {item.transport_to_next?.mode && (
+            <span className="font-semibold text-slate-700">{item.transport_to_next.mode}</span>
+          )}
+          {item.transport_to_next?.duration && <span>· {item.transport_to_next.duration}</span>}
+          {item.transport_to_next?.cost_kr && <span>· {item.transport_to_next.cost_kr}</span>}
+          {legUrl && (
+            <a
+              href={legUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-auto font-semibold text-blue-600 hover:text-blue-800 shrink-0"
+            >
+              길찾기 →
+            </a>
+          )}
+        </div>
+      )}
+    </li>
   );
 }

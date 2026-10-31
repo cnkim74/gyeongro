@@ -16,10 +16,13 @@ export const maxDuration = 300;
 //   - "claude-opus-5-5"   : 최고 품질 (가장 비쌈)
 // 플래너 화면(클라이언트)과 서버의 응답 형식 버전. 형식을 바꾸면 양쪽을 같이 올릴 것.
 // 예전 화면 코드가 남아 있는 기기는 AI 호출(=크레딧 소모) 전에 차단하고 새로고침을 안내.
-const PLANNER_API_VERSION = "2";
+const PLANNER_API_VERSION = "3";
 
 const SKELETON_MODEL = "claude-opus-5-5";
 const DAY_MODEL = "claude-sonnet-5-5";
+// 생각 강도 — 뼈대(동선·장소 선정)는 품질 유지, Day 상세는 뼈대를 채우는 작업이라 낮춰 속도 확보
+const SKELETON_EFFORT = "medium" as const;
+const DAY_EFFORT = "low" as const;
 
 // 비용 로그용 단가 (USD / 100만 토큰) — Anthropic 공식 단가 기준
 const PRICE_PER_MTOK: Record<string, { input: number; output: number }> = {
@@ -236,6 +239,7 @@ ${placeRules}`;
 
   const callJson = async (
     model: string,
+    effort: "low" | "medium" | "high",
     user: string,
     maxTokens: number,
     validate: (v: Json) => boolean
@@ -246,6 +250,7 @@ ${placeRules}`;
         .stream({
           model,
           max_tokens: maxTokens,
+          output_config: { effort },
           system: systemContent,
           messages: [{ role: "user", content: user }],
         })
@@ -306,60 +311,78 @@ ${placeRules}`;
         }
       }, 15000);
 
+      const t0 = Date.now();
+      let tSkeleton = 0;
       try {
         send({ progress: "전체 여행 동선을 설계하고 있어요" });
 
-        const skeleton = await callJson(SKELETON_MODEL, skeletonPrompt, 8000, (v) =>
+        const skeleton = await callJson(SKELETON_MODEL, SKELETON_EFFORT, skeletonPrompt, 8000, (v) =>
           Array.isArray(v.days) && v.days.length >= totalDays
         );
+        tSkeleton = Date.now() - t0;
         const skeletonDays = (skeleton.days as Json[]).slice(0, totalDays);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { days: _skeletonDays, ...overview } = skeleton;
+
+        // 뼈대가 나오면 바로 화면에 개요를 먼저 보여줌 (Day 상세는 완성되는 대로 채움)
+        send({
+          overview: {
+            ...overview,
+            days: skeletonDays.map((d, i) => ({
+              day: i + 1,
+              city: typeof d.city === "string" ? d.city : undefined,
+              title: d.title,
+              theme: d.theme,
+              plan: d.plan,
+              accommodation: d.accommodation,
+              schedule: [],
+              pending: true,
+            })),
+          },
+        });
 
         let doneCount = 0;
         send({ progress: `하루하루 상세 일정을 작성하고 있어요 (0/${totalDays})` });
 
         const dayNumbers = Array.from({ length: totalDays }, (_, i) => i + 1);
         const detailedDays = await mapLimit(dayNumbers, 8, async (n) => {
-          const day = await callJson(DAY_MODEL, dayPrompt(n, skeletonDays), 12000, (v) =>
+          const day = await callJson(DAY_MODEL, DAY_EFFORT, dayPrompt(n, skeletonDays), 12000, (v) =>
             Array.isArray(v.schedule) && v.schedule.length > 0
           );
           day.day = n;
           // 뼈대의 도시명 — 장소 좌표 검색 정확도 + 다중 도시 표시용
           const skCity = skeletonDays[n - 1]?.city;
           if (typeof skCity === "string" && skCity.trim()) day.city = skCity.trim();
+
+          // 장소 좌표 (지도 표시용) — 실패해도 일정은 그대로
+          try {
+            const schedule = Array.isArray(day.schedule) ? (day.schedule as Json[]) : [];
+            const idx: number[] = [];
+            const queries: PlaceQuery[] = [];
+            schedule.forEach((it, ii) => {
+              if (it && typeof it.place === "string" && it.place.trim()) {
+                idx.push(ii);
+                queries.push({
+                  place: it.place,
+                  city: typeof day.city === "string" ? day.city : destination,
+                });
+              }
+            });
+            const geos = await resolvePlaces(queries);
+            geos.forEach((g, k) => {
+              if (g) schedule[idx[k]].geo = g;
+            });
+          } catch {
+            // 지도 좌표 실패는 무시
+          }
+
+          // 완성된 Day 를 바로 전송
+          send({ day: { index: n - 1, data: day } });
           doneCount++;
           send({ progress: `하루하루 상세 일정을 작성하고 있어요 (${doneCount}/${totalDays})` });
           return day;
         });
 
-        // 장소 좌표 (지도 표시용) — 실패해도 일정은 그대로 전송
-        try {
-          send({ progress: "장소 위치를 지도에 표시하고 있어요" });
-          const refs: { di: number; ii: number }[] = [];
-          const queries: PlaceQuery[] = [];
-          detailedDays.forEach((d, di) => {
-            const schedule = Array.isArray(d.schedule) ? (d.schedule as Json[]) : [];
-            schedule.forEach((it, ii) => {
-              if (it && typeof it.place === "string" && it.place.trim()) {
-                refs.push({ di, ii });
-                queries.push({
-                  place: it.place,
-                  city: typeof d.city === "string" ? d.city : destination,
-                });
-              }
-            });
-          });
-          const geos = await resolvePlaces(queries);
-          geos.forEach((g, k) => {
-            if (!g) return;
-            const { di, ii } = refs[k];
-            (detailedDays[di].schedule as Json[])[ii].geo = g;
-          });
-        } catch {
-          // 지도 좌표 실패는 무시
-        }
-
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { days: _skeletonDays, ...overview } = skeleton;
         const itinerary = { ...overview, days: detailedDays };
 
         // 결과를 작은 조각으로 나눠 전송 — 큰 한 줄이 네트워크에서 쪼개져도 안전하도록
@@ -373,7 +396,7 @@ ${placeRules}`;
         send({ error: message });
       } finally {
         console.log(
-          `[itinerary] days=${totalDays} calls=${usageTotals.calls} ` +
+          `[itinerary] days=${totalDays} skeleton_ms=${tSkeleton} total_ms=${Date.now() - t0} calls=${usageTotals.calls} ` +
             `input_tokens=${usageTotals.input} output_tokens=${usageTotals.output} ` +
             `cost_usd=${usageTotals.usd.toFixed(4)} cost_krw≈${Math.round(usageTotals.usd * 1400)}`
         );

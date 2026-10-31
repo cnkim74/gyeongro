@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import SessionProvider from "@/components/SessionProvider";
+// 한글 친화 폰트 (Pretendard, OFL 라이선스) — 필요한 글자만 내려받는 dynamic subset
+import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./globals.css";
 
 const geistSans = Geist({

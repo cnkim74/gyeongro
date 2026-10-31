@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import ItineraryView, { type Itinerary } from "@/components/ItineraryView";
+import PlannerLoading from "@/components/PlannerLoading";
 import FlightSearchPanel from "@/components/FlightSearchPanel";
 import HotelSearchPanel from "@/components/HotelSearchPanel";
 import ActivitySearchPanel from "@/components/ActivitySearchPanel";
@@ -64,7 +65,7 @@ function PlannerContent() {
   const initialDestination = searchParams.get("destination") ?? "";
   const PLANNER_DRAFT_KEY = "pothos_planner_draft";
   // 서버(generate-itinerary)의 PLANNER_API_VERSION 과 같아야 함
-  const PLANNER_API_VERSION = "2";
+  const PLANNER_API_VERSION = "3";
 
   const [step, setStep] = useState(1);
   const [destination, setDestination] = useState(initialDestination);
@@ -237,6 +238,19 @@ function PlannerContent() {
           if (data.error) throw new Error(data.error);
           if (data.progress) {
             setProgress(data.progress);
+          } else if (data.overview) {
+            // 뼈대 완성 → 결과 화면을 먼저 보여주고 Day 상세는 도착하는 대로 채움
+            setItinerary(data.overview as Itinerary);
+            setStep(3);
+            if (typeof window !== "undefined") window.scrollTo({ top: 0 });
+          } else if (data.day && typeof data.day.index === "number") {
+            const { index, data: dayData } = data.day as { index: number; data: Itinerary["days"][number] };
+            setItinerary((prev) => {
+              if (!prev) return prev;
+              const days = [...prev.days];
+              days[index] = dayData;
+              return { ...prev, days };
+            });
           } else if (data.done) {
             finished = true;
             const jsonText = rawBuffer.current.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
@@ -253,6 +267,7 @@ function PlannerContent() {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "오류가 발생했습니다. 다시 시도해주세요.");
+      setStep(2); // 오류 화면 (개요가 먼저 떴더라도)
     } finally {
       setIsLoading(false);
     }
@@ -643,40 +658,13 @@ function PlannerContent() {
         )}
 
         {/* Step 2: Loading */}
-        {step === 2 && (
+        {step === 2 && isLoading && (
+          <PlannerLoading destination={destination} totalDays={days + 1} progress={progress} />
+        )}
+        {step === 2 && !isLoading && (
           <div className="fixed inset-0 z-[60] bg-gray-50 flex items-center justify-center">
             <div className="text-center px-4">
-              {isLoading ? (
-                <>
-                  <div className="relative w-24 h-24 mx-auto mb-8">
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 animate-ping opacity-20" />
-                    <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                      <Sparkles className="w-10 h-10 text-white animate-pulse" />
-                    </div>
-                  </div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-3">
-                    AI가 일정을 만들고 있어요
-                  </h2>
-                  <p className="text-gray-500 mb-2">
-                    <span className="font-semibold text-blue-600">{destination}</span> {days + 1}일 일정을 분석 중...
-                  </p>
-                  {progress && (
-                    <p className="text-blue-600 text-sm font-medium mb-2">{progress}</p>
-                  )}
-                  <p className="text-gray-400 text-sm">보통 1~2분 정도 소요됩니다. 화면을 닫지 말고 기다려주세요</p>
-                  <div className="flex justify-center gap-2 mt-6">
-                    {["숙소 검색 중", "맛집 탐색 중", "동선 최적화 중"].map((t, i) => (
-                      <div
-                        key={t}
-                        className="px-3 py-1.5 rounded-full bg-blue-50 text-blue-600 text-xs font-medium animate-pulse"
-                        style={{ animationDelay: `${i * 0.3}s` }}
-                      >
-                        {t}
-                      </div>
-                    ))}
-                  </div>
-                </>
-              ) : error ? (
+              {error ? (
                 <div className="max-w-md">
                   {needsAuth ? (
                     <Sparkles className="w-16 h-16 text-blue-400 mx-auto mb-4" />
@@ -727,7 +715,16 @@ function PlannerContent() {
               다시 계획하기
             </button>
 
-            <ItineraryView itinerary={itinerary} destination={destination} />
+            {isLoading && (
+              <div className="sticky top-20 z-30 mb-4 flex items-center gap-3 rounded-2xl bg-blue-600 text-white px-4 py-3 shadow-lg">
+                <Loader2 className="w-5 h-5 animate-spin shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[15px] font-bold">AI가 나머지 일정을 채우고 있어요</p>
+                  {progress && <p className="text-sm text-blue-100 truncate">{progress}</p>}
+                </div>
+              </div>
+            )}
+            <ItineraryView itinerary={itinerary} destination={destination} generating={isLoading} />
 
             {/* 항공편 메타서치 */}
             <div className="mt-6">
@@ -808,7 +805,7 @@ function PlannerContent() {
                       setSaving(false);
                     }
                   }}
-                  disabled={saving}
+                  disabled={saving || isLoading}
                   className="flex-1 py-4 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold flex items-center justify-center gap-2 hover:shadow-xl hover:shadow-blue-500/25 transition-all disabled:opacity-50"
                 >
                   {saving ? (
