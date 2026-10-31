@@ -15,10 +15,12 @@ import {
   HeartPulse,
   Mountain,
   MessagesSquare,
+  Sparkles,
 } from "lucide-react";
 
 const MENU = [
   { href: "/admin", label: "대시보드", icon: LayoutDashboard },
+  { href: "/admin/hero", label: "메인 히어로", icon: Sparkles },
   { href: "/admin/users", label: "사용자 관리", icon: Users },
   { href: "/admin/sherpas", label: "셰르파 검수", icon: Mountain },
   { href: "/admin/medical/clinics", label: "클리닉 검수", icon: HeartPulse },
