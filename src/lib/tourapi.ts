@@ -62,8 +62,17 @@ export function cleanText(html: unknown): string {
 }
 
 async function tourGet(op: string, params: Record<string, string>, revalidate: number): Promise<Item[]> {
+  return (await tourGetPage(op, params, revalidate)).items;
+}
+
+async function tourGetPage(
+  op: string,
+  params: Record<string, string>,
+  revalidate: number
+): Promise<{ items: Item[]; totalCount: number }> {
+  const empty = { items: [] as Item[], totalCount: 0 };
   const key = process.env.TOURAPI_SERVICE_KEY;
-  if (!key) return [];
+  if (!key) return empty;
   const qs = new URLSearchParams({
     MobileOS: "ETC",
     MobileApp: "Pothos",
@@ -82,19 +91,25 @@ async function tourGet(op: string, params: Record<string, string>, revalidate: n
     } catch {
       // 키 오류 등은 XML 로 옴
       console.log(`[tourapi] ${op} non-json status=${res.status} body=${text.slice(0, 200)}`);
-      return [];
+      return empty;
     }
-    const body = (data as { response?: { header?: { resultCode?: string; resultMsg?: string }; body?: { items?: { item?: Item | Item[] } | "" } } }).response;
+    const body = (data as {
+      response?: {
+        header?: { resultCode?: string; resultMsg?: string };
+        body?: { items?: { item?: Item | Item[] } | ""; totalCount?: number };
+      };
+    }).response;
     if (body?.header?.resultCode && body.header.resultCode !== "0000") {
       console.log(`[tourapi] ${op} resultCode=${body.header.resultCode} msg=${body.header.resultMsg}`);
-      return [];
+      return empty;
     }
+    const totalCount = Number(body?.body?.totalCount ?? 0) || 0;
     const items = body?.body?.items;
-    if (!items || typeof items === "string" || !items.item) return [];
-    return Array.isArray(items.item) ? items.item : [items.item];
+    if (!items || typeof items === "string" || !items.item) return { items: [], totalCount };
+    return { items: Array.isArray(items.item) ? items.item : [items.item], totalCount };
   } catch (e) {
     console.log(`[tourapi] ${op} fetch failed: ${e instanceof Error ? e.message : e}`);
-    return [];
+    return empty;
   }
 }
 
@@ -125,19 +140,29 @@ export function isTourApiEnabled(): boolean {
  * @param to   YYYYMMDD — 이 날짜 이전에 시작하는 행사 (선택)
  */
 export async function listFestivals(from: string, to?: string): Promise<FestivalSummary[]> {
-  const params: Record<string, string> = {
-    eventStartDate: from,
-    numOfRows: "500",
-    pageNo: "1",
-    arrange: "A",
-  };
-  if (to) params.eventEndDate = to;
-  const items = await tourGet("searchFestival2", params, 6 * 3600);
-  return items
+  // eventEndDate 는 "그 날짜까지 끝나는 행사"로 걸러져 범위가 지나치게 좁아지므로 쓰지 않고,
+  // eventStartDate(from) 이후 진행되는 행사를 모두 받아 기간은 서버에서 직접 거름
+  const ROWS = 1000;
+  const all: Item[] = [];
+  let total = 0;
+  for (let page = 1; page <= 5; page++) {
+    const { items, totalCount } = await tourGetPage(
+      "searchFestival2",
+      { eventStartDate: from, numOfRows: String(ROWS), pageNo: String(page), arrange: "A" },
+      6 * 3600
+    );
+    total = totalCount;
+    all.push(...items);
+    if (items.length < ROWS || all.length >= totalCount) break;
+  }
+  const list = all
     .map(toSummary)
     .filter((f) => f.contentId && f.title)
+    .filter((f) => !f.endDate || f.endDate >= from)
     .filter((f) => !to || !f.startDate || f.startDate <= to)
     .sort((a, b) => a.startDate.localeCompare(b.startDate));
+  console.log(`[tourapi] searchFestival2 from=${from} to=${to ?? "-"} total=${total} fetched=${all.length} shown=${list.length}`);
+  return list;
 }
 
 export async function getFestival(contentId: string): Promise<FestivalDetail | null> {
