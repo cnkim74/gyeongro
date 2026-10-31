@@ -1,4 +1,6 @@
 import Link from "next/link";
+import FirstPostEventBanner from "@/components/FirstPostEventBanner";
+import InviteCard from "@/components/InviteCard";
 import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
 import { getSupabaseServiceClient } from "@/lib/supabase";
@@ -49,6 +51,8 @@ export default async function BoardListPage() {
               </Link>
             )}
           </div>
+
+          <FirstPostEventBanner href="/board/tip/new" cta="첫 글 쓰러 가기" />
 
           {!boards || boards.length === 0 ? (
             <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center">
@@ -101,6 +105,24 @@ export default async function BoardListPage() {
               ))}
             </div>
           )}
+
+          <div className="grid md:grid-cols-2 gap-5 mt-8">
+            <InviteCard />
+            <div className="rounded-3xl p-5 sm:p-6 border border-amber-100 bg-gradient-to-br from-amber-50 via-white to-orange-50">
+              <h2 className="text-lg font-bold text-gray-900">🧭 셰르파·여행 파트너이신가요?</h2>
+              <p className="text-[15px] text-gray-600 mt-1">
+                현지 가이드, 숙소·체험 업체라면 본인 이름으로 소개 글을 올려 주세요. 여행자들에게 직접 알릴 수 있어요.
+              </p>
+              <div className="flex flex-wrap gap-2 mt-4">
+                <Link href="/sherpa/become" className="px-5 py-3 rounded-2xl bg-amber-500 text-white text-[15px] font-bold">
+                  셰르파 등록하기
+                </Link>
+                <Link href="/board/free/new" className="px-5 py-3 rounded-2xl border border-amber-200 bg-white text-[15px] font-semibold text-amber-700">
+                  자유게시판에 소개 글 쓰기
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
       <Footer />

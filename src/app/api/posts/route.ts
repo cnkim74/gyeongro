@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { grantFirstPostReward } from "@/lib/events";
 import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
 import { getSupabaseServiceClient } from "@/lib/supabase";
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
 
   const { data: board } = await supabase
     .from("boards")
-    .select("id, is_admin_only, is_published")
+    .select("id, slug, is_admin_only, is_published")
     .eq("id", board_id)
     .single();
 
@@ -74,5 +75,11 @@ export async function POST(req: NextRequest) {
     }
   );
 
-  return Response.json({ id: data.id });
+  // 첫 글 이벤트 — 조건에 맞으면 AI 플래너 이용권 자동 지급
+  const reward = await grantFirstPostReward(session.user.id, {
+    boardSlug: board.slug as string,
+    content: `${title} ${content}`,
+  });
+
+  return Response.json({ id: data.id, reward });
 }

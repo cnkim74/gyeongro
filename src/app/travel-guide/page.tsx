@@ -1,4 +1,5 @@
 import Link from "next/link";
+import FirstPostEventBanner from "@/components/FirstPostEventBanner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import YouTubeEmbed from "@/components/YouTubeEmbed";
@@ -153,8 +154,12 @@ export default async function TravelGuidePage() {
             ))}
           </div>
 
+          <div className="mt-12">
+            <FirstPostEventBanner href="/board/youtube/new" cta="내 유튜브 공유하기" />
+          </div>
+
           {/* 커뮤니티 여행 유튜브 */}
-          <section className="mt-12 rounded-3xl p-6 border border-red-100 bg-gradient-to-br from-red-50 via-white to-rose-50">
+          <section className="rounded-3xl p-6 border border-red-100 bg-gradient-to-br from-red-50 via-white to-rose-50">
             <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">

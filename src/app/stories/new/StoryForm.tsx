@@ -76,6 +76,9 @@ export default function StoryForm() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "등록 실패");
+      if (data.reward > 0) {
+        alert(`🎉 첫 글 이벤트 당첨!\nAI 플래너 ${data.reward}회 이용권이 지급됐어요. 여행 일정 만들 때 자동으로 사용돼요.`);
+      }
       router.push(`/stories/${data.id}`);
       router.refresh();
     } catch (err) {

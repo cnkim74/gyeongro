@@ -1,4 +1,5 @@
 import Link from "next/link";
+import FirstPostEventBanner from "@/components/FirstPostEventBanner";
 import { extractYouTube, youtubeThumb } from "@/lib/youtube";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
@@ -123,6 +124,10 @@ export default async function BoardPostsPage({
             <ArrowLeft className="w-4 h-4" />
             게시판 목록
           </Link>
+
+          {board.slug !== "notice" && (
+            <FirstPostEventBanner href={`/board/${board.slug}/new`} cta="첫 글 쓰기" />
+          )}
 
           <div className="flex items-center justify-between mb-6">
             <div>
