@@ -8,7 +8,7 @@ import HeroSection from "@/components/HeroSection";
 import { AURORA_PRESETS, DEFAULT_HERO, type HeroConfig, type AuroraPreset, type HeroBackground } from "@/lib/hero";
 
 const BG_OPTIONS: { id: HeroBackground; label: string; desc: string }[] = [
-  { id: "video", label: "🎬 영상", desc: "여러 영상을 올리면 방문할 때마다 랜덤 재생 (기본: 오로라·공항 이륙)" },
+  { id: "video", label: "🎬 영상", desc: "여러 영상을 올리면 방문할 때마다 랜덤 재생 (기본 4편: 오로라·이륙·은행나무·해변)" },
   { id: "aurora", label: "🌌 오로라 애니메이션", desc: "움직이는 오로라 + 반짝이는 별 (영상 없이 가벼움)" },
   { id: "image", label: "🖼️ 사진", desc: "JPG·PNG·WebP" },
 ];
@@ -149,7 +149,7 @@ export default function HeroEditor({ initial }: { initial: HeroConfig }) {
                 />
                 <span>
                   <b>Pothos 기본 영상 포함</b>
-                  <span className="block text-sm text-gray-500">오로라 · 공항 이륙 (휴대폰용 세로 영상 포함)</span>
+                  <span className="block text-sm text-gray-500">오로라 · 공항 이륙 · 은행나무 길 · 노을 해변 (휴대폰용 세로 영상 포함)</span>
                 </span>
               </label>
 
