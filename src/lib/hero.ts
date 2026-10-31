@@ -57,6 +57,20 @@ export const BUNDLED_HERO_VIDEOS: HeroVideoSources[] = [
     poster: "/hero/day-poster.jpg",
     mobilePoster: "/hero/day-poster-mobile.jpg",
   },
+  // 노란 은행나무 길을 걷는 커플 (가을)
+  {
+    desktop: "/hero/ginkgo-1080.mp4",
+    mobile: "/hero/ginkgo-mobile.mp4",
+    poster: "/hero/ginkgo-poster.jpg",
+    mobilePoster: "/hero/ginkgo-poster-mobile.jpg",
+  },
+  // 노을 빛줄기 아래 해변을 걷는 여행자
+  {
+    desktop: "/hero/beach-1080.mp4",
+    mobile: "/hero/beach-mobile.mp4",
+    poster: "/hero/beach-poster.jpg",
+    mobilePoster: "/hero/beach-poster-mobile.jpg",
+  },
 ];
 
 /** 이번 방문에 재생할 영상 후보 목록 */
