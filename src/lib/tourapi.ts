@@ -7,6 +7,8 @@
 // - 화면에는 "출처: 한국관광공사" 표시
 // - 키가 없거나 API 오류면 빈 결과 → 화면은 '준비 중' 안내
 
+import { unstable_cache } from "next/cache";
+
 const BASE = "https://apis.data.go.kr/B551011/KorService2";
 
 export interface FestivalSummary {
@@ -65,54 +67,57 @@ async function tourGet(op: string, params: Record<string, string>, revalidate: n
   return (await tourGetPage(op, params, revalidate)).items;
 }
 
+/** 정상 응답만 캐시 — 오류(인증키 미등록 등)는 throw 해서 캐시되지 않게 */
+async function fetchTourText(op: string, paramsJson: string): Promise<string> {
+  const key = (process.env.TOURAPI_SERVICE_KEY ?? "").trim();
+  if (!key) throw new Error("no key");
+  const qs = new URLSearchParams({
+    MobileOS: "ETC",
+    MobileApp: "Pothos",
+    _type: "json",
+    ...(JSON.parse(paramsJson) as Record<string, string>),
+  });
+  // 인증키는 포털에서 받은 그대로 (이미 인코딩된 키면 그대로, 아니면 인코딩)
+  const keyParam = /%[0-9A-Fa-f]{2}/.test(key) ? key : encodeURIComponent(key);
+  const res = await fetch(`${BASE}/${op}?serviceKey=${keyParam}&${qs.toString()}`, { cache: "no-store" });
+  const text = await res.text();
+  let ok = false;
+  try {
+    const j = JSON.parse(text) as { response?: { header?: { resultCode?: string } } };
+    ok = res.ok && j.response?.header?.resultCode === "0000";
+  } catch {
+    ok = false;
+  }
+  if (!ok) {
+    // 키 미등록·트래픽 초과 등 — 원본 일부를 남겨 원인 확인 (키는 포함되지 않음)
+    throw new Error(`status=${res.status} raw=${text.slice(0, 300)}`);
+  }
+  return text;
+}
+
+// 인자(op, params)가 캐시 키 — 인증키는 키에 포함되지 않음
+const cachedTour6h = unstable_cache(fetchTourText, ["tourapi-v2-6h"], { revalidate: 6 * 3600 });
+const cachedTour1d = unstable_cache(fetchTourText, ["tourapi-v2-1d"], { revalidate: 24 * 3600 });
+
 async function tourGetPage(
   op: string,
   params: Record<string, string>,
   revalidate: number
 ): Promise<{ items: Item[]; totalCount: number }> {
   const empty = { items: [] as Item[], totalCount: 0 };
-  const key = process.env.TOURAPI_SERVICE_KEY;
-  if (!key) return empty;
-  const qs = new URLSearchParams({
-    MobileOS: "ETC",
-    MobileApp: "Pothos",
-    _type: "json",
-    ...params,
-  });
-  // 인증키는 포털에서 받은 그대로 (이미 인코딩된 키면 그대로, 아니면 인코딩)
-  const keyParam = /%[0-9A-Fa-f]{2}/.test(key) ? key : encodeURIComponent(key);
-  const url = `${BASE}/${op}?serviceKey=${keyParam}&${qs.toString()}`;
+  if (!(process.env.TOURAPI_SERVICE_KEY ?? "").trim()) return empty;
   try {
-    const res = await fetch(url, { next: { revalidate } });
-    const text = await res.text();
-    let data: unknown;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      // 키 오류 등은 XML 로 옴
-      console.log(`[tourapi] ${op} non-json status=${res.status} body=${text.slice(0, 200)}`);
-      return empty;
-    }
-    const body = (data as {
-      response?: {
-        header?: { resultCode?: string; resultMsg?: string };
-        body?: { items?: { item?: Item | Item[] } | ""; totalCount?: number };
-      };
-    }).response;
-    if (body?.header?.resultCode && body.header.resultCode !== "0000") {
-      console.log(`[tourapi] ${op} resultCode=${body.header.resultCode} msg=${body.header.resultMsg}`);
-      return empty;
-    }
-    const totalCount = Number(body?.body?.totalCount ?? 0) || 0;
-    if (!body?.header || totalCount === 0) {
-      // 예상과 다른 형식(게이트웨이 인증 오류 등)이나 0건이면 원본 일부를 남겨 원인 확인 (키는 포함되지 않음)
-      console.log(`[tourapi] ${op} status=${res.status} total=${totalCount} raw=${text.slice(0, 300)}`);
-    }
-    const items = body?.body?.items;
+    const getter = revalidate >= 24 * 3600 ? cachedTour1d : cachedTour6h;
+    const text = await getter(op, JSON.stringify(params));
+    const body = (JSON.parse(text) as {
+      response?: { body?: { items?: { item?: Item | Item[] } | ""; totalCount?: number } };
+    }).response?.body;
+    const totalCount = Number(body?.totalCount ?? 0) || 0;
+    const items = body?.items;
     if (!items || typeof items === "string" || !items.item) return { items: [], totalCount };
     return { items: Array.isArray(items.item) ? items.item : [items.item], totalCount };
   } catch (e) {
-    console.log(`[tourapi] ${op} fetch failed: ${e instanceof Error ? e.message : e}`);
+    console.log(`[tourapi] ${op} failed: ${e instanceof Error ? e.message : e}`);
     return empty;
   }
 }
@@ -135,7 +140,7 @@ function toSummary(it: Item): FestivalSummary {
 }
 
 export function isTourApiEnabled(): boolean {
-  return !!process.env.TOURAPI_SERVICE_KEY;
+  return !!(process.env.TOURAPI_SERVICE_KEY ?? "").trim();
 }
 
 /**
