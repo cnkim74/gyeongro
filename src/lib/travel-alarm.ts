@@ -31,10 +31,17 @@ async function fetchAlarm(country: string): Promise<string> {
     `${encodeURIComponent(field)}=${encodeURIComponent(country)}`;
   const res = await fetch(url, { cache: "no-store" });
   const text = await res.text();
+  // 응답 형식: { response: { header: { resultCode }, body: { items: { item: [...] } } } }
+  // 결과 코드 표기가 API마다 달라("0"·"00"·"0000") 숫자로 비교하고, body 가 있으면 정상으로 봄
   let ok = false;
   try {
-    const j = JSON.parse(text) as { resultCode?: number | string; response?: { header?: { resultCode?: string } } };
-    ok = res.ok && (String(j.resultCode) === "0" || j.response?.header?.resultCode === "0000");
+    const j = JSON.parse(text) as {
+      resultCode?: number | string;
+      data?: unknown;
+      response?: { header?: { resultCode?: string | number }; body?: unknown };
+    };
+    const code = j.response?.header?.resultCode ?? j.resultCode;
+    ok = res.ok && (code !== undefined ? Number(code) === 0 : !!(j.response?.body || j.data));
   } catch {
     ok = false;
   }
@@ -42,7 +49,7 @@ async function fetchAlarm(country: string): Promise<string> {
   return text;
 }
 
-const cachedAlarm = unstable_cache(fetchAlarm, ["travel-alarm-v1"], { revalidate: 6 * 3600 });
+const cachedAlarm = unstable_cache(fetchAlarm, ["travel-alarm-v2"], { revalidate: 6 * 3600 });
 
 /** 나라 이름(한글) 또는 ISO 2자리 코드로 여행경보 조회. 실패하면 null */
 export async function getTravelAlarm(country: string): Promise<TravelAlarm[] | null> {

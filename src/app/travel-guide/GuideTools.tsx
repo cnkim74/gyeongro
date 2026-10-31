@@ -11,6 +11,14 @@ interface Alarm {
   level: number;
   regionType: string;
   writtenAt: string;
+  mapUrl: string | null;
+}
+
+/** 경보 범위 표시 — '일부 지역'을 분명히 (나라 전체 경보로 오해하지 않도록) */
+function regionLabel(t: string): string {
+  if (/일부|부분/.test(t)) return "일부 지역";
+  if (/전체|전역|전 지역/.test(t)) return "전 지역";
+  return t;
 }
 
 const LEVEL: Record<number, { label: string; cls: string; desc: string }> = {
@@ -116,24 +124,47 @@ export default function GuideTools() {
               </p>
             ) : (
               <ul className="space-y-2">
-                {alarms.map((a, i) => {
+                {[...alarms].sort((x, y) => y.level - x.level).map((a, i) => {
                   const lv = LEVEL[a.level] ?? LEVEL[0];
                   return (
                     <li key={i} className="flex items-start gap-3 bg-white rounded-2xl p-4 border border-gray-100">
                       <span className={`shrink-0 px-3 py-1.5 rounded-full text-white text-sm font-bold ${lv.cls}`}>{lv.label}</span>
                       <span className="text-[15px] text-gray-800">
                         <b>{a.country}</b>
-                        {a.regionType ? ` · ${a.regionType}` : ""}
+                        {a.regionType && (
+                          <span
+                            className={`ml-1.5 inline-block px-2 py-0.5 rounded-full text-xs font-bold align-middle ${
+                              regionLabel(a.regionType) === "일부 지역" ? "bg-amber-100 text-amber-800" : "bg-gray-100 text-gray-700"
+                            }`}
+                          >
+                            {regionLabel(a.regionType)}
+                          </span>
+                        )}
                         <br />
                         <span className="text-gray-500 text-sm">
                           {lv.desc}
                           {a.writtenAt ? ` (${a.writtenAt} 기준)` : ""}
                         </span>
+                        {a.mapUrl && (
+                          <a
+                            href={a.mapUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block mt-1 text-sm font-semibold text-rose-600"
+                          >
+                            경보 지역 지도 보기 →
+                          </a>
+                        )}
                       </span>
                     </li>
                   );
                 })}
               </ul>
+            )}
+            {alarms && alarms.some((a) => regionLabel(a.regionType) === "일부 지역") && (
+              <p className="mt-3 text-sm text-gray-600 bg-amber-50 rounded-xl px-3 py-2">
+                💡 &apos;일부 지역&apos; 경보는 나라 전체가 아니라 지정된 지역에만 적용돼요. 지도에서 해당 지역을 확인하세요.
+              </p>
             )}
             <a
               href="https://www.0404.go.kr"
