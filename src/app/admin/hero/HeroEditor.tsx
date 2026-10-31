@@ -32,15 +32,18 @@ export default function HeroEditor({ initial }: { initial: HeroConfig }) {
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error ?? "업로드를 준비하지 못했어요.");
-      // 서버를 거치지 않고 저장소로 바로 업로드 (영상 용량 대응)
-      const fd = new FormData();
-      fd.append("cacheControl", "31536000");
-      fd.append("", file);
-      const up = await fetch(j.signedUrl, {
-        method: "PUT",
-        headers: j.apikey ? { apikey: j.apikey, "x-upsert": "false" } : { "x-upsert": "false" },
-        body: fd,
-      });
+      // 서버를 거치지 않고 R2로 바로 업로드 (영상 용량 대응)
+      // Content-Type 헤더가 R2에 파일 형식으로 저장된다
+      let up: Response;
+      try {
+        up = await fetch(j.signedUrl, {
+          method: "PUT",
+          headers: { "Content-Type": j.contentType ?? file.type },
+          body: file,
+        });
+      } catch {
+        throw new Error("저장소에 연결하지 못했어요. R2 버킷의 CORS 설정을 확인해 주세요.");
+      }
       if (!up.ok) throw new Error(`업로드 실패 (${up.status})`);
       if (target === "media") set("mediaUrl", j.publicUrl);
       else set("posterUrl", j.publicUrl);
