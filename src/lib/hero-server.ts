@@ -36,8 +36,9 @@ async function readHeroConfig(): Promise<HeroConfig> {
   }
 }
 
-/** 메인 페이지용 — 캐시(1시간), 관리자가 저장하면 즉시 갱신 */
-export const getHeroConfig = unstable_cache(readHeroConfig, ["hero-config-v1"], {
+/** 메인 페이지용 — 캐시(1시간), 관리자가 저장하면 즉시 갱신
+ *  ※ 이 캐시는 배포가 바뀌어도 유지됨 → 기본값(DEFAULT_HERO)을 바꾸면 키 버전도 올릴 것 */
+export const getHeroConfig = unstable_cache(readHeroConfig, ["hero-config-v2"], {
   tags: [HERO_TAG],
   revalidate: 3600,
 });
