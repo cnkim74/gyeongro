@@ -19,7 +19,7 @@ import Anthropic from "@anthropic-ai/sdk";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 // Anthropic Claude — 사용자 본인 ANTHROPIC_API_KEY 크레딧으로 과금.
 const CURATE_MODEL = "claude-sonnet-5-5";
