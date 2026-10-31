@@ -28,13 +28,22 @@ export interface HeroConfig {
   checks: string[];
 }
 
+/** 기본 내장 오로라 영상 (public/hero) — 영상 배경인데 주소가 비어 있으면 이 영상 사용 */
+export const BUNDLED_HERO_VIDEO = {
+  desktop: "/hero/aurora-1080.mp4",
+  mobile: "/hero/aurora-mobile.mp4",
+  poster: "/hero/aurora-poster.jpg",
+  mobilePoster: "/hero/aurora-poster-mobile.jpg",
+};
+
 export const DEFAULT_HERO: HeroConfig = {
-  background: "aurora",
+  background: "video",
   auroraPreset: "northern",
-  stars: true,
+  // 영상 자체에 별이 있어 기본은 끔
+  stars: false,
   mediaUrl: "",
   posterUrl: "",
-  overlay: 45,
+  overlay: 30,
   badge: "AI 여행 플래너 · 축제 · 현지 셰르파",
   titleLine1: "여행은,",
   titleHighlight: "길에서 시작됩니다",
@@ -86,7 +95,7 @@ export function normalizeHero(input: unknown): HeroConfig {
   const v = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
   const d = DEFAULT_HERO;
   const background: HeroBackground =
-    v.background === "video" || v.background === "image" ? v.background : "aurora";
+    v.background === "video" || v.background === "image" || v.background === "aurora" ? v.background : d.background;
   const auroraPreset: AuroraPreset =
     v.auroraPreset === "sunset" || v.auroraPreset === "ocean" ? v.auroraPreset : "northern";
   const overlay = Math.min(80, Math.max(0, Math.round(Number(v.overlay ?? d.overlay)) || 0));
