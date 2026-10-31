@@ -11,7 +11,8 @@ import {
   REGIONS,
   type FestivalSummary,
 } from "@/lib/tourapi";
-import { GLOBAL_FESTIVALS } from "@/lib/global-festivals";
+import { GLOBAL_FESTIVALS, type GlobalFestival } from "@/lib/global-festivals";
+import { listPublishedGlobalFestivals } from "@/lib/global-festivals-db";
 
 export const metadata = {
   title: "축제·행사 찾기 - Pothos",
@@ -100,7 +101,24 @@ export default async function FestivalsPage({ searchParams }: { searchParams: Pr
   }
   // '앞으로 30일'이면 이번 달 + 다음 달
   const globalMonths = ym === months[0].ym ? [month, months[1].month] : [month];
-  const globals = GLOBAL_FESTIVALS.filter((f) => f.months.some((m) => globalMonths.includes(m)));
+  // 세계 축제: 관리자가 게시한 AI 큐레이션(정확한 날짜) + 고정 목록(대표 시기)
+  let globals: GlobalFestival[] = [];
+  if (tab === "global") {
+    const isNext30G = ym === months[0].ym;
+    const gFrom = isNext30G ? today : `${ym}01`;
+    const gTo = isNext30G ? addDays(today, 30) : lastDayOf(ym);
+    const ymdOf = (d: string) => d.replace(/-/g, "");
+    const dbList = (await listPublishedGlobalFestivals()).filter((f) =>
+      f.startDate
+        ? ymdOf(f.startDate) <= gTo && ymdOf(f.endDate ?? f.startDate) >= gFrom
+        : f.months.some((m) => globalMonths.includes(m))
+    );
+    const dbNames = new Set(dbList.map((f) => f.nameEn.trim().toLowerCase()).filter(Boolean));
+    const staticList = GLOBAL_FESTIVALS.filter(
+      (f) => f.months.some((m) => globalMonths.includes(m)) && !dbNames.has(f.nameEn.trim().toLowerCase())
+    );
+    globals = [...dbList, ...staticList];
+  }
 
   const chip = (active: boolean) =>
     `shrink-0 px-4 py-2 rounded-full text-[15px] font-semibold transition-colors ${
@@ -248,7 +266,10 @@ export default async function FestivalsPage({ searchParams }: { searchParams: Pr
                       <h2 className="text-lg font-bold text-gray-900 leading-snug">{f.name}</h2>
                       <p className="text-sm text-gray-400 mb-2">{f.nameEn}</p>
                       <p className="flex items-center gap-1.5 text-[15px] text-rose-600 font-semibold mb-2">
-                        <CalendarDays className="w-4 h-4" /> {f.period}
+                        <CalendarDays className="w-4 h-4" />{" "}
+                        {f.startDate
+                          ? `${formatYmd(f.startDate.replace(/-/g, ""))}${f.endDate && f.endDate !== f.startDate ? ` ~ ${formatYmd(f.endDate.replace(/-/g, ""))}` : ""}`
+                          : f.period}
                       </p>
                       <p className="text-[15px] text-gray-700 leading-relaxed flex-1">{f.summary}</p>
                       <div className="flex gap-2 mt-4">
@@ -258,15 +279,27 @@ export default async function FestivalsPage({ searchParams }: { searchParams: Pr
                         >
                           <Sparkles className="w-4 h-4" /> 이 축제로 일정 만들기
                         </Link>
-                        <a
-                          href={`https://www.google.com/search?q=${encodeURIComponent(`${f.nameEn} ${new Date().getFullYear()} dates`)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center px-4 rounded-2xl border border-gray-200 text-gray-700"
-                          title="올해 개최일 검색"
-                        >
-                          <Search className="w-5 h-5" />
-                        </a>
+                        {f.sourceUrl ? (
+                          <a
+                            href={f.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center px-4 rounded-2xl border border-gray-200 text-sm font-semibold text-gray-700"
+                            title="개최일 출처"
+                          >
+                            출처
+                          </a>
+                        ) : (
+                          <a
+                            href={`https://www.google.com/search?q=${encodeURIComponent(`${f.nameEn} ${new Date().getFullYear()} dates`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center px-4 rounded-2xl border border-gray-200 text-gray-700"
+                            title="올해 개최일 검색"
+                          >
+                            <Search className="w-5 h-5" />
+                          </a>
+                        )}
                       </div>
                     </div>
                   ))}

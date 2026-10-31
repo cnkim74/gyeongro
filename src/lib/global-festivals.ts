@@ -17,6 +17,10 @@ export interface GlobalFestival {
   period: string;
   summary: string;
   emoji: string;
+  /** AI 큐레이션(관리자 검수) 항목만: 확인된 개최일과 출처 */
+  startDate?: string | null;
+  endDate?: string | null;
+  sourceUrl?: string | null;
 }
 
 export const GLOBAL_FESTIVALS: GlobalFestival[] = [
