@@ -67,9 +67,22 @@ async function tourGet(op: string, params: Record<string, string>, revalidate: n
   return (await tourGetPage(op, params, revalidate)).items;
 }
 
+/**
+ * 환경변수에서 인증키만 추출 — 포털 화면에서 주변 글자까지 함께 복사된 경우 대비
+ * (공백이 섞여 있으면 64자리 16진수 키를 우선, 없으면 가장 긴 키 형태 토큰)
+ */
+function serviceKey(): string {
+  const raw = (process.env.TOURAPI_SERVICE_KEY ?? "").trim();
+  if (!raw || !/\s/.test(raw)) return raw;
+  const hex = raw.match(/\b[0-9a-fA-F]{64}\b/);
+  if (hex) return hex[0];
+  const tokens = raw.split(/\s+/).filter((t) => /^[A-Za-z0-9%+/=]{30,}$/.test(t));
+  return tokens.sort((a, b) => b.length - a.length)[0] ?? raw;
+}
+
 /** 정상 응답만 캐시 — 오류(인증키 미등록 등)는 throw 해서 캐시되지 않게 */
 async function fetchTourText(op: string, paramsJson: string): Promise<string> {
-  const key = (process.env.TOURAPI_SERVICE_KEY ?? "").trim();
+  const key = serviceKey();
   if (!key) throw new Error("no key");
   const qs = new URLSearchParams({
     MobileOS: "ETC",
