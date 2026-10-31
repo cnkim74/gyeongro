@@ -175,6 +175,47 @@ function loadGoogleMaps(apiKey: string): Promise<MapsLibs> {
   return mapsPromise;
 }
 
+// ── 도로 경로 (/api/routes/day) ──────────────────────────────────────
+interface DayRouteData {
+  path: [number, number][];
+  provider: "kakao" | "google";
+  distanceM: number;
+  durationS: number;
+}
+// 같은 페이지 안에서는 같은 동선을 한 번만 요청 (전체 지도·Day 지도 공유)
+const routeCache = new Map<string, Promise<DayRouteData | null>>();
+
+function routeSignature(geos: PlaceGeo[]): string {
+  return geos.map((g) => `${g.lat.toFixed(5)},${g.lng.toFixed(5)}`).join(";");
+}
+
+function fetchDayRoute(geos: PlaceGeo[]): Promise<DayRouteData | null> {
+  const sig = routeSignature(geos);
+  let pr = routeCache.get(sig);
+  if (!pr) {
+    pr = fetch("/api/routes/day", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        points: geos.map((g) => ({ lat: g.lat, lng: g.lng, placeId: g.placeId })),
+      }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { route?: DayRouteData | null } | null) => j?.route ?? null)
+      .catch(() => null);
+    routeCache.set(sig, pr);
+  }
+  return pr;
+}
+
+function formatRouteSummary(r: DayRouteData): string {
+  const km = r.distanceM / 1000;
+  const dist = km >= 10 ? `${Math.round(km)}km` : `${km.toFixed(1)}km`;
+  const min = Math.round(r.durationS / 60);
+  const dur = min >= 60 ? `${Math.floor(min / 60)}시간 ${min % 60}분` : `${min}분`;
+  return `자동차 기준 약 ${dist} · ${dur}`;
+}
+
 // ── 컴포넌트 ─────────────────────────────────────────────────────────
 
 export default function TripMap({
@@ -212,6 +253,31 @@ export default function TripMap({
       ),
     [days]
   );
+
+  // Day별 도로 경로 (key: 좌표 시그니처, undefined = 불러오는 중)
+  const [routes, setRoutes] = useState<Record<string, DayRouteData | null>>({});
+  const daySigs = useMemo(
+    () =>
+      points.map((dp) => {
+        const geos = dp.map((p) => p.geo).filter((g): g is PlaceGeo => !!g);
+        return geos.length >= 2 ? routeSignature(geos) : "";
+      }),
+    [points]
+  );
+  useEffect(() => {
+    let cancelled = false;
+    points.forEach((dp, di) => {
+      const sig = daySigs[di];
+      if (!sig) return;
+      const geos = dp.map((p) => p.geo).filter((g): g is PlaceGeo => !!g);
+      fetchDayRoute(geos).then((r) => {
+        if (!cancelled) setRoutes((prev) => (sig in prev ? prev : { ...prev, [sig]: r }));
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [points, daySigs]);
 
   // 지도 초기화
   useEffect(() => {
@@ -296,14 +362,29 @@ export default function TripMap({
       });
 
       if (path.length >= 2) {
-        const line = new libs.Polyline({
-          map,
-          path,
-          strokeColor: color,
-          strokeOpacity: 0.85,
-          strokeWeight: 3,
-          geodesic: true,
-        });
+        const route = routes[daySigs[di]];
+        const line = route
+          ? // 도로 기준 경로
+            new libs.Polyline({
+              map,
+              path: route.path.map(([lat, lng]) => ({ lat, lng })),
+              strokeColor: color,
+              strokeOpacity: 0.85,
+              strokeWeight: 4,
+            })
+          : // 경로를 불러오는 중이거나 실패 → 점선 직선
+            new libs.Polyline({
+              map,
+              path,
+              strokeOpacity: 0,
+              icons: [
+                {
+                  icon: { path: "M 0,-1 0,1", strokeOpacity: 0.6, strokeColor: color, scale: 3 },
+                  offset: "0",
+                  repeat: "12px",
+                },
+              ],
+            });
         overlaysRef.current.push(line);
       }
     });
@@ -314,7 +395,12 @@ export default function TripMap({
     } else if (count > 1) {
       map.fitBounds(bounds, 40);
     }
-  }, [mapReady, points, selected]);
+  }, [mapReady, points, selected, routes, daySigs]);
+
+  // 단일 Day 화면에서 보여줄 경로 요약
+  const shownDay = selected === "all" ? null : selected;
+  const shownSig = shownDay != null ? daySigs[shownDay] : "";
+  const shownRoute = shownSig ? routes[shownSig] : undefined;
 
   const located = points.flat().filter((p) => p.geo).length;
   const total = points.flat().length;
@@ -372,6 +458,15 @@ export default function TripMap({
         )}
       </div>
 
+      {mapReady && shownSig && (
+        <p className="text-[11px] text-slate-500 mt-1.5">
+          {shownRoute === undefined
+            ? "도로 경로를 불러오는 중…"
+            : shownRoute
+            ? `🚗 ${formatRouteSummary(shownRoute)} (${shownRoute.provider === "kakao" ? "카카오모빌리티" : "Google"})`
+            : "도로 경로를 불러오지 못해 점선(직선)으로 표시했어요."}
+        </p>
+      )}
       {mapReady && total > 0 && located < total && (
         <p className="text-[11px] text-slate-400 mt-1.5">
           {located === 0
