@@ -1,11 +1,13 @@
 // 도로 기준 경로 (지도에 직선 대신 실제 도로를 따라 그리기 위함) — 서버 전용
 //
-// - 국내: 카카오모빌리티 자동차 길찾기 (구글은 한국 자동차 경로 미지원)
+// - 기본: Google Routes API computeRoutes (DRIVE, 경유지 최대 10개 → Essentials 요금, 월 10,000건 무료)
+//   키: GOOGLE_MAPS_SERVER_KEY (Routes API 허용 필요)
+//   ※ 구글은 한국 자동차 경로를 지원하지 않았으나 2026년 2월 정부 허가 이후 열릴 수 있어 국내도 먼저 시도
+// - 국내 보조: 카카오모빌리티 자동차 길찾기
 //   GET https://apis-navi.kakaomobility.com/v1/directions  (출발·도착 + 경유지 최대 5개)
 //   키: KAKAO_REST_API_KEY (없으면 카카오 로그인용 KAKAO_CLIENT_ID = 같은 앱의 REST API 키)
-//   ※ 카카오 디벨로퍼스 앱에서 '카카오모빌리티' 길찾기 사용 권한이 필요
-// - 해외: Google Routes API computeRoutes (DRIVE, 경유지 최대 10개 → Essentials 요금, 월 10,000건 무료)
-//   키: GOOGLE_MAPS_SERVER_KEY (Routes API 허용 필요)
+//   ※ 상업 서비스는 무료 쿼터 안이라도 카카오모빌리티와 '사전 제휴 계약'이 필수
+//     → 계약 후 KAKAO_DIRECTIONS_ENABLED=true 를 설정해야만 호출함
 //
 // 경로 결과는 저장하지 않음 (구글·카카오 모두 결과 저장·재사용 제한) — 요청 시마다 계산.
 
@@ -172,10 +174,18 @@ async function googleRoute(points: RoutePoint[]): Promise<DayRoute | null> {
 /** 하루 동선(방문 순서대로)의 도로 경로. 실패하면 null → 화면은 점선 직선으로 표시 */
 export async function getDayRoute(points: RoutePoint[]): Promise<DayRoute | null> {
   if (points.length < 2) return null;
+  const allKorea = points.every((p) => isInKorea(p.lat, p.lng));
+  let route: DayRoute | null = null;
   try {
-    const allKorea = points.every((p) => isInKorea(p.lat, p.lng));
-    return allKorea ? await kakaoRoute(points) : await googleRoute(points);
+    route = await googleRoute(points);
+    // 국내인데 구글 경로가 없으면, 카카오 제휴 계약 후 켠 경우에만 카카오로 보완
+    if (!route && allKorea && process.env.KAKAO_DIRECTIONS_ENABLED === "true") {
+      route = await kakaoRoute(points);
+    }
   } catch {
-    return null;
+    route = null;
   }
+  // 어떤 제공사가 성공했는지 확인용 (Vercel 로그)
+  console.log(`[route] korea=${allKorea} points=${points.length} provider=${route?.provider ?? "none"}`);
+  return route;
 }
