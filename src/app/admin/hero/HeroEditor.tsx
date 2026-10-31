@@ -8,7 +8,7 @@ import HeroSection from "@/components/HeroSection";
 import { AURORA_PRESETS, DEFAULT_HERO, type HeroConfig, type AuroraPreset, type HeroBackground } from "@/lib/hero";
 
 const BG_OPTIONS: { id: HeroBackground; label: string; desc: string }[] = [
-  { id: "video", label: "🎬 영상", desc: "기본: Pothos 오로라 영상 · 직접 올리기 MP4·WebM 50MB 이하" },
+  { id: "video", label: "🎬 영상", desc: "기본: 시간대별 자동(낮 이륙·밤 오로라) · 직접 올리기 MP4·WebM 50MB 이하" },
   { id: "aurora", label: "🌌 오로라 애니메이션", desc: "움직이는 오로라 + 반짝이는 별 (영상 없이 가벼움)" },
   { id: "image", label: "🖼️ 사진", desc: "JPG·PNG·WebP" },
 ];
@@ -149,7 +149,7 @@ export default function HeroEditor({ initial }: { initial: HeroConfig }) {
               </label>
               <input
                 className={input}
-                placeholder={c.background === "video" ? "비워두면 Pothos 기본 오로라 영상" : "또는 주소 붙여넣기 (https://...)"}
+                placeholder={c.background === "video" ? "비워두면 Pothos 기본 영상 (낮: 이륙하는 비행기 · 밤: 오로라)" : "또는 주소 붙여넣기 (https://...)"}
                 value={c.mediaUrl}
                 onChange={(e) => set("mediaUrl", e.target.value)}
               />
@@ -164,7 +164,7 @@ export default function HeroEditor({ initial }: { initial: HeroConfig }) {
                     c.mediaUrl ? "border-gray-200 text-gray-700 hover:bg-gray-50" : "border-blue-500 bg-blue-50 text-blue-700"
                   }`}
                 >
-                  {c.mediaUrl ? "Pothos 기본 오로라 영상으로 되돌리기" : "✓ Pothos 기본 오로라 영상 사용 중"}
+                  {c.mediaUrl ? "Pothos 기본 영상(낮·밤 자동)으로 되돌리기" : "✓ Pothos 기본 영상 사용 중 — 낮엔 이륙, 밤엔 오로라"}
                 </button>
               )}
               {c.background === "video" && (

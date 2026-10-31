@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import StarRating from "@/components/StarRating";
 import HeroSection from "@/components/HeroSection";
+import WhyPothos from "@/components/WhyPothos";
 import { getHeroConfig } from "@/lib/hero-server";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import {
@@ -194,6 +195,9 @@ export default async function HomePage() {
 
       {/* Hero — 움직이는 오로라 + 반짝이는 별 (관리자 페이지에서 문구·배경 수정) */}
       <HeroSection config={hero} />
+
+      {/* 그냥 AI 와 무엇이 다른지 */}
+      <WhyPothos />
 
       {/* 메타서치 4종 — 매출 채널 강조 */}
       <section className="py-16 bg-white border-b border-slate-100">
