@@ -63,6 +63,8 @@ function PlannerContent() {
   const { data: session, status } = useSession();
   const initialDestination = searchParams.get("destination") ?? "";
   const PLANNER_DRAFT_KEY = "pothos_planner_draft";
+  // 서버(generate-itinerary)의 PLANNER_API_VERSION 과 같아야 함
+  const PLANNER_API_VERSION = "2";
 
   const [step, setStep] = useState(1);
   const [destination, setDestination] = useState(initialDestination);
@@ -175,7 +177,10 @@ function PlannerContent() {
 
       const res = await fetch("/api/generate-itinerary", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-planner-version": PLANNER_API_VERSION,
+        },
         body: JSON.stringify({
           destination,
           days,
@@ -195,6 +200,11 @@ function PlannerContent() {
           if (res.status === 401 && data.needsLogin) {
             setNeedsAuth(true);
             msg = "AI 여행 설계는 회원 전용이에요. 회원가입 후 바로 이용할 수 있어요.";
+          } else if (res.status === 409 && data.reload) {
+            // 화면 코드가 서버보다 오래됨 → 입력값 보존 후 새로고침
+            saveDraft();
+            window.location.reload();
+            return;
           } else if (res.status === 429 && data.quotaExceeded) {
             msg = `오늘의 무료 AI 플래너 한도(${data.limit}회)를 다 사용했어요. 내일 자정(KST)에 리셋됩니다.`;
           } else if (data.error) {
@@ -249,7 +259,7 @@ function PlannerContent() {
   };
 
   // 입력한 여행 조건을 저장해 두고 (회원가입 후 복원) 인증 페이지로 이동
-  const goAuth = (path: "/signup" | "/login") => {
+  const saveDraft = () => {
     try {
       sessionStorage.setItem(
         PLANNER_DRAFT_KEY,
@@ -267,8 +277,12 @@ function PlannerContent() {
         })
       );
     } catch {
-      // 저장 실패해도 이동은 진행
+      // 저장 실패는 무시
     }
+  };
+
+  const goAuth = (path: "/signup" | "/login") => {
+    saveDraft();
     router.push(`${path}?callbackUrl=${encodeURIComponent("/planner")}`);
   };
 

@@ -13,6 +13,10 @@ export const maxDuration = 300;
 //   - "claude-haiku-5-5"  : 가장 저렴·빠름 (품질 보통)
 //   - "claude-sonnet-5-5" : 균형
 //   - "claude-opus-5-5"   : 최고 품질 (가장 비쌈)
+// 플래너 화면(클라이언트)과 서버의 응답 형식 버전. 형식을 바꾸면 양쪽을 같이 올릴 것.
+// 예전 화면 코드가 남아 있는 기기는 AI 호출(=크레딧 소모) 전에 차단하고 새로고침을 안내.
+const PLANNER_API_VERSION = "2";
+
 const SKELETON_MODEL = "claude-opus-5-5";
 const DAY_MODEL = "claude-sonnet-5-5";
 
@@ -72,6 +76,17 @@ export async function POST(req: NextRequest) {
     return Response.json(
       { error: "AI 플래너는 로그인 후 사용 가능합니다.", needsLogin: true },
       { status: 401 }
+    );
+  }
+
+  if (req.headers.get("x-planner-version") !== PLANNER_API_VERSION) {
+    return Response.json(
+      {
+        error:
+          "Pothos가 업데이트되었어요. 화면을 새로고침(앱은 완전히 종료 후 다시 실행)한 뒤 다시 시도해주세요.",
+        reload: true,
+      },
+      { status: 409 }
     );
   }
 
