@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { grantFirstPostReward } from "@/lib/events";
 import { auth } from "@/lib/auth";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 
@@ -45,5 +46,15 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) return Response.json({ error: error.message }, { status: 500 });
-  return Response.json({ id: data.id });
+
+  // 첫 글 이벤트 — 스토리도 대상
+  const sectionText = Array.isArray(sections)
+    ? sections.map((x: { title?: string; content?: string }) => `${x?.title ?? ""} ${x?.content ?? ""}`).join(" ")
+    : "";
+  const reward = await grantFirstPostReward(session.user.id, {
+    isStory: true,
+    content: `${title} ${intro ?? ""} ${sectionText}`,
+  });
+
+  return Response.json({ id: data.id, reward });
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import FirstPostEventBanner from "@/components/FirstPostEventBanner";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -83,6 +84,8 @@ export default async function StoriesPage() {
               스토리 쓰기
             </Link>
           </div>
+
+          <FirstPostEventBanner href="/stories/new" cta="첫 스토리 쓰기" />
 
           {!stories || stories.length === 0 ? (
             <div className="bg-slate-50 rounded-3xl p-16 text-center">
