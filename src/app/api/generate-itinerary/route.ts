@@ -250,7 +250,7 @@ ${medicalCtx.clinicName ? `- 클리닉: ${medicalCtx.clinicName}${medicalCtx.cli
 
 [1단계] 전체 여행의 뼈대만 설계하세요. 각 날짜의 상세 일정은 다음 단계에서 Day별로 따로 작성합니다.
 JSON 출력 형식:
-{"title":"${nights}박 ${totalDays}일 + 여행 특징 (예: ${nights}박 ${totalDays}일 낭만적인 파리 여행)","summary":"2-3문장","highlights":["3개"],"totalBudget":{"accommodation":N,"food":N,"transport":N,"activities":N},"tips":["3개"],"bestSeason":"...","days":[{"day":1,"city":"도시명","title":"...","theme":"...","plan":"그날 방문할 핵심 장소 4~6곳을 동선 순서대로 + 한 줄 요약","accommodation":"..."}]}
+{"title":"${nights}박 ${totalDays}일 + 여행 특징 (예: ${nights}박 ${totalDays}일 낭만적인 파리 여행)","summary":"2-3문장","highlights":["3개"],"totalBudget":{"accommodation":N,"food":N,"transport":N,"activities":N},"tips":["3개, 각각 한 문장 (40자 이내)"],"bestSeason":"...","days":[{"day":1,"city":"도시명","title":"...","theme":"...","plan":"그날 방문할 핵심 장소 4~6곳을 동선 순서대로 + 한 줄 요약","accommodation":"..."}]}
 days 배열은 반드시 Day 1부터 Day ${totalDays}까지 정확히 ${totalDays}개. 서로 다른 날짜에 같은 장소 중복 금지. 동선이 효율적이도록 지역을 묶어서 배치.
 ${placeRules}`;
 
@@ -261,7 +261,7 @@ ${JSON.stringify(skeletonDays)}
 
 [2단계] 위 뼈대 중 **Day ${n}** 하루만 상세 일정으로 작성하세요. 뼈대의 도시·장소·흐름을 따르고, 다른 Day에 배정된 장소는 쓰지 마세요.
 JSON 출력 형식 (Day ${n} 객체 1개):
-{"day":${n},"title":"...","theme":"...","schedule":[{"time":"09:00","place":"장소명만(주소X)","activity":"...","duration":"2시간","cost":N,"tip":"...","transport_to_next":{"mode":"🚇 지하철4호선","duration":"12분","cost_kr":"₩1,400"},"nearby_alternatives":[{"name":"...","reason":"..."}],"nearby_food":[{"name":"...","type":"카페|디저트|현지식","why":"SNS 인기 이유"}]}],"meal":{"breakfast":"...","lunch":"...","dinner":"..."},"accommodation":"...","dayBudget":N}
+{"day":${n},"title":"...","theme":"...","schedule":[{"time":"09:00","place":"장소명만(주소X)","activity":"...","duration":"2시간","cost":N,"tip":"한 줄 팁 (30자 이내)","transport_to_next":{"mode":"🚇 지하철4호선","duration":"12분","cost_kr":"₩1,400"},"nearby_alternatives":[{"name":"...","reason":"..."}],"nearby_food":[{"name":"...","type":"카페|디저트|현지식","why":"SNS 인기 이유"}]}],"meal":{"breakfast":"...","lunch":"...","dinner":"..."},"accommodation":"...","dayBudget":N}
 schedule 4개 이상. transport_to_next는 마지막 항목 외 모두 포함, nearby_alternatives 2개·nearby_food 1개(있으면).
 ${placeRules}`;
 

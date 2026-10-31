@@ -184,7 +184,7 @@ export default async function FestivalsPage({ searchParams }: { searchParams: Pr
                         <Link
                           key={f.contentId}
                           href={`/festivals/${f.contentId}`}
-                          className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all"
+                          className="group rounded-3xl overflow-hidden border border-rose-100 shadow-[0_10px_30px_-14px_rgba(225,29,72,0.35)] hover:shadow-[0_16px_40px_-14px_rgba(225,29,72,0.5)] hover:-translate-y-0.5 transition-all bg-gradient-to-br from-rose-50 via-white to-orange-50"
                         >
                           <div className="relative aspect-[16/10] bg-gradient-to-br from-rose-100 to-orange-100">
                             {f.thumb ? (
@@ -193,6 +193,8 @@ export default async function FestivalsPage({ searchParams }: { searchParams: Pr
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-5xl">🎉</div>
                             )}
+                            {/* 사진 아래 그라데이션 */}
+                            <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/35 to-transparent" />
                             {b && (
                               <span className={`absolute top-3 left-3 px-3 py-1 rounded-full text-white text-sm font-bold ${b.cls}`}>
                                 {b.text}
@@ -235,7 +237,10 @@ export default async function FestivalsPage({ searchParams }: { searchParams: Pr
               ) : (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
                   {globals.map((f) => (
-                    <div key={f.id} className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 flex flex-col">
+                    <div
+                      key={f.id}
+                      className="rounded-3xl border border-orange-100 p-6 flex flex-col bg-gradient-to-br from-amber-50 via-white to-rose-50 shadow-[0_10px_30px_-14px_rgba(249,115,22,0.4)]"
+                    >
                       <div className="text-5xl mb-3">{f.emoji}</div>
                       <p className="text-sm font-semibold text-gray-500 mb-1">
                         {f.flag} {f.country} · {f.city}
