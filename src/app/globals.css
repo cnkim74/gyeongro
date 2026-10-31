@@ -143,3 +143,72 @@ h1, h2, h3, .font-title {
 @media (prefers-reduced-motion: reduce) {
   .pothos-cloud, .pothos-hop, .pothos-pin, .pothos-fade, .pothos-shimmer { animation: none; }
 }
+
+/* ── 메인 히어로: 움직이는 오로라 · 반짝이는 별 · 별똥별 ─────── */
+.pothos-aurora {
+  position: absolute;
+  left: -25%;
+  width: 150%;
+  height: 50%;
+  filter: blur(38px) saturate(1.4);
+  mix-blend-mode: screen;
+  opacity: 0.95;
+  border-radius: 50%;
+  will-change: transform, opacity;
+  /* 오로라 커튼처럼 세로 결 */
+  -webkit-mask-image: repeating-linear-gradient(90deg, #000 0px, rgba(0,0,0,0.55) 22px, #000 44px);
+  mask-image: repeating-linear-gradient(90deg, #000 0px, rgba(0,0,0,0.55) 22px, #000 44px);
+}
+.pothos-aurora-a { top: 2%;  animation: pothos-aurora-a 18s ease-in-out infinite alternate; }
+.pothos-aurora-b { top: 22%; animation: pothos-aurora-b 24s ease-in-out infinite alternate; }
+.pothos-aurora-c { top: 40%; animation: pothos-aurora-c 30s ease-in-out infinite alternate; opacity: 0.7; }
+
+@keyframes pothos-aurora-a {
+  0%   { transform: translateX(-8%) rotate(-8deg) scaleY(0.8); opacity: 0.55; }
+  50%  { transform: translateX(6%) rotate(-3deg) scaleY(1.15); opacity: 0.85; }
+  100% { transform: translateX(-3%) rotate(-11deg) scaleY(0.9); opacity: 0.65; }
+}
+@keyframes pothos-aurora-b {
+  0%   { transform: translateX(10%) rotate(6deg) scaleY(1); opacity: 0.5; }
+  50%  { transform: translateX(-6%) rotate(2deg) scaleY(1.3); opacity: 0.8; }
+  100% { transform: translateX(4%) rotate(9deg) scaleY(0.85); opacity: 0.6; }
+}
+@keyframes pothos-aurora-c {
+  0%   { transform: translateX(-4%) rotate(-4deg) scaleY(0.9); }
+  100% { transform: translateX(8%) rotate(5deg) scaleY(1.2); }
+}
+
+.pothos-star {
+  position: absolute;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 0 6px 1px rgba(255, 255, 255, 0.7);
+  animation-name: pothos-twinkle;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+@keyframes pothos-twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.7); }
+  50% { opacity: 1; transform: scale(1.25); }
+}
+
+.pothos-shooting {
+  position: absolute;
+  width: 140px;
+  height: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.95), transparent);
+  transform: rotate(-35deg);
+  opacity: 0;
+  animation: pothos-shooting 14s linear infinite;
+}
+@keyframes pothos-shooting {
+  0%   { opacity: 0; transform: rotate(-35deg) translateX(0); }
+  2%   { opacity: 1; }
+  7%   { opacity: 0; transform: rotate(-35deg) translateX(-360px); }
+  100% { opacity: 0; transform: rotate(-35deg) translateX(-360px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pothos-aurora, .pothos-star, .pothos-shooting { animation: none; }
+}

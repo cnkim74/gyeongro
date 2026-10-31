@@ -2,6 +2,8 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import StarRating from "@/components/StarRating";
+import HeroSection from "@/components/HeroSection";
+import { getHeroConfig } from "@/lib/hero-server";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import {
   Sparkles,
@@ -12,7 +14,6 @@ import {
   Users,
   Camera,
   Layers,
-  CheckCircle,
   Clapperboard,
   Croissant,
   Mountain,
@@ -185,110 +186,14 @@ const howItWorks = [
 ];
 
 export default async function HomePage() {
-  const reviews = await getLandingReviews();
+  const [reviews, hero] = await Promise.all([getLandingReviews(), getHeroConfig()]);
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <Header />
 
-      {/* Hero - 모던하고 강한 비주얼 */}
-      <section className="relative min-h-[92vh] flex items-center overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950">
-        {/* Aurora — 다층 색상 그라디언트 */}
-        <div className="absolute inset-0">
-          <div className="absolute top-10 left-1/4 w-[600px] h-[400px] bg-blue-500/25 rounded-full blur-[140px]" />
-          <div className="absolute bottom-20 right-1/4 w-[700px] h-[500px] bg-indigo-500/25 rounded-full blur-[140px]" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-purple-500/15 rounded-full blur-[120px]" />
-          {/* 오로라 청록 띠 */}
-          <div className="absolute top-1/3 left-0 right-0 h-[200px] bg-gradient-to-r from-transparent via-cyan-400/15 to-transparent blur-[80px] -rotate-6" />
-          {/* 오로라 그린 띠 (왼쪽 상단) */}
-          <div className="absolute top-0 left-0 w-[500px] h-[300px] bg-emerald-400/10 rounded-full blur-[120px]" />
-          {/* 오로라 핑크 점 (우하단) */}
-          <div className="absolute bottom-0 right-1/3 w-[400px] h-[300px] bg-fuchsia-500/10 rounded-full blur-[100px]" />
-        </div>
-
-        {/* 별 패턴 */}
-        <div
-          className="absolute inset-0 opacity-80 mix-blend-screen pointer-events-none"
-          style={{
-            backgroundImage: "url('/patterns/stars.svg')",
-            backgroundRepeat: "repeat",
-            backgroundSize: "1200px 800px",
-          }}
-        />
-
-        {/* Subtle grid pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
-            backgroundSize: "64px 64px",
-          }}
-        />
-
-        <div className="relative z-10 max-w-6xl mx-auto px-6 py-32 w-full">
-          <div className="max-w-4xl">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-white/70 text-xs font-medium mb-8 tracking-wide">
-              <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-              <span>AI 플래너 · 셰르파 매칭 · 항공·호텔·렌트카 가격 비교</span>
-            </div>
-
-            <h1 className="text-5xl sm:text-7xl md:text-8xl font-bold text-white leading-[1.05] tracking-tight mb-8">
-              여행은,
-              <br />
-              <span className="bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-300 bg-clip-text text-transparent">
-                길에서 시작됩니다
-              </span>
-            </h1>
-
-            <p className="text-base sm:text-2xl text-white/60 max-w-2xl mb-10 leading-relaxed font-light">
-              취향과 예산만 알려주세요. AI가 30초 만에 맞춤 일정을 설계하고,
-              <br className="hidden sm:block" />
-              현지 셰르파부터 항공·호텔까지 한 곳에서 만들어 드립니다.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Link
-                href="/planner"
-                className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-white text-slate-950 font-semibold text-base hover:bg-blue-50 transition-all hover:-translate-y-0.5"
-              >
-                <Compass className="w-5 h-5" />
-                AI 여행 시작하기
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <Link
-                href="/sherpa"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-white/5 border border-white/10 text-white font-semibold text-base hover:bg-white/10 transition-colors backdrop-blur-md"
-              >
-                <Mountain className="w-5 h-5" />
-                셰르파 만나기
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-2 gap-x-5 gap-y-4 mt-12 text-white/50 text-[15px] sm:flex sm:flex-wrap sm:items-center sm:gap-x-8 sm:gap-y-3 sm:mt-16 sm:text-sm">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-emerald-400" />
-                AI 무료 (일 5회)
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-emerald-400" />
-                현지 셰르파 1:1
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-emerald-400" />
-                항공·호텔 비교
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-emerald-400" />
-                다국어 자동 번역
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom gradient fade */}
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent" />
-      </section>
+      {/* Hero — 움직이는 오로라 + 반짝이는 별 (관리자 페이지에서 문구·배경 수정) */}
+      <HeroSection config={hero} />
 
       {/* 메타서치 4종 — 매출 채널 강조 */}
       <section className="py-16 bg-white border-b border-slate-100">
