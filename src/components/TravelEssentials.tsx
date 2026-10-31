@@ -1,87 +1,5 @@
-import { getSupabaseServiceClient } from "@/lib/supabase";
 import { ShoppingBag, ExternalLink } from "lucide-react";
-
-interface AffiliateProduct {
-  id: string;
-  category: string;
-  name: string;
-  description: string | null;
-  image_url: string | null;
-  affiliate_url: string;
-  price_text: string | null;
-  html_snippet: string | null;
-}
-
-// 허용 iframe 호스트 — 쿠팡 관련 모든 도메인
-const ALLOWED_IFRAME_DOMAINS = [
-  "coupang.com", // www.coupang.com, link.coupang.com 등
-  "coupangcdn.com", // 이미지 CDN
-  "coupa.ng", // 쿠팡 단축 URL (https://coupa.ng/...)
-];
-
-function isAllowedIframeHost(hostname: string): boolean {
-  const h = hostname.toLowerCase();
-  return ALLOWED_IFRAME_DOMAINS.some(
-    (d) => h === d || h.endsWith("." + d)
-  );
-}
-
-/**
- * HTML 스니펫에서 허용된 도메인의 iframe·a·img·br·span만 통과시킴.
- * 원본 iframe 태그는 그대로 유지(속성 보존), src 도메인만 검증.
- */
-function sanitizeSnippet(html: string): string {
-  if (!html) return "";
-
-  // 1. 위험한 태그·속성 우선 제거
-  let cleaned = html
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, "") // onclick, onload 등
-    .replace(/javascript:/gi, "")
-    .replace(/<form[\s\S]*?<\/form>/gi, "")
-    .replace(/<input[^>]*>/gi, "")
-    .replace(/<meta[^>]*>/gi, "");
-
-  // 2. iframe 도메인 검증 — 원본 태그 그대로 유지 (속성 보존)
-  cleaned = cleaned.replace(/<iframe[^>]*>/gi, (full: string) => {
-    const srcMatch = full.match(/src\s*=\s*["']([^"']+)["']/i);
-    if (!srcMatch) return ""; // src 없으면 제거
-    try {
-      const u = new URL(srcMatch[1]);
-      if (!isAllowedIframeHost(u.hostname)) return ""; // 허용 도메인 아니면 제거
-    } catch {
-      return "";
-    }
-    return full; // 원본 그대로
-  });
-
-  return cleaned;
-}
-
-const CATEGORIES: Record<string, { label: string; emoji: string }> = {
-  connectivity: { label: "통신", emoji: "📶" },
-  power: { label: "전원·충전", emoji: "🔋" },
-  luggage: { label: "캐리어·짐", emoji: "🧳" },
-  comfort: { label: "편의용품", emoji: "✨" },
-  health: { label: "건강·약품", emoji: "💊" },
-  etc: { label: "기타", emoji: "🎒" },
-};
-
-async function getActiveProducts(): Promise<AffiliateProduct[]> {
-  try {
-    const supabase = getSupabaseServiceClient();
-    const { data } = await supabase
-      .from("affiliate_products")
-      .select("id, category, name, description, image_url, affiliate_url, price_text, html_snippet")
-      .eq("is_active", true)
-      .order("display_order")
-      .order("created_at");
-    return (data ?? []) as AffiliateProduct[];
-  } catch {
-    return [];
-  }
-}
+import { getActiveProducts, sanitizeSnippet, CATEGORIES, type AffiliateProduct } from "@/lib/affiliate";
 
 export default async function TravelEssentials() {
   const products = await getActiveProducts();
@@ -100,13 +18,13 @@ export default async function TravelEssentials() {
         <ShoppingBag className="w-5 h-5 text-orange-500" />
         <h2 className="font-bold text-gray-900 text-lg">여행 준비물 추천</h2>
       </div>
-      <p className="text-xs text-gray-400 mb-3">
+      <p className="text-[15px] text-gray-500 mb-3">
         여행에 필요한 필수 아이템을 한 번에 준비하세요
       </p>
 
       {/* 쿠팡 파트너스 필수 표기 — 상단 (정책 준수) */}
       <div className="bg-orange-50/60 border border-orange-100 rounded-xl px-3.5 py-2.5 mb-5">
-        <p className="text-[11px] text-orange-900 leading-relaxed">
+        <p className="text-sm text-orange-900 leading-relaxed">
           <strong>안내:</strong> 이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에
           따른 일정액의 수수료를 제공받습니다.
         </p>
@@ -117,7 +35,7 @@ export default async function TravelEssentials() {
           const c = CATEGORIES[cat] ?? { label: cat, emoji: "🎒" };
           return (
             <div key={cat}>
-              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+              <h3 className="text-base font-bold text-gray-700 mb-2">
                 {c.emoji} {c.label}
               </h3>
 
@@ -149,16 +67,16 @@ export default async function TravelEssentials() {
                       ) : (
                         <div className="w-full aspect-square rounded-lg bg-gradient-to-br from-orange-100 to-amber-100 flex flex-col items-center justify-center mb-2 relative overflow-hidden">
                           <div className="text-4xl mb-1 opacity-90">{c.emoji}</div>
-                          <p className="text-[9px] text-orange-700/70 font-medium tracking-wide">
+                          <p className="text-xs text-orange-700/70 font-medium tracking-wide">
                             이미지 준비중
                           </p>
                         </div>
                       )}
-                      <p className="text-xs font-semibold text-gray-900 line-clamp-2 group-hover:text-orange-600 transition-colors">
+                      <p className="text-[15px] font-semibold text-gray-900 line-clamp-2 group-hover:text-orange-600 transition-colors">
                         {p.name}
                       </p>
                       {p.price_text && (
-                        <p className="text-xs text-orange-600 font-bold mt-1">
+                        <p className="text-sm text-orange-600 font-bold mt-1">
                           {p.price_text}
                         </p>
                       )}
@@ -176,7 +94,7 @@ export default async function TravelEssentials() {
       </div>
 
       {/* 하단 표기 — 정책상 ''눈에 잘 띄는 위치'' 요구 충족 */}
-      <p className="text-[11px] text-gray-500 mt-5 pt-4 border-t border-gray-100 leading-relaxed">
+      <p className="text-sm text-gray-500 mt-5 pt-4 border-t border-gray-100 leading-relaxed">
         ⓘ 본 페이지에 표시된 상품은 쿠팡 파트너스(Coupang Partners) 활동의 일환으로,
         이용자가 링크를 통해 구매할 경우 Pothos는 일정액의 수수료를 제공받습니다.
         가격·재고는 쿠팡 사이트의 실시간 정보가 정확합니다.
