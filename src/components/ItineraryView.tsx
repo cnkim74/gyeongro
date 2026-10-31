@@ -18,11 +18,9 @@ import {
   Coffee,
   Hash,
 } from "lucide-react";
-import {
-  getPlaceSearchUrl,
-  getDirectionsUrl,
-  getDirectionsEmbedUrl,
-} from "@/lib/maps";
+import { getPlaceSearchUrl, getDirectionsUrl } from "@/lib/maps";
+import TripMap, { useResolvedDays, googlePlaceUrl, legDirectionsUrl } from "@/components/TripMap";
+import PlaceInfo from "@/components/PlaceInfo";
 import {
   googleMapsSearch,
   naverMapSearch,
@@ -48,6 +46,14 @@ export interface NearbyFood {
   why?: string;
 }
 
+/** 장소 좌표 (Google place ID + 위경도). 좌표는 Google 약관상 30일까지만 유효 */
+export interface PlaceGeo {
+  placeId: string;
+  lat: number;
+  lng: number;
+  at: string;
+}
+
 export interface ScheduleItem {
   time: string;
   place: string;
@@ -58,10 +64,13 @@ export interface ScheduleItem {
   transport_to_next?: TransportLeg | null;
   nearby_alternatives?: NearbyAlternative[];
   nearby_food?: NearbyFood[];
+  geo?: PlaceGeo | null;
 }
 
 export interface DayPlan {
   day: number;
+  /** 그날 머무는 도시 (다중 도시 일정) */
+  city?: string;
   title: string;
   theme: string;
   schedule: ScheduleItem[];
@@ -104,7 +113,8 @@ export default function ItineraryView({
   destination: string;
 }) {
   const [expandedDay, setExpandedDay] = useState<number | null>(0);
-  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  // 좌표 없는(예전 저장) 일정은 여기서 한 번만 채움 → 지도·장소 정보가 공유
+  const days = useResolvedDays(itinerary.days ?? [], destination);
 
   return (
     <>
@@ -150,8 +160,19 @@ export default function ItineraryView({
         )}
       </div>
 
+      {/* 전체 여행 지도 */}
+      {days.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
+          <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <MapIcon className="w-5 h-5 text-blue-500" />
+            여행 지도
+          </h3>
+          <TripMap days={days} height={360} />
+        </div>
+      )}
+
       <div className="space-y-4 mb-6">
-        {itinerary.days?.map((day, idx) => {
+        {days.map((day, idx) => {
           const medType = detectMedicalDayType(day);
           const dayBgGradient =
             medType === "treatment"
@@ -212,13 +233,7 @@ export default function ItineraryView({
                     .filter(Boolean);
                   if (places.length < 2) return null;
 
-                  const dirsUrl = getDirectionsUrl(places, destination, "driving");
-                  const embedUrl = getDirectionsEmbedUrl(
-                    places,
-                    destination,
-                    googleMapsApiKey,
-                    "driving"
-                  );
+                  const dirsUrl = getDirectionsUrl(places, destination, "transit");
 
                   return (
                     <div>
@@ -238,24 +253,9 @@ export default function ItineraryView({
                           </a>
                         )}
                       </div>
-                      {embedUrl ? (
-                        <div className="rounded-2xl overflow-hidden border border-gray-100 mb-2">
-                          <iframe
-                            src={embedUrl}
-                            width="100%"
-                            height="280"
-                            style={{ border: 0 }}
-                            loading="lazy"
-                            allowFullScreen
-                            referrerPolicy="no-referrer-when-downgrade"
-                            title={`Day ${day.day} 경로`}
-                          />
-                        </div>
-                      ) : (
-                        <div className="bg-blue-50 rounded-2xl p-4 text-xs text-blue-700">
-                          💡 임베드 지도를 보려면 관리자가 <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> 환경변수를 설정해야 합니다. 아래 일정의 [지도] 링크는 즉시 작동합니다.
-                        </div>
-                      )}
+                      <div className="mb-3">
+                        <TripMap days={days} initialDayIndex={idx} showTabs={false} height={260} />
+                      </div>
 
                       {/* 순서 있는 동선 리스트 — 지도가 경로 선 못 그려도 순서 명확 */}
                       <ol className="space-y-1 mb-3">
@@ -328,7 +328,11 @@ export default function ItineraryView({
                               <div className="flex items-start justify-between gap-2">
                                 <p className="font-semibold text-gray-900 text-sm">{item.place}</p>
                                 <a
-                                  href={getPlaceSearchUrl(item.place, destination)}
+                                  href={
+                                    item.geo
+                                      ? googlePlaceUrl(item.place, item.geo)
+                                      : getPlaceSearchUrl(item.place, destination)
+                                  }
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="shrink-0 inline-flex items-center gap-0.5 text-[11px] text-blue-500 hover:text-blue-700 font-medium px-2 py-0.5 rounded-full bg-blue-50 hover:bg-blue-100"
@@ -339,6 +343,7 @@ export default function ItineraryView({
                                 </a>
                               </div>
                               <p className="text-gray-500 text-sm mt-0.5">{item.activity}</p>
+                              <PlaceInfo name={item.place} geo={item.geo} city={day.city || destination} />
                               <div className="flex items-center gap-3 mt-1.5">
                                 <span className="text-xs text-gray-400 flex items-center gap-1">
                                   <Clock className="w-3 h-3" /> {item.duration}
@@ -452,6 +457,25 @@ export default function ItineraryView({
                               {item.transport_to_next.cost_kr && (
                                 <span>· {item.transport_to_next.cost_kr}</span>
                               )}
+                              {(() => {
+                                const next = day.schedule?.[i + 1];
+                                const url = next
+                                  ? legDirectionsUrl(
+                                      { name: item.place, geo: item.geo },
+                                      { name: next.place, geo: next.geo }
+                                    )
+                                  : null;
+                                return url ? (
+                                  <a
+                                    href={url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="ml-1 font-semibold text-blue-600 hover:text-blue-800"
+                                  >
+                                    길찾기 →
+                                  </a>
+                                ) : null;
+                              })()}
                             </div>
                           )}
                         </div>
