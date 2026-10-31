@@ -75,6 +75,7 @@ export default function HeaderClient({ user, locale, labels }: HeaderClientProps
           <nav className="hidden md:flex items-center gap-6">
             {[
               { label: t("nav.planner"), href: "/planner" },
+              { label: t("nav.festivals"), href: "/festivals" },
               { label: t("nav.themes"), href: "/themes" },
               { label: t("nav.sherpa"), href: "/sherpa" },
               { label: t("nav.medical"), href: "/medical" },
@@ -149,6 +150,7 @@ export default function HeaderClient({ user, locale, labels }: HeaderClientProps
           <div className="px-4 py-4 space-y-3">
             {[
               { label: t("nav.planner"), href: "/planner" },
+              { label: t("nav.festivals"), href: "/festivals" },
               { label: t("nav.themes"), href: "/themes" },
               { label: t("nav.sherpa"), href: "/sherpa" },
               { label: t("nav.medical"), href: "/medical" },

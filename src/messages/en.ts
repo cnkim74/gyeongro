@@ -4,6 +4,7 @@
 export const en: Record<string, string> = {
   // Header
   "nav.planner": "Planner",
+  "nav.festivals": "Festivals",
   "nav.themes": "Themes",
   "nav.sherpa": "Sherpa",
   "nav.medical": "Medical",

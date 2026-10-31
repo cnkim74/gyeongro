@@ -96,6 +96,20 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const { destination, days, people, budget, travelStyle, themes, medical } = body;
+  // 출발일 (선택) — YYYY-MM-DD
+  const startDate: string | null =
+    typeof body.startDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.startDate) ? body.startDate : null;
+  // 축제 기반 일정 (선택)
+  const festivalIn = body.festival && typeof body.festival === "object" ? body.festival : null;
+  const festival =
+    festivalIn && typeof festivalIn.title === "string" && festivalIn.title.trim()
+      ? {
+          title: String(festivalIn.title).slice(0, 100),
+          period: typeof festivalIn.period === "string" ? festivalIn.period.slice(0, 60) : "",
+          place: typeof festivalIn.place === "string" ? festivalIn.place.slice(0, 120) : "",
+          addr: typeof festivalIn.addr === "string" ? festivalIn.addr.slice(0, 120) : "",
+        }
+      : null;
   const medicalCtx = medical as MedicalContext | null;
 
   if (!destination || !days || !people || !budget) {
@@ -196,13 +210,33 @@ ${medicalCtx.clinicName ? `- 클리닉: ${medicalCtx.clinicName}${medicalCtx.cli
 6. tips 배열에 의료 주의사항 1~2개 추가.`;
   }
 
+  // 날짜별 요일 (출발일이 있을 때)
+  let dateLine = "";
+  if (startDate) {
+    const WD = ["일", "월", "화", "수", "목", "금", "토"];
+    const [y, m, d] = startDate.split("-").map(Number);
+    const list = Array.from({ length: totalDays }, (_, i) => {
+      const dt = new Date(Date.UTC(y, m - 1, d + i));
+      return `Day ${i + 1}=${dt.getUTCMonth() + 1}/${dt.getUTCDate()}(${WD[dt.getUTCDay()]})`;
+    });
+    dateLine = `\n- 날짜: ${startDate} 출발 (${list.join(", ")}) — 요일별 휴무일·주말 혼잡을 고려`;
+  }
+  const festivalBlock = festival
+    ? `
+
+🎉 축제 연계 여행 (매우 중요):
+- 축제: ${festival.title}
+- 기간: ${festival.period}${festival.place ? `\n- 장소: ${festival.place}` : ""}${festival.addr ? ` (${festival.addr})` : ""}
+규칙: 축제 기간에 해당하는 날${startDate ? "(위 날짜 기준)" : ""}의 일정에 축제 관람을 그날의 핵심으로 반드시 포함하고, 주요 프로그램·야간 행사 시간대를 고려해 배치. 해당 day title 에 축제명 표시. 축제장 주변 맛집·숙소 우선. tips 에 축제 기간 혼잡·교통 통제·주차 대비 팁 1개 이상.`
+    : "";
+
   const conditions = `여행 조건
 - 목적지: ${destination}
-- 기간: ${nights}박 ${totalDays}일 (Day 1~${totalDays})
+- 기간: ${nights}박 ${totalDays}일 (Day 1~${totalDays})${dateLine}
 - 인원: ${people}명
 - 예산: ${budget.toLocaleString()}원 (1인 ${Math.round(budget / people).toLocaleString()}원)
 - 스타일: ${styleText}
-- 테마: ${themeText}${themeDetail ? `\n  ${themeDetail}` : ""}${medicalBlock}
+- 테마: ${themeText}${themeDetail ? `\n  ${themeDetail}` : ""}${medicalBlock}${festivalBlock}
 
 다중 도시(→/,/'에서~까지'): 도시별 박수 자동 분배. 도시 간 이동 day에는 ✈️/🚄/🚌 이동 수단 + 시간·요금 명시. day title에 도시명 명시.`;
 

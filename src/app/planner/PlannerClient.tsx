@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import ItineraryView, { type Itinerary } from "@/components/ItineraryView";
 import PlannerLoading from "@/components/PlannerLoading";
+import { getGlobalFestival } from "@/lib/global-festivals";
 import FlightSearchPanel from "@/components/FlightSearchPanel";
 import HotelSearchPanel from "@/components/HotelSearchPanel";
 import ActivitySearchPanel from "@/components/ActivitySearchPanel";
@@ -23,6 +24,8 @@ import {
   CheckCircle,
   HeartPulse,
   Stethoscope,
+  PartyPopper,
+  X,
 } from "lucide-react";
 
 const themes = [
@@ -68,7 +71,22 @@ function PlannerContent() {
   const PLANNER_API_VERSION = "3";
 
   const [step, setStep] = useState(1);
-  const [destination, setDestination] = useState(initialDestination);
+  // 해외 축제에서 넘어온 경우 (정적 목록이라 첫 렌더에서 바로 반영)
+  const initialGfest = getGlobalFestival(searchParams.get("gfest"));
+  const [destination, setDestination] = useState(initialGfest?.destination ?? initialDestination);
+  // 출발일 (선택, YYYY-MM-DD) — 축제 기반 일정이나 요일 고려에 사용
+  const [startDate, setStartDate] = useState("");
+  // 축제 기반 일정 (/festivals 에서 '이 축제로 일정 만들기')
+  const [festival, setFestival] = useState<{
+    title: string;
+    period: string;
+    place?: string | null;
+    addr?: string | null;
+  } | null>(
+    initialGfest
+      ? { title: initialGfest.name, period: initialGfest.period, place: `${initialGfest.country} ${initialGfest.city}` }
+      : null
+  );
   const [days, setDays] = useState(3);
   const [people, setPeople] = useState(2);
   const [budget, setBudget] = useState(500000);
@@ -121,6 +139,35 @@ function PlannerContent() {
       cancelled = true;
     };
   }, [medicalEnabled, medicalProcedure, destination]);
+
+  // 국내 축제에서 넘어온 경우: 축제 정보를 받아 목적지·출발일 미리 채우기
+  useEffect(() => {
+    const fid = searchParams.get("festival");
+    if (!fid || !/^\d{1,12}$/.test(fid)) return;
+    let cancelled = false;
+    fetch(`/api/festivals/${fid}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((f: { title: string; startDate: string; endDate: string; addr: string; place: string | null; destination: string } | null) => {
+        if (cancelled || !f) return;
+        const fmt = (x: string) => (/^\d{8}$/.test(x) ? `${x.slice(0, 4)}-${x.slice(4, 6)}-${x.slice(6, 8)}` : "");
+        const start = fmt(f.startDate);
+        const end = fmt(f.endDate);
+        setFestival({ title: f.title, period: `${start || "?"} ~ ${end || "?"}`, place: f.place, addr: f.addr });
+        if (f.destination) setDestination(f.destination);
+        // 출발일: 축제 시작일 (이미 시작했으면 내일, 단 종료일 이전)
+        const today = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+        const tomorrow = new Date(Date.now() + 33 * 3600 * 1000).toISOString().slice(0, 10);
+        if (start && start > today) setStartDate(start);
+        else if (end && tomorrow <= end) setStartDate(tomorrow);
+        else setStartDate(today);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+    // 최초 1회
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 회원가입 후 돌아왔을 때, 입력했던 여행 조건 복원 (1회성)
   // sessionStorage는 서버 렌더링에 없으므로 마운트 후 effect에서 복원해야 함
@@ -190,6 +237,8 @@ function PlannerContent() {
           travelStyle,
           themes: selectedThemes,
           medical: medicalPayload,
+          startDate: startDate || null,
+          festival,
         }),
       });
 
@@ -332,6 +381,27 @@ function PlannerContent() {
             </div>
 
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 space-y-8">
+              {festival && (
+                <div className="flex items-start gap-3 rounded-2xl bg-gradient-to-r from-rose-50 to-orange-50 border border-rose-100 p-4">
+                  <PartyPopper className="w-6 h-6 text-rose-500 shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-rose-600">축제 맞춤 일정</p>
+                    <p className="text-lg font-bold text-gray-900 leading-snug">{festival.title}</p>
+                    <p className="text-[15px] text-gray-600 mt-0.5">
+                      {festival.period}
+                      {festival.place ? ` · ${festival.place}` : ""}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setFestival(null)}
+                    className="p-1 text-gray-400 hover:text-gray-700"
+                    aria-label="축제 연결 해제"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              )}
+
               {/* Destination */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
@@ -416,6 +486,30 @@ function PlannerContent() {
                     </button>
                   </div>
                 </div>
+              </div>
+
+              {/* 출발일 */}
+              <div>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
+                  <Calendar className="w-4 h-4 text-blue-500" />
+                  출발일 <span className="text-gray-400 font-normal">(선택)</span>
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none text-gray-900"
+                  />
+                  {startDate && (
+                    <button onClick={() => setStartDate("")} className="text-sm text-gray-500 hover:text-gray-800">
+                      지우기
+                    </button>
+                  )}
+                </div>
+                <p className="text-sm text-gray-500 mt-1.5">
+                  날짜를 넣으면 요일·휴무일·축제 날짜를 고려해서 일정을 짜요
+                </p>
               </div>
 
               {/* Budget */}

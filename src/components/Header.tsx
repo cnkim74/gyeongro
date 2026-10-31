@@ -11,7 +11,7 @@ export default async function Header() {
   const t = createTranslator(locale);
   const labels: Record<MessageKey, string> = {} as Record<MessageKey, string>;
   const headerKeys: MessageKey[] = [
-    "nav.planner", "nav.themes", "nav.sherpa", "nav.medical", "nav.partners",
+    "nav.planner", "nav.festivals", "nav.themes", "nav.sherpa", "nav.medical", "nav.partners",
     "nav.stories", "nav.community", "nav.flights", "nav.hotels", "nav.activities",
     "nav.cars", "nav.login", "nav.signup", "nav.cta", "nav.profile",
     "nav.my_trips", "nav.logout", "nav.language",
