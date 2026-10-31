@@ -4,6 +4,7 @@
 export const ja: Record<string, string> = {
   // Header
   "nav.planner": "プランナー",
+  "nav.festivals": "祭り",
   "nav.themes": "テーマ",
   "nav.sherpa": "シェルパ",
   "nav.medical": "メディカル",
