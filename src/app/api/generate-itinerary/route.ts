@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { auth } from "@/lib/auth";
 import { consumeQuota, QuotaExceededError } from "@/lib/ai-quota";
+import { resolvePlaces, type PlaceQuery } from "@/lib/places";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -322,10 +323,40 @@ ${placeRules}`;
             Array.isArray(v.schedule) && v.schedule.length > 0
           );
           day.day = n;
+          // 뼈대의 도시명 — 장소 좌표 검색 정확도 + 다중 도시 표시용
+          const skCity = skeletonDays[n - 1]?.city;
+          if (typeof skCity === "string" && skCity.trim()) day.city = skCity.trim();
           doneCount++;
           send({ progress: `하루하루 상세 일정을 작성하고 있어요 (${doneCount}/${totalDays})` });
           return day;
         });
+
+        // 장소 좌표 (지도 표시용) — 실패해도 일정은 그대로 전송
+        try {
+          send({ progress: "장소 위치를 지도에 표시하고 있어요" });
+          const refs: { di: number; ii: number }[] = [];
+          const queries: PlaceQuery[] = [];
+          detailedDays.forEach((d, di) => {
+            const schedule = Array.isArray(d.schedule) ? (d.schedule as Json[]) : [];
+            schedule.forEach((it, ii) => {
+              if (it && typeof it.place === "string" && it.place.trim()) {
+                refs.push({ di, ii });
+                queries.push({
+                  place: it.place,
+                  city: typeof d.city === "string" ? d.city : destination,
+                });
+              }
+            });
+          });
+          const geos = await resolvePlaces(queries);
+          geos.forEach((g, k) => {
+            if (!g) return;
+            const { di, ii } = refs[k];
+            (detailedDays[di].schedule as Json[])[ii].geo = g;
+          });
+        } catch {
+          // 지도 좌표 실패는 무시
+        }
 
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { days: _skeletonDays, ...overview } = skeleton;
