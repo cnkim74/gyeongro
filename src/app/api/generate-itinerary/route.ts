@@ -1,12 +1,23 @@
 import { NextRequest } from "next/server";
-import Groq from "groq-sdk";
+import Anthropic from "@anthropic-ai/sdk";
 import { auth } from "@/lib/auth";
 import { consumeQuota, QuotaExceededError } from "@/lib/ai-quota";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
-const MODEL = "llama-3.3-70b-versatile";
+// Anthropic Claude 모델 — 사용자 본인 ANTHROPIC_API_KEY 크레딧으로 과금됨.
+// 비용/속도/품질 조절은 이 한 줄만 바꾸면 됩니다:
+//   - "claude-haiku-5-5"  : 가장 저렴·빠름 (품질 보통)
+//   - "claude-sonnet-5-5" : 균형 (현재 기본) — Vercel Hobby 60초 제한에 안전
+//   - "claude-opus-5-5"   : 최고 품질 (느리고 비쌈, 60초 초과 위험)
+const MODEL = "claude-sonnet-5-5";
+
+/** Anthropic 응답에서 text 블록만 뽑아 합침 */
+function extractText(msg: Anthropic.Message): string {
+  return msg.content.map((b) => (b.type === "text" ? b.text : "")).join("");
+}
 
 function tryRepairJson(text: string): string {
   let t = text.trim();
@@ -15,7 +26,7 @@ function tryRepairJson(text: string): string {
   // <think> 블록 제거
   t = t.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
   // 키릴/히라가나/카타카나 제거
-  t = t.replace(/[\u0400-\u04FF\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\u0900-\u097F\u0E00-\u0E7F\u3040-\u309F\u30A0-\u30FF\uFB50-\uFDFF\uFE70-\uFEFF]/g, "");
+  t = t.replace(/[Ѐ-ӿ֐-׿؀-ۿݐ-ݿऀ-ॿ฀-๿぀-ゟ゠-ヿﭐ-﷿ﹰ-﻿]/g, "");
 
   // 첫 { 와 마지막 } 사이만 추출
   const firstBrace = t.indexOf("{");
@@ -83,14 +94,14 @@ export async function POST(req: NextRequest) {
     throw err;
   }
 
-  const apiKey = process.env.GROQ_API_KEY;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return Response.json(
-      { error: "GROQ_API_KEY 환경변수가 설정되지 않았습니다." },
+      { error: "ANTHROPIC_API_KEY 환경변수가 설정되지 않았습니다." },
       { status: 500 }
     );
   }
-  const groq = new Groq({ apiKey });
+  const anthropic = new Anthropic({ apiKey });
 
   const themeText = themes?.length > 0 ? themes.join(", ") : "일반 관광";
   const themeHints: Record<string, string> = {
@@ -192,25 +203,24 @@ JSON 출력:
 규칙: schedule 4개+, **모든 장소는 반드시 ''${destination}'' 내부 또는 인접 지역에 실제 존재해야 함**. 다른 도시·국가의 장소 추천 금지. place는 이름만(주소·도시 제외). **외국 장소는 반드시 '한글(English/Local)' 형식** (예: 카를교(Charles Bridge), 카프카 박물관(Kafka Museum)). 한국 장소는 한글만 OK. **테마가 destination과 충돌하면 destination 우선** (예: ''강릉'' + ''anime'' 테마 → 강릉의 만화·웹툰 카페·한국 애니 관련 장소 추천. 일본 애니 성지(스가신사·가마쿠라) 등 destination 밖은 절대 금지). transport_to_next는 마지막 외 모두 포함, nearby_alternatives 2개·nearby_food 1개(있으면). 한국이면 백종원·미슐랭·핫플 위주, 해외면 미슐랭·로컬 SNS 인기.`;
 
   const systemContent =
-    "한국 여행 플래너. 실재 장소만 추천. **모든 장소는 사용자가 입력한 destination 안에 있어야 함** (다른 도시·국가 장소 절대 금지). 모든 텍스트 한글(외국 고유명사는 '한글(영문)' 형식). 출력은 valid JSON object 1개만, 마크다운·코드블록 금지.";
+    "한국 여행 플래너. 실재 장소만 추천. **모든 장소는 사용자가 입력한 destination 안에 있어야 함** (다른 도시·국가 장소 절대 금지). 모든 텍스트 한글(외국 고유명사는 '한글(영문)' 형식). 출력은 valid JSON object 1개만, 마크다운·코드블록·설명 금지. 반드시 '{' 로 시작해서 '}' 로 끝나야 함.";
 
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        const completion = await groq.chat.completions.create({
-          model: MODEL,
-          messages: [
-            { role: "system", content: systemContent },
-            { role: "user", content: prompt },
-          ],
-          max_tokens: 8000,
-          temperature: 0.7,
-          response_format: { type: "json_object" },
-        });
+        const completion = await anthropic.messages
+          .stream({
+            model: MODEL,
+            max_tokens: 8000,
+            temperature: 0.7,
+            system: systemContent,
+            messages: [{ role: "user", content: prompt }],
+          })
+          .finalMessage();
 
-        const raw = completion.choices[0]?.message?.content ?? "";
+        const raw = extractText(completion);
         const cleaned = tryRepairJson(raw);
 
         // 서버에서 valid JSON 파싱 시도
@@ -218,23 +228,17 @@ JSON 출력:
           JSON.parse(cleaned);
         } catch {
           // 1차 실패 → 수정 요청
-          const repair = await groq.chat.completions.create({
-            model: MODEL,
-            messages: [
-              {
-                role: "system",
-                content:
-                  "다음 JSON 문자열에 문법 오류가 있습니다. 오류를 수정해서 valid JSON 만 반환하세요. 다른 텍스트 절대 추가하지 마세요.",
-              },
-              { role: "user", content: cleaned },
-            ],
-            max_tokens: 8000,
-            temperature: 0,
-            response_format: { type: "json_object" },
-          });
-          const repaired = tryRepairJson(
-            repair.choices[0]?.message?.content ?? ""
-          );
+          const repair = await anthropic.messages
+            .stream({
+              model: MODEL,
+              max_tokens: 8000,
+              temperature: 0,
+              system:
+                "다음 JSON 문자열에 문법 오류가 있습니다. 오류를 수정해서 valid JSON 만 반환하세요. 다른 텍스트·마크다운·코드블록 절대 추가하지 마세요. 반드시 '{' 로 시작해서 '}' 로 끝나야 함.",
+              messages: [{ role: "user", content: cleaned }],
+            })
+            .finalMessage();
+          const repaired = tryRepairJson(extractText(repair));
           try {
             JSON.parse(repaired);
             controller.enqueue(

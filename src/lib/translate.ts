@@ -1,10 +1,10 @@
-// 다국어 자동 번역 (Groq Llama + DB 캐싱)
+// 다국어 자동 번역 (Anthropic Claude + DB 캐싱)
 //
 // 정책:
 //   - 마스터 언어는 한국어 (ko). 모든 콘텐츠는 ko로 작성 → en/ja/zh 자동 생성
 //   - DB 캐시: 동일 (text, target) 조합은 LLM 호출 안 함 → 비용 절감 + 일관성
-//   - Groq Llama 3.1 8B Instant (무료 티어 + TPD 6M)
-//   - 환경변수: GROQ_API_KEY 필수
+//   - Anthropic Claude Haiku (빠르고 저렴 — 번역 용도에 최적)
+//   - 환경변수: ANTHROPIC_API_KEY 필수 (사용자 본인 크레딧으로 과금)
 //
 // 사용:
 //   import { translateText, translateBatch } from "@/lib/translate";
@@ -12,7 +12,7 @@
 //   const [en, ja, zh] = await translateBatch(ko, ["en", "ja", "zh"]);
 
 import crypto from "node:crypto";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Anthropic from "@anthropic-ai/sdk";
 import { getSupabaseServiceClient } from "./supabase";
 
 export type TargetLang = "en" | "ja" | "zh";
@@ -25,7 +25,8 @@ const LANG_NAMES: Record<SourceLang, string> = {
   zh: "Simplified Chinese",
 };
 
-const MODEL = "gemini-2.0-flash";
+// 번역 모델 — 저렴·빠른 Haiku 기본. 품질을 더 원하면 "claude-sonnet-5-5" 로 변경.
+const MODEL = "claude-haiku-5-5";
 
 /** 안정적인 hash (sha256 prefix) */
 function makeHash(text: string, sourceLang: SourceLang): string {
@@ -76,31 +77,43 @@ async function saveCache(
   );
 }
 
-/** Groq로 실제 번역 호출 */
+/** Anthropic Claude로 실제 번역 호출 */
 async function callLLM(
   text: string,
   sourceLang: SourceLang,
   targetLang: TargetLang
 ): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("GEMINI_API_KEY 환경변수가 설정되지 않았습니다.");
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("ANTHROPIC_API_KEY 환경변수가 설정되지 않았습니다.");
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
+  const anthropic = new Anthropic({ apiKey });
+
+  const systemInstruction = `You are a professional translator. Translate from ${LANG_NAMES[sourceLang]} to ${LANG_NAMES[targetLang]}.
+Rules:
+- Output ONLY the translated text. No explanations, no quotes, no markdown.
+- Preserve numbers, URLs, brand names, and proper nouns as-is.
+- Keep the tone natural and idiomatic in the target language.
+- If the input contains line breaks, preserve them.`;
+
+  const msg = await anthropic.messages.create({
     model: MODEL,
-    systemInstruction: `You are a professional translator. Translate from ${LANG_NAMES[sourceLang]} to ${LANG_NAMES[targetLang]}.\nRules:\n- Output ONLY the translated text. No explanations, no quotes, no markdown.\n- Preserve numbers, URLs, brand names, and proper nouns as-is.\n- Keep the tone natural and idiomatic in the target language.\n- If the input contains line breaks, preserve them.`,
-    generationConfig: { maxOutputTokens: 2000, temperature: 0.3 },
+    max_tokens: 2000,
+    temperature: 0.3,
+    system: systemInstruction,
+    messages: [{ role: "user", content: text }],
   });
 
-  const completion = await model.generateContent(text);
-  return (completion.response.text() ?? "").trim();
+  const out = msg.content
+    .map((b) => (b.type === "text" ? b.text : ""))
+    .join("");
+  return out.trim();
 }
 
 /**
  * 단일 텍스트 번역 (캐시 우선)
  * - 빈 입력 → 빈 문자열 반환
  * - 캐시 hit → 즉시 반환
- * - 캐시 miss → Gemini 호출 → 캐시 저장 → 반환
+ * - 캐시 miss → Claude 호출 → 캐시 저장 → 반환
  */
 export async function translateText(
   text: string,
