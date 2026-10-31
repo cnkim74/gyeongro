@@ -110,6 +110,21 @@ function detectMedicalDayType(day: DayPlan): "treatment" | "recovery" | null {
   return null;
 }
 
+/** #rrggbb → rgba(…, alpha) */
+function tint(hex: string, alpha: number): string {
+  const h = hex.replace("#", "");
+  const n = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h, 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
+
+/** 같은 색을 조금 어둡게 (그라데이션 끝 색) */
+function shade(hex: string, amount = 0.25): string {
+  const h = hex.replace("#", "");
+  const n = parseInt(h, 16);
+  const f = (v: number) => Math.max(0, Math.round(v * (1 - amount)));
+  return `rgb(${f((n >> 16) & 255)}, ${f((n >> 8) & 255)}, ${f(n & 255)})`;
+}
+
 export default function ItineraryView({
   itinerary,
   destination,
@@ -263,18 +278,25 @@ function DayCard({
 
   return (
     <div
-      className={`bg-white rounded-3xl border overflow-hidden shadow-sm ${
-        medType ? "border-rose-200" : "border-gray-100"
-      }`}
+      className="rounded-3xl overflow-hidden border"
+      style={{
+        // 날짜 색을 살린 은은한 그라데이션 카드
+        background: `linear-gradient(135deg, ${tint(color, 0.12)} 0%, #ffffff 42%, #ffffff 70%, ${tint(color, 0.06)} 100%)`,
+        borderColor: tint(color, 0.22),
+        boxShadow: `0 10px 30px -14px ${tint(color, 0.45)}`,
+      }}
     >
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between gap-3 p-5 text-left hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center justify-between gap-3 p-5 text-left hover:bg-white/40 transition-colors"
       >
         <div className="flex items-center gap-4 min-w-0">
           <div
             className="w-14 h-14 rounded-2xl flex flex-col items-center justify-center text-white shrink-0"
-            style={{ backgroundColor: color }}
+            style={{
+              background: `linear-gradient(135deg, ${color} 0%, ${shade(color, 0.3)} 100%)`,
+              boxShadow: `0 6px 14px -6px ${tint(color, 0.7)}`,
+            }}
           >
             <span className="text-[11px] font-semibold opacity-90 leading-none">DAY</span>
             <span className="text-xl font-extrabold leading-tight">{day.day}</span>
@@ -318,7 +340,7 @@ function DayCard({
       </button>
 
       {expanded && pending && (
-        <div className="border-t border-gray-100 p-5">
+        <div className="border-t p-5" style={{ borderColor: tint(color, 0.15) }}>
           {day.plan && <p className="text-[15px] text-gray-700 leading-relaxed mb-4">🗺️ {day.plan}</p>}
           <p className="text-[15px] font-semibold text-blue-600 mb-3 inline-flex items-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -335,7 +357,7 @@ function DayCard({
       )}
 
       {expanded && !pending && (
-        <div className="border-t border-gray-100 p-5 space-y-6">
+        <div className="border-t p-5 space-y-6" style={{ borderColor: tint(color, 0.15) }}>
           {/* 오늘의 지도 */}
           {places.length >= 2 && (
             <div>
@@ -439,6 +461,7 @@ function ScheduleRow({
   destination: string;
 }) {
   const [more, setMore] = useState(false);
+  const [tipOpen, setTipOpen] = useState(false);
   const inKorea = isKoreanCity(destination);
   const hasMore =
     (item.nearby_alternatives?.length ?? 0) > 0 || (item.nearby_food?.length ?? 0) > 0;
@@ -448,11 +471,27 @@ function ScheduleRow({
 
   return (
     <li>
-      <div className="rounded-2xl border border-gray-100 bg-white p-4">
+      <div
+        className="relative rounded-2xl p-4 overflow-hidden"
+        style={{
+          background: `linear-gradient(160deg, #ffffff 55%, ${tint(color, 0.08)} 100%)`,
+          border: `1px solid ${tint(color, 0.18)}`,
+          boxShadow: `0 4px 16px -10px ${tint(color, 0.5)}`,
+        }}
+      >
+        {/* 왼쪽 그라데이션 포인트 라인 */}
+        <span
+          aria-hidden
+          className="absolute left-0 top-0 bottom-0 w-1"
+          style={{ background: `linear-gradient(180deg, ${color}, ${tint(color, 0.15)})` }}
+        />
         <div className="flex items-start gap-3">
           <span
-            className="shrink-0 w-7 h-7 rounded-full text-white text-sm font-bold flex items-center justify-center mt-0.5"
-            style={{ backgroundColor: color }}
+            className="shrink-0 w-8 h-8 rounded-full text-white text-sm font-bold flex items-center justify-center mt-0.5"
+            style={{
+              background: `linear-gradient(135deg, ${color}, ${shade(color, 0.3)})`,
+              boxShadow: `0 4px 10px -4px ${tint(color, 0.7)}`,
+            }}
           >
             {order}
           </span>
@@ -483,7 +522,15 @@ function ScheduleRow({
             </div>
 
             {item.tip && (
-              <p className="mt-2 px-3 py-2 bg-amber-50 rounded-xl text-sm text-amber-800 leading-relaxed">💡 {item.tip}</p>
+              // 팁은 한 줄로 — 누르면 전체 보기
+              <button
+                onClick={() => setTipOpen(!tipOpen)}
+                className="mt-2 w-full min-w-0 flex items-start gap-1.5 px-3 py-2 rounded-xl text-left text-sm text-amber-900"
+                style={{ background: "linear-gradient(90deg, #fef3c7, #fffbeb)" }}
+              >
+                <span className="shrink-0">💡</span>
+                <span className={`min-w-0 flex-1 ${tipOpen ? "leading-relaxed" : "truncate"}`}>{item.tip}</span>
+              </button>
             )}
 
             <div className="flex flex-wrap items-center gap-2 mt-2">
