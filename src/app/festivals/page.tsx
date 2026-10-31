@@ -32,7 +32,7 @@ function monthOptions(): { ym: string; label: string; month: number }[] {
     const m = d.getUTCMonth() + 1;
     out.push({
       ym: `${y}${String(m).padStart(2, "0")}`,
-      label: i === 0 ? "이번 달" : y !== now.getUTCFullYear() ? `${y}.${m}월` : `${m}월`,
+      label: i === 0 ? "앞으로 30일" : y !== now.getUTCFullYear() ? `${y}.${m}월` : `${m}월`,
       month: m,
     });
   }
@@ -44,6 +44,12 @@ function lastDayOf(ym: string): string {
   const m = Number(ym.slice(4, 6));
   const d = new Date(Date.UTC(y, m, 0)).getUTCDate();
   return `${ym}${String(d).padStart(2, "0")}`;
+}
+
+/** YYYYMMDD + n일 */
+function addDays(d: string, n: number): string {
+  const t = new Date(Date.UTC(+d.slice(0, 4), +d.slice(4, 6) - 1, +d.slice(6, 8) + n));
+  return `${t.getUTCFullYear()}${String(t.getUTCMonth() + 1).padStart(2, "0")}${String(t.getUTCDate()).padStart(2, "0")}`;
 }
 
 function badge(f: FestivalSummary, today: string): { text: string; cls: string } | null {
@@ -81,15 +87,20 @@ export default async function FestivalsPage({ searchParams }: { searchParams: Pr
   let festivals: FestivalSummary[] = [];
   let hasCat = false;
   if (tab === "kr" && isTourApiEnabled()) {
-    const from = ym === months[0].ym ? today : `${ym}01`;
-    const all = await listFestivals(from, lastDayOf(ym));
+    // 첫 칩은 '오늘부터 30일', 나머지는 해당 월 전체
+    const isNext30 = ym === months[0].ym;
+    const from = isNext30 ? today : `${ym}01`;
+    const to = isNext30 ? addDays(today, 30) : lastDayOf(ym);
+    const all = await listFestivals(from, to);
     hasCat = all.some((f) => f.cat2);
     festivals = all
       .filter((f) => !f.endDate || f.endDate >= today)
       .filter((f) => !region || regionOf(f.addr) === region)
       .filter((f) => !kind || (kind === "festival" ? f.cat2 === "A0207" : f.cat2 !== "A0207"));
   }
-  const globals = GLOBAL_FESTIVALS.filter((f) => f.months.includes(month));
+  // '앞으로 30일'이면 이번 달 + 다음 달
+  const globalMonths = ym === months[0].ym ? [month, months[1].month] : [month];
+  const globals = GLOBAL_FESTIVALS.filter((f) => f.months.some((m) => globalMonths.includes(m)));
 
   const chip = (active: boolean) =>
     `shrink-0 px-4 py-2 rounded-full text-[15px] font-semibold transition-colors ${
@@ -215,7 +226,7 @@ export default async function FestivalsPage({ searchParams }: { searchParams: Pr
           {tab === "global" && (
             <>
               <p className="text-[15px] text-gray-500 mb-4 mt-2">
-                {month}월에 열리는 세계 대표 축제 · 개최일은 해마다 달라지니 출발 전 공식 정보를 꼭 확인하세요
+                {globalMonths.map((m) => `${m}월`).join("·")}에 열리는 세계 대표 축제 · 개최일은 해마다 달라지니 출발 전 공식 정보를 꼭 확인하세요
               </p>
               {globals.length === 0 ? (
                 <div className="bg-white rounded-3xl p-10 text-center text-gray-600 text-base">
