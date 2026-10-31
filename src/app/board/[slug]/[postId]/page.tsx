@@ -1,4 +1,6 @@
 import Link from "next/link";
+import YouTubeEmbed from "@/components/YouTubeEmbed";
+import { extractYouTube, channelLabel } from "@/lib/youtube";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getSupabaseServiceClient } from "@/lib/supabase";
@@ -163,7 +165,35 @@ export default async function PostDetailPage({
               )}
             </div>
 
-            <div className="text-gray-800 leading-relaxed whitespace-pre-wrap break-words">
+            {/* 본문에 유튜브 주소가 있으면 영상·채널을 바로 보여줌 */}
+            {(() => {
+              const yt = extractYouTube(post.content ?? "");
+              if (yt.videoIds.length === 0 && yt.channels.length === 0) return null;
+              return (
+                <div className="space-y-3 mb-6">
+                  {yt.videoIds.slice(0, 3).map((id) => (
+                    <YouTubeEmbed key={id} id={id} title={post.title} />
+                  ))}
+                  {yt.channels.slice(0, 3).map((url) => (
+                    <a
+                      key={url}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-4 rounded-2xl border border-red-100 bg-gradient-to-r from-red-50 to-white hover:shadow-md transition-shadow"
+                    >
+                      <span className="w-11 h-11 rounded-full bg-red-600 flex items-center justify-center text-white text-lg shrink-0">▶</span>
+                      <span className="min-w-0">
+                        <span className="block text-sm text-red-600 font-semibold">유튜브 채널</span>
+                        <span className="block text-base font-bold text-gray-900 truncate">{channelLabel(url)}</span>
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              );
+            })()}
+
+            <div className="text-gray-800 text-base leading-relaxed whitespace-pre-wrap break-words">
               {post.content}
             </div>
           </article>

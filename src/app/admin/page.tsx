@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SeedContentButton from "./SeedContentButton";
 import { requireAdmin } from "@/lib/admin";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import {
@@ -42,6 +43,10 @@ export default async function AdminDashboardPage() {
     <div className="p-6 lg:p-10">
       <h1 className="text-2xl font-bold text-gray-900 mb-1">관리자 대시보드</h1>
       <p className="text-sm text-gray-500 mb-8">서비스 전반을 관리하세요</p>
+
+      <div className="mb-8">
+        <SeedContentButton />
+      </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {stats.map((s) => {
