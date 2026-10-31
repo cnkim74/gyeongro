@@ -168,7 +168,7 @@ ${medicalCtx.clinicName ? `- 클리닉: ${medicalCtx.clinicName}${medicalCtx.cli
 6. tips 배열에 의료 주의사항 1~2개 추가.`;
   }
 
-  const prompt = `여행 조건
+  const conditions = `여행 조건
 - 목적지: ${destination}
 - 기간: ${nights}박 ${totalDays}일 (Day 1~${totalDays})
 - 인원: ${people}명
@@ -176,94 +176,132 @@ ${medicalCtx.clinicName ? `- 클리닉: ${medicalCtx.clinicName}${medicalCtx.cli
 - 스타일: ${styleText}
 - 테마: ${themeText}${themeDetail ? `\n  ${themeDetail}` : ""}${medicalBlock}
 
-다중 도시(→/,/'에서~까지'): 도시별 박수 자동 분배. 도시 간 이동 day의 transport_to_next에 ✈️/🚄/🚌 + 시간·요금. day title에 도시명 명시.
+다중 도시(→/,/'에서~까지'): 도시별 박수 자동 분배. 도시 간 이동 day에는 ✈️/🚄/🚌 이동 수단 + 시간·요금 명시. day title에 도시명 명시.`;
 
-JSON 출력:
-{
-  "title": "${nights}박 ${totalDays}일 + 여행 특징 (예: ${nights}박 ${totalDays}일 낭만적인 파리 여행)",
-  "summary": "2-3문장",
-  "highlights": ["3개"],
-  "totalBudget": {"accommodation":N, "food":N, "transport":N, "activities":N},
-  "days": [{
-    "day": 1, "title": "...", "theme": "...",
-    "schedule": [{
-      "time": "09:00", "place": "장소명만(주소X)", "activity": "...",
-      "duration": "2시간", "cost": N, "tip": "...",
-      "transport_to_next": {"mode": "🚇 지하철4호선", "duration": "12분", "cost_kr": "₩1,400"},
-      "nearby_alternatives": [{"name":"...", "reason":"..."}],
-      "nearby_food": [{"name":"...", "type":"카페|디저트|현지식", "why":"SNS 인기 이유"}]
-    }],
-    "meal": {"breakfast":"...", "lunch":"...", "dinner":"..."},
-    "accommodation": "...", "dayBudget": N
-  }],
-  "tips": ["3개"],
-  "bestSeason": "..."
-}
-
-규칙: schedule 4개+, **모든 장소는 반드시 ''${destination}'' 내부 또는 인접 지역에 실제 존재해야 함**. 다른 도시·국가의 장소 추천 금지. place는 이름만(주소·도시 제외). **외국 장소는 반드시 '한글(English/Local)' 형식** (예: 카를교(Charles Bridge), 카프카 박물관(Kafka Museum)). 한국 장소는 한글만 OK. **테마가 destination과 충돌하면 destination 우선** (예: ''강릉'' + ''anime'' 테마 → 강릉의 만화·웹툰 카페·한국 애니 관련 장소 추천. 일본 애니 성지(스가신사·가마쿠라) 등 destination 밖은 절대 금지). transport_to_next는 마지막 외 모두 포함, nearby_alternatives 2개·nearby_food 1개(있으면). 한국이면 백종원·미슐랭·핫플 위주, 해외면 미슐랭·로컬 SNS 인기.`;
+  const placeRules = `규칙: **모든 장소는 반드시 '${destination}' 내부 또는 인접 지역에 실제 존재해야 함**. 다른 도시·국가의 장소 추천 금지. place는 이름만(주소·도시 제외). **외국 장소는 반드시 '한글(English/Local)' 형식** (예: 카를교(Charles Bridge), 카프카 박물관(Kafka Museum)). 한국 장소는 한글만 OK. **테마가 destination과 충돌하면 destination 우선** (예: '강릉' + 'anime' 테마 → 강릉의 만화·웹툰 카페·한국 애니 관련 장소 추천. 일본 애니 성지 등 destination 밖은 절대 금지). 한국이면 백종원·미슐랭·핫플 위주, 해외면 미슐랭·로컬 SNS 인기.`;
 
   const systemContent =
-    "한국 여행 플래너. 실재 장소만 추천. **모든 장소는 사용자가 입력한 destination 안에 있어야 함** (다른 도시·국가 장소 절대 금지). 모든 텍스트 한글(외국 고유명사는 '한글(영문)' 형식). 출력은 valid JSON object 1개만, 마크다운·코드블록·설명 금지. 반드시 '{' 로 시작해서 '}' 로 끝나야 함.";
+    "한국 여행 플래너. 실재 장소만 추천. **모든 장소는 사용자가 입력한 destination 안에 있어야 함** (다른 도시·국가 장소 절대 금지). 모든 텍스트 한글(외국 고유명사는 '한글(영문)' 형식). 출력은 valid JSON object 1개만, 마크다운·코드블록·설명 금지. 공백·줄바꿈 없는 한 줄(minified) JSON으로 출력. 반드시 '{' 로 시작해서 '}' 로 끝나야 함.";
+
+  // 1단계 — 전체 뼈대 (날짜별 도시·핵심 장소)
+  const skeletonPrompt = `${conditions}
+
+[1단계] 전체 여행의 뼈대만 설계하세요. 각 날짜의 상세 일정은 다음 단계에서 Day별로 따로 작성합니다.
+JSON 출력 형식:
+{"title":"${nights}박 ${totalDays}일 + 여행 특징 (예: ${nights}박 ${totalDays}일 낭만적인 파리 여행)","summary":"2-3문장","highlights":["3개"],"totalBudget":{"accommodation":N,"food":N,"transport":N,"activities":N},"tips":["3개"],"bestSeason":"...","days":[{"day":1,"city":"도시명","title":"...","theme":"...","plan":"그날 방문할 핵심 장소 4~6곳을 동선 순서대로 + 한 줄 요약","accommodation":"..."}]}
+days 배열은 반드시 Day 1부터 Day ${totalDays}까지 정확히 ${totalDays}개. 서로 다른 날짜에 같은 장소 중복 금지. 동선이 효율적이도록 지역을 묶어서 배치.
+${placeRules}`;
+
+  const dayPrompt = (n: number, skeletonDays: unknown) => `${conditions}
+
+[확정된 전체 여행 뼈대]
+${JSON.stringify(skeletonDays)}
+
+[2단계] 위 뼈대 중 **Day ${n}** 하루만 상세 일정으로 작성하세요. 뼈대의 도시·장소·흐름을 따르고, 다른 Day에 배정된 장소는 쓰지 마세요.
+JSON 출력 형식 (Day ${n} 객체 1개):
+{"day":${n},"title":"...","theme":"...","schedule":[{"time":"09:00","place":"장소명만(주소X)","activity":"...","duration":"2시간","cost":N,"tip":"...","transport_to_next":{"mode":"🚇 지하철4호선","duration":"12분","cost_kr":"₩1,400"},"nearby_alternatives":[{"name":"...","reason":"..."}],"nearby_food":[{"name":"...","type":"카페|디저트|현지식","why":"SNS 인기 이유"}]}],"meal":{"breakfast":"...","lunch":"...","dinner":"..."},"accommodation":"...","dayBudget":N}
+schedule 4개 이상. transport_to_next는 마지막 항목 외 모두 포함, nearby_alternatives 2개·nearby_food 1개(있으면).
+${placeRules}`;
+
+  type Json = Record<string, unknown>;
+
+  /** Claude 호출 → JSON 파싱. 잘림(max_tokens)·파싱 실패·검증 실패 시 1회 재시도 */
+  const callJson = async (
+    user: string,
+    maxTokens: number,
+    validate: (v: Json) => boolean
+  ): Promise<Json> => {
+    let lastErr: Error = new Error("AI 응답을 해석하지 못했습니다.");
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const msg = await anthropic.messages
+        .stream({
+          model: MODEL,
+          max_tokens: maxTokens,
+          system: systemContent,
+          messages: [{ role: "user", content: user }],
+        })
+        .finalMessage();
+      if (msg.stop_reason === "max_tokens") {
+        lastErr = new Error("AI 응답이 너무 길어 잘렸습니다. 다시 시도해주세요.");
+        continue;
+      }
+      try {
+        const parsed = JSON.parse(tryRepairJson(extractText(msg))) as Json;
+        if (validate(parsed)) return parsed;
+        lastErr = new Error("AI 응답 형식이 올바르지 않습니다. 다시 시도해주세요.");
+      } catch {
+        lastErr = new Error("AI 응답을 해석하지 못했습니다. 다시 시도해주세요.");
+      }
+    }
+    throw lastErr;
+  };
+
+  /** 동시 실행 수 제한 병렬 map (API rate limit 보호) */
+  const mapLimit = async <T, R>(
+    items: T[],
+    limit: number,
+    fn: (item: T) => Promise<R>
+  ): Promise<R[]> => {
+    const out: R[] = new Array(items.length);
+    let next = 0;
+    const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+      while (next < items.length) {
+        const idx = next++;
+        out[idx] = await fn(items[idx]);
+      }
+    });
+    await Promise.all(workers);
+    return out;
+  };
 
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
     async start(controller) {
-      try {
-        const completion = await anthropic.messages
-          .stream({
-            model: MODEL,
-            max_tokens: 8000,
-            system: systemContent,
-            messages: [{ role: "user", content: prompt }],
-          })
-          .finalMessage();
-
-        const raw = extractText(completion);
-        const cleaned = tryRepairJson(raw);
-
-        // 서버에서 valid JSON 파싱 시도
+      const send = (obj: unknown) =>
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+      // 긴 생성 동안 연결이 끊기지 않도록 주기적 keep-alive (클라이언트는 무시)
+      const ping = setInterval(() => {
         try {
-          JSON.parse(cleaned);
+          controller.enqueue(encoder.encode(`: ping\n\n`));
         } catch {
-          // 1차 실패 → 수정 요청
-          const repair = await anthropic.messages
-            .stream({
-              model: MODEL,
-              max_tokens: 8000,
-              system:
-                "다음 JSON 문자열에 문법 오류가 있습니다. 오류를 수정해서 valid JSON 만 반환하세요. 다른 텍스트·마크다운·코드블록 절대 추가하지 마세요. 반드시 '{' 로 시작해서 '}' 로 끝나야 함.",
-              messages: [{ role: "user", content: cleaned }],
-            })
-            .finalMessage();
-          const repaired = tryRepairJson(extractText(repair));
-          try {
-            JSON.parse(repaired);
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ chunk: repaired })}\n\n`)
-            );
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`)
-            );
-            controller.close();
-            return;
-          } catch {
-            // fall through — cleaned 그대로 (클라이언트가 에러 처리)
-          }
+          // 이미 닫힘
         }
+      }, 15000);
 
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ chunk: cleaned })}\n\n`)
+      try {
+        send({ progress: "전체 여행 동선을 설계하고 있어요" });
+
+        const skeleton = await callJson(skeletonPrompt, 8000, (v) =>
+          Array.isArray(v.days) && v.days.length >= totalDays
         );
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`)
-        );
-        controller.close();
+        const skeletonDays = (skeleton.days as Json[]).slice(0, totalDays);
+
+        let doneCount = 0;
+        send({ progress: `하루하루 상세 일정을 작성하고 있어요 (0/${totalDays})` });
+
+        const dayNumbers = Array.from({ length: totalDays }, (_, i) => i + 1);
+        const detailedDays = await mapLimit(dayNumbers, 8, async (n) => {
+          const day = await callJson(dayPrompt(n, skeletonDays), 12000, (v) =>
+            Array.isArray(v.schedule) && v.schedule.length > 0
+          );
+          day.day = n;
+          doneCount++;
+          send({ progress: `하루하루 상세 일정을 작성하고 있어요 (${doneCount}/${totalDays})` });
+          return day;
+        });
+
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { days: _skeletonDays, ...overview } = skeleton;
+        const itinerary = { ...overview, days: detailedDays };
+
+        send({ chunk: JSON.stringify(itinerary) });
+        send({ done: true });
       } catch (err) {
         const message = err instanceof Error ? err.message : "오류가 발생했습니다.";
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ error: message })}\n\n`)
-        );
+        send({ error: message });
+      } finally {
+        clearInterval(ping);
         controller.close();
       }
     },

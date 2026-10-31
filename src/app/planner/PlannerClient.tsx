@@ -75,6 +75,7 @@ function PlannerContent() {
   const [itinerary, setItinerary] = useState<Itinerary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [needsAuth, setNeedsAuth] = useState(false);
+  const [progress, setProgress] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const rawBuffer = useRef("");
@@ -119,6 +120,8 @@ function PlannerContent() {
   }, [medicalEnabled, medicalProcedure, destination]);
 
   // 회원가입 후 돌아왔을 때, 입력했던 여행 조건 복원 (1회성)
+  // sessionStorage는 서버 렌더링에 없으므로 마운트 후 effect에서 복원해야 함
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem(PLANNER_DRAFT_KEY);
@@ -138,8 +141,8 @@ function PlannerContent() {
     } catch {
       // sessionStorage 사용 불가 환경은 무시
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const toggleTheme = (id: string) => {
     setSelectedThemes((prev) =>
@@ -151,6 +154,7 @@ function PlannerContent() {
     setIsLoading(true);
     setError(null);
     setNeedsAuth(false);
+    setProgress(null);
     setItinerary(null);
     rawBuffer.current = "";
 
@@ -205,19 +209,26 @@ function PlannerContent() {
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
+      // 네트워크 조각이 줄 중간에서 끊겨도 안전하도록 버퍼링
+      let sseBuffer = "";
+      let finished = false;
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const text = decoder.decode(value);
-        const lines = text.split("\n");
+        sseBuffer += decoder.decode(value, { stream: true });
+        const lines = sseBuffer.split("\n");
+        sseBuffer = lines.pop() ?? "";
 
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
           const data = JSON.parse(line.slice(6));
           if (data.error) throw new Error(data.error);
-          if (data.done) {
+          if (data.progress) {
+            setProgress(data.progress);
+          } else if (data.done) {
+            finished = true;
             const jsonText = rawBuffer.current.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
             const parsed = JSON.parse(jsonText);
             setItinerary(parsed);
@@ -226,6 +237,9 @@ function PlannerContent() {
             rawBuffer.current += data.chunk;
           }
         }
+      }
+      if (!finished) {
+        throw new Error("응답이 중간에 끊겼어요. 다시 시도해주세요.");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "오류가 발생했습니다. 다시 시도해주세요.");
@@ -632,6 +646,9 @@ function PlannerContent() {
                   <p className="text-gray-500 mb-2">
                     <span className="font-semibold text-blue-600">{destination}</span> {days + 1}일 일정을 분석 중...
                   </p>
+                  {progress && (
+                    <p className="text-blue-600 text-sm font-medium mb-2">{progress}</p>
+                  )}
                   <p className="text-gray-400 text-sm">보통 1~2분 정도 소요됩니다. 화면을 닫지 말고 기다려주세요</p>
                   <div className="flex justify-center gap-2 mt-6">
                     {["숙소 검색 중", "맛집 탐색 중", "동선 최적화 중"].map((t, i) => (
