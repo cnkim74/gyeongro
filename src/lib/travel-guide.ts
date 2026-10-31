@@ -21,6 +21,8 @@ export interface GuideTopic {
   videos: GuideVideo[];
   /** 더 많은 영상 검색어 */
   youtubeQuery: string;
+  /** 함께 보여줄 쿠팡 파트너스 상품 카테고리 (관리자 '쿠팡 파트너스'에서 등록한 상품) */
+  shopCategories?: string[];
 }
 
 export const GUIDE_TOPICS: GuideTopic[] = [
@@ -68,6 +70,7 @@ export const GUIDE_TOPICS: GuideTopic[] = [
       { id: "_NUl4HX2Z7M", title: "해외여행 전 여행 경보 확인하세요! [해외안전여행정보]", channel: "YTN korean" },
     ],
     youtubeQuery: "해외여행 안전 수칙",
+    shopCategories: ["health"],
   },
   {
     id: "idp",
@@ -112,6 +115,7 @@ export const GUIDE_TOPICS: GuideTopic[] = [
       { id: "EofyyqvZeWE", title: "미국에서 렌트카 이용하기 전에 꼭 봐야하는 영상", channel: "카모아 CARMORE" },
     ],
     youtubeQuery: "해외 렌터카 이용 팁",
+    shopCategories: ["connectivity", "power"],
   },
   {
     id: "immigration",
@@ -135,6 +139,7 @@ export const GUIDE_TOPICS: GuideTopic[] = [
       { id: "vtdo5qixSgs", title: "\"입국심사\" 이것만 알면 무조건 통과! 여행영어 완벽정리", channel: "왕초보 영어학교" },
     ],
     youtubeQuery: "입국심사 여행영어",
+    shopCategories: ["connectivity"],
   },
   {
     id: "money",
@@ -178,5 +183,6 @@ export const GUIDE_TOPICS: GuideTopic[] = [
       { id: "8cbAJe9gHPM", title: "여행의 질을 올려줄 짐 싸는 노하우 / 캐리어만 1000번 싼 전직 승무원", channel: "줌블리에 Jumvelier" },
     ],
     youtubeQuery: "해외여행 짐싸기 꿀팁",
+    shopCategories: ["luggage", "comfort", "power", "health"],
   },
 ];

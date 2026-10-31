@@ -7,6 +7,8 @@ import { GUIDE_TOPICS } from "@/lib/travel-guide";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import { extractYouTube, youtubeThumb } from "@/lib/youtube";
 import GuideTools from "./GuideTools";
+import AffiliateStrip from "@/components/AffiliateStrip";
+import { getActiveProducts } from "@/lib/affiliate";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +39,7 @@ async function getCommunityVideos() {
 }
 
 export default async function TravelGuidePage() {
-  const community = await getCommunityVideos();
+  const [community, products] = await Promise.all([getCommunityVideos(), getActiveProducts()]);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -138,6 +140,14 @@ export default async function TravelGuidePage() {
                       유튜브에서 더 찾아보기 <ExternalLink className="w-4 h-4" />
                     </a>
                   </div>
+
+                  {/* 주제에 맞는 쿠팡 파트너스 준비물 */}
+                  {t.shopCategories && (
+                    <AffiliateStrip
+                      products={products.filter((p) => t.shopCategories!.includes(p.category)).slice(0, 10)}
+                      title={t.id === "packing" ? "짐싸기 추천 준비물" : "함께 챙기면 좋은 준비물"}
+                    />
+                  )}
                 </div>
               </section>
             ))}
