@@ -140,6 +140,31 @@ function PlannerContent() {
     };
   }, [medicalEnabled, medicalProcedure, destination]);
 
+  // 해외 축제(AI 큐레이션·관리자 게시)에서 넘어온 경우: 확인된 개최일로 출발일까지 채우기
+  useEffect(() => {
+    const gid = searchParams.get("gfest");
+    if (!gid || !gid.startsWith("db-")) return;
+    let cancelled = false;
+    fetch(`/api/global-festivals/${encodeURIComponent(gid)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((f: { name: string; period: string; country: string; city: string; destination: string; startDate?: string | null; endDate?: string | null } | null) => {
+        if (cancelled || !f) return;
+        const period = f.startDate
+          ? `${f.startDate}${f.endDate && f.endDate !== f.startDate ? ` ~ ${f.endDate}` : ""}`
+          : f.period;
+        setFestival({ title: f.name, period, place: `${f.country} ${f.city}` });
+        if (f.destination) setDestination(f.destination);
+        const today = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+        if (f.startDate && f.startDate > today) setStartDate(f.startDate);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+    // 최초 1회
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // 국내 축제에서 넘어온 경우: 축제 정보를 받아 목적지·출발일 미리 채우기
   useEffect(() => {
     const fid = searchParams.get("festival");
