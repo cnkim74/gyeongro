@@ -60,8 +60,9 @@ function formatCurrency(n: number) {
 function PlannerContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const initialDestination = searchParams.get("destination") ?? "";
+  const PLANNER_DRAFT_KEY = "pothos_planner_draft";
 
   const [step, setStep] = useState(1);
   const [destination, setDestination] = useState(initialDestination);
@@ -73,6 +74,7 @@ function PlannerContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [itinerary, setItinerary] = useState<Itinerary | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [needsAuth, setNeedsAuth] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const rawBuffer = useRef("");
@@ -116,6 +118,29 @@ function PlannerContent() {
     };
   }, [medicalEnabled, medicalProcedure, destination]);
 
+  // 회원가입 후 돌아왔을 때, 입력했던 여행 조건 복원 (1회성)
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(PLANNER_DRAFT_KEY);
+      if (!raw) return;
+      sessionStorage.removeItem(PLANNER_DRAFT_KEY);
+      const d = JSON.parse(raw);
+      if (d.destination) setDestination(d.destination);
+      if (typeof d.days === "number") setDays(d.days);
+      if (typeof d.people === "number") setPeople(d.people);
+      if (typeof d.budget === "number") setBudget(d.budget);
+      if (d.travelStyle) setTravelStyle(d.travelStyle);
+      if (Array.isArray(d.selectedThemes)) setSelectedThemes(d.selectedThemes);
+      if (typeof d.medicalEnabled === "boolean") setMedicalEnabled(d.medicalEnabled);
+      if (d.medicalProcedure) setMedicalProcedure(d.medicalProcedure);
+      if (d.medicalClinicId) setMedicalClinicId(d.medicalClinicId);
+      if (typeof d.medicalTreatmentDay === "number") setMedicalTreatmentDay(d.medicalTreatmentDay);
+    } catch {
+      // sessionStorage 사용 불가 환경은 무시
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const toggleTheme = (id: string) => {
     setSelectedThemes((prev) =>
       prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
@@ -125,6 +150,7 @@ function PlannerContent() {
   const generateItinerary = async () => {
     setIsLoading(true);
     setError(null);
+    setNeedsAuth(false);
     setItinerary(null);
     rawBuffer.current = "";
 
@@ -163,7 +189,8 @@ function PlannerContent() {
         try {
           const data = await res.json();
           if (res.status === 401 && data.needsLogin) {
-            msg = "AI 플래너는 로그인이 필요해요. 로그인 후 다시 시도해주세요.";
+            setNeedsAuth(true);
+            msg = "AI 여행 설계는 회원 전용이에요. 회원가입 후 바로 이용할 수 있어요.";
           } else if (res.status === 429 && data.quotaExceeded) {
             msg = `오늘의 무료 AI 플래너 한도(${data.limit}회)를 다 사용했어요. 내일 자정(KST)에 리셋됩니다.`;
           } else if (data.error) {
@@ -207,8 +234,37 @@ function PlannerContent() {
     }
   };
 
+  // 입력한 여행 조건을 저장해 두고 (회원가입 후 복원) 인증 페이지로 이동
+  const goAuth = (path: "/signup" | "/login") => {
+    try {
+      sessionStorage.setItem(
+        PLANNER_DRAFT_KEY,
+        JSON.stringify({
+          destination,
+          days,
+          people,
+          budget,
+          travelStyle,
+          selectedThemes,
+          medicalEnabled,
+          medicalProcedure,
+          medicalClinicId,
+          medicalTreatmentDay,
+        })
+      );
+    } catch {
+      // 저장 실패해도 이동은 진행
+    }
+    router.push(`${path}?callbackUrl=${encodeURIComponent("/planner")}`);
+  };
+
   const handleSubmit = async () => {
     if (!destination.trim()) return;
+    // AI 여행 설계는 회원 전용 — 비회원은 회원가입으로 유도 (입력값 보존)
+    if (status === "unauthenticated") {
+      goAuth("/signup");
+      return;
+    }
     setStep(2);
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
     await generateItinerary();
@@ -535,9 +591,25 @@ function PlannerContent() {
                 className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-lg flex items-center justify-center gap-2 hover:shadow-xl hover:shadow-blue-500/25 hover:-translate-y-0.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
               >
                 <Sparkles className="w-5 h-5" />
-                AI로 여행 일정 만들기
+                {status === "unauthenticated"
+                  ? "회원가입하고 AI 여행 설계 받기"
+                  : "AI로 여행 일정 만들기"}
                 <ArrowRight className="w-5 h-5" />
               </button>
+
+              {status === "unauthenticated" && (
+                <p className="text-center text-sm text-gray-400 mt-3">
+                  AI 여행 설계는 회원 전용이에요. 가입은 10초면 끝나요.
+                  <br />
+                  이미 회원이신가요?{" "}
+                  <button
+                    onClick={() => goAuth("/login")}
+                    className="text-blue-500 font-semibold hover:underline"
+                  >
+                    로그인
+                  </button>
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -575,15 +647,38 @@ function PlannerContent() {
                 </>
               ) : error ? (
                 <div className="max-w-md">
-                  <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-                  <h2 className="text-xl font-bold text-gray-900 mb-2">오류가 발생했어요</h2>
+                  {needsAuth ? (
+                    <Sparkles className="w-16 h-16 text-blue-400 mx-auto mb-4" />
+                  ) : (
+                    <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+                  )}
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">
+                    {needsAuth ? "회원가입이 필요해요" : "오류가 발생했어요"}
+                  </h2>
                   <p className="text-gray-500 text-sm mb-6">{error}</p>
-                  <button
-                    onClick={() => setStep(1)}
-                    className="px-6 py-3 rounded-full bg-blue-500 text-white font-semibold hover:bg-blue-600 transition-colors"
-                  >
-                    다시 시도하기
-                  </button>
+                  {needsAuth ? (
+                    <div className="flex items-center justify-center gap-3">
+                      <button
+                        onClick={() => goAuth("/signup")}
+                        className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold hover:shadow-lg transition-all"
+                      >
+                        회원가입하고 시작
+                      </button>
+                      <button
+                        onClick={() => goAuth("/login")}
+                        className="px-6 py-3 rounded-full border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+                      >
+                        로그인
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setStep(1)}
+                      className="px-6 py-3 rounded-full bg-blue-500 text-white font-semibold hover:bg-blue-600 transition-colors"
+                    >
+                      다시 시도하기
+                    </button>
+                  )}
                 </div>
               ) : null}
             </div>
