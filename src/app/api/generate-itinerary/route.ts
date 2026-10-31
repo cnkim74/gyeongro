@@ -8,11 +8,20 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 // Anthropic Claude 모델 — 사용자 본인 ANTHROPIC_API_KEY 크레딧으로 과금됨.
-// 비용/속도/품질 조절은 이 한 줄만 바꾸면 됩니다:
+// 1단계(전체 뼈대: 동선·장소 선정)는 품질이 가장 중요하므로 Opus,
+// 2단계(Day별 상세 작성)는 뼈대를 따라 채우는 작업이라 Sonnet으로 비용 절감.
 //   - "claude-haiku-5-5"  : 가장 저렴·빠름 (품질 보통)
-//   - "claude-sonnet-5-5" : 균형 (보통 1~2분 소요)
-//   - "claude-opus-5-5"   : 최고 품질 (현재 기본 — 가장 비싸고 느림, 함수 제한 300초)
-const MODEL = "claude-opus-5-5";
+//   - "claude-sonnet-5-5" : 균형
+//   - "claude-opus-5-5"   : 최고 품질 (가장 비쌈)
+const SKELETON_MODEL = "claude-opus-5-5";
+const DAY_MODEL = "claude-sonnet-5-5";
+
+// 비용 로그용 단가 (USD / 100만 토큰) — Anthropic 공식 단가 기준
+const PRICE_PER_MTOK: Record<string, { input: number; output: number }> = {
+  "claude-opus-5-5": { input: 4, output: 20 },
+  "claude-sonnet-5-5": { input: 2, output: 10 },
+  "claude-haiku-5-5": { input: 0.1, output: 0.5 },
+};
 
 /** Anthropic 응답에서 text 블록만 뽑아 합침 */
 function extractText(msg: Anthropic.Message): string {
@@ -206,7 +215,11 @@ ${placeRules}`;
   type Json = Record<string, unknown>;
 
   /** Claude 호출 → JSON 파싱. 잘림(max_tokens)·파싱 실패·검증 실패 시 1회 재시도 */
+  // 요청 1건의 누적 사용량 (Vercel 로그로 실측 비용 확인용)
+  const usageTotals = { calls: 0, input: 0, output: 0, usd: 0 };
+
   const callJson = async (
+    model: string,
     user: string,
     maxTokens: number,
     validate: (v: Json) => boolean
@@ -215,12 +228,20 @@ ${placeRules}`;
     for (let attempt = 0; attempt < 2; attempt++) {
       const msg = await anthropic.messages
         .stream({
-          model: MODEL,
+          model,
           max_tokens: maxTokens,
           system: systemContent,
           messages: [{ role: "user", content: user }],
         })
         .finalMessage();
+      const price = PRICE_PER_MTOK[model];
+      usageTotals.calls++;
+      usageTotals.input += msg.usage.input_tokens;
+      usageTotals.output += msg.usage.output_tokens;
+      if (price) {
+        usageTotals.usd +=
+          (msg.usage.input_tokens * price.input + msg.usage.output_tokens * price.output) / 1_000_000;
+      }
       if (msg.stop_reason === "max_tokens") {
         lastErr = new Error("AI 응답이 너무 길어 잘렸습니다. 다시 시도해주세요.");
         continue;
@@ -272,7 +293,7 @@ ${placeRules}`;
       try {
         send({ progress: "전체 여행 동선을 설계하고 있어요" });
 
-        const skeleton = await callJson(skeletonPrompt, 8000, (v) =>
+        const skeleton = await callJson(SKELETON_MODEL, skeletonPrompt, 8000, (v) =>
           Array.isArray(v.days) && v.days.length >= totalDays
         );
         const skeletonDays = (skeleton.days as Json[]).slice(0, totalDays);
@@ -282,7 +303,7 @@ ${placeRules}`;
 
         const dayNumbers = Array.from({ length: totalDays }, (_, i) => i + 1);
         const detailedDays = await mapLimit(dayNumbers, 8, async (n) => {
-          const day = await callJson(dayPrompt(n, skeletonDays), 12000, (v) =>
+          const day = await callJson(DAY_MODEL, dayPrompt(n, skeletonDays), 12000, (v) =>
             Array.isArray(v.schedule) && v.schedule.length > 0
           );
           day.day = n;
@@ -295,12 +316,21 @@ ${placeRules}`;
         const { days: _skeletonDays, ...overview } = skeleton;
         const itinerary = { ...overview, days: detailedDays };
 
-        send({ chunk: JSON.stringify(itinerary) });
+        // 결과를 작은 조각으로 나눠 전송 — 큰 한 줄이 네트워크에서 쪼개져도 안전하도록
+        const payload = JSON.stringify(itinerary);
+        for (let i = 0; i < payload.length; i += 1000) {
+          send({ chunk: payload.slice(i, i + 1000) });
+        }
         send({ done: true });
       } catch (err) {
         const message = err instanceof Error ? err.message : "오류가 발생했습니다.";
         send({ error: message });
       } finally {
+        console.log(
+          `[itinerary] days=${totalDays} calls=${usageTotals.calls} ` +
+            `input_tokens=${usageTotals.input} output_tokens=${usageTotals.output} ` +
+            `cost_usd=${usageTotals.usd.toFixed(4)} cost_krw≈${Math.round(usageTotals.usd * 1400)}`
+        );
         clearInterval(ping);
         controller.close();
       }
