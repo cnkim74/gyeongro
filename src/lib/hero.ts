@@ -28,12 +28,46 @@ export interface HeroConfig {
   checks: string[];
 }
 
-/** 기본 내장 오로라 영상 (public/hero) — 영상 배경인데 주소가 비어 있으면 이 영상 사용 */
-export const BUNDLED_HERO_VIDEO = {
-  desktop: "/hero/aurora-1080.mp4",
-  mobile: "/hero/aurora-mobile.mp4",
-  poster: "/hero/aurora-poster.jpg",
-  mobilePoster: "/hero/aurora-poster-mobile.jpg",
+/**
+ * 기본 내장 영상 (public/hero) — 영상 배경인데 주소가 비어 있으면 시간대에 맞춰 자동 선택
+ *   낮(06~18시): 공항에서 이륙하는 비행기 · 밤: 오로라
+ */
+export const BUNDLED_HERO_VIDEOS = {
+  day: {
+    desktop: "/hero/day-1080.mp4",
+    mobile: "/hero/day-mobile.mp4",
+    poster: "/hero/day-poster.jpg",
+    mobilePoster: "/hero/day-poster-mobile.jpg",
+  },
+  night: {
+    desktop: "/hero/aurora-1080.mp4",
+    mobile: "/hero/aurora-mobile.mp4",
+    poster: "/hero/aurora-poster.jpg",
+    mobilePoster: "/hero/aurora-poster-mobile.jpg",
+  },
+};
+
+export type DayPart = "day" | "night";
+
+/** 06~18시는 낮, 나머지는 밤 (서버·화면 공용) */
+export function dayPartOf(hour: number): DayPart {
+  return hour >= 6 && hour < 18 ? "day" : "night";
+}
+
+/** 월별 여행 시즌 문구 (히어로 상단 — 날짜에 맞춰 자동) */
+export const MONTH_SEASONS: Record<number, { text: string; emoji: string }> = {
+  1: { text: "겨울 눈꽃·온천 여행", emoji: "❄️" },
+  2: { text: "겨울 축제·스키 시즌", emoji: "⛷️" },
+  3: { text: "봄꽃 마중 여행", emoji: "🌱" },
+  4: { text: "벚꽃·봄 축제 시즌", emoji: "🌸" },
+  5: { text: "초록 여행·봄 축제", emoji: "🌿" },
+  6: { text: "초여름 바다 여행", emoji: "🌊" },
+  7: { text: "여름 휴가 시즌", emoji: "🏖️" },
+  8: { text: "한여름 휴가·물놀이", emoji: "🏝️" },
+  9: { text: "가을 여행의 시작", emoji: "🍂" },
+  10: { text: "단풍·가을 축제 시즌", emoji: "🍁" },
+  11: { text: "늦가을 단풍·축제", emoji: "🍁" },
+  12: { text: "연말·겨울 여행", emoji: "🎄" },
 };
 
 export const DEFAULT_HERO: HeroConfig = {
@@ -43,16 +77,16 @@ export const DEFAULT_HERO: HeroConfig = {
   stars: false,
   mediaUrl: "",
   posterUrl: "",
-  overlay: 30,
-  badge: "AI 여행 플래너 · 축제 · 현지 셰르파",
+  overlay: 35,
+  badge: "그럴듯한 답변이 아닌, 실제로 갈 수 있는 여행",
   titleLine1: "여행은,",
   titleHighlight: "길에서 시작됩니다",
-  subtitle: "가고 싶은 곳만 알려주세요. AI가 동선·맛집·숙소까지 한 번에 짜드려요.",
+  subtitle: "지도에서 확인한 실제 장소, 공식 축제·여행경보 데이터로 바로 떠날 수 있는 일정을 짜드려요.",
   primaryLabel: "AI로 여행 일정 만들기",
   primaryHref: "/planner",
   secondaryLabel: "축제 보러 가기",
   secondaryHref: "/festivals",
-  checks: ["무료로 시작", "동선 지도 제공", "축제 맞춤 일정", "현지 셰르파"],
+  checks: ["실제 장소 지도 확인", "동선·길찾기 연결", "공식 축제 데이터", "외교부 여행경보"],
 };
 
 export const AURORA_PRESETS: Record<AuroraPreset, { label: string; base: string; colors: [string, string, string, string] }> = {

@@ -3,8 +3,14 @@
 
 import Link from "next/link";
 import { ArrowRight, CheckCircle, Sparkles } from "lucide-react";
-import { AURORA_PRESETS, BUNDLED_HERO_VIDEO, type HeroConfig } from "@/lib/hero";
+import { AURORA_PRESETS, BUNDLED_HERO_VIDEOS, MONTH_SEASONS, dayPartOf, type HeroConfig } from "@/lib/hero";
 import HeroVideo from "./HeroVideo";
+
+/** 한국 시간 기준 현재 시·월 (서버 첫 화면용 — 화면에서는 방문자 기기 시간으로 다시 맞춤) */
+function kstNow() {
+  const d = new Date(Date.now() + 9 * 3600 * 1000);
+  return { hour: d.getUTCHours(), month: d.getUTCMonth() + 1 };
+}
 
 // 서버·클라이언트에서 같은 별 배치가 나오도록 고정 시드 난수
 function seeded(seed: number) {
@@ -40,6 +46,9 @@ export default function HeroSection({
   const [c1, c2, c3, c4] = preset.colors;
   // 영상: 주소가 비어 있으면 내장 오로라 영상 / 사진: 주소가 있어야 표시
   const isVideo = config.background === "video";
+  const { hour, month } = kstNow();
+  const part = dayPartOf(hour);
+  const season = MONTH_SEASONS[month];
   const hasMedia = isVideo || (config.background === "image" && !!config.mediaUrl);
   const showAurora = !hasMedia;
 
@@ -51,18 +60,15 @@ export default function HeroSection({
       {/* ── 배경: 영상 / 사진 ─────────────────── */}
       {isVideo &&
         (config.mediaUrl ? (
+          // 관리자가 올린 영상: 시간대와 관계없이 같은 영상
           <HeroVideo
-            desktopSrc={config.mediaUrl}
-            mobileSrc={config.mediaUrl}
-            desktopPoster={config.posterUrl || undefined}
+            day={{ desktop: config.mediaUrl, mobile: config.mediaUrl, poster: config.posterUrl || undefined }}
+            night={{ desktop: config.mediaUrl, mobile: config.mediaUrl, poster: config.posterUrl || undefined }}
+            initial={part}
           />
         ) : (
-          <HeroVideo
-            desktopSrc={BUNDLED_HERO_VIDEO.desktop}
-            mobileSrc={BUNDLED_HERO_VIDEO.mobile}
-            desktopPoster={BUNDLED_HERO_VIDEO.poster}
-            mobilePoster={BUNDLED_HERO_VIDEO.mobilePoster}
-          />
+          // 내장 영상: 낮엔 이륙하는 비행기, 밤엔 오로라
+          <HeroVideo day={BUNDLED_HERO_VIDEOS.day} night={BUNDLED_HERO_VIDEOS.night} initial={part} />
         ))}
       {hasMedia && config.background === "image" && (
         // eslint-disable-next-line @next/next/no-img-element
@@ -121,10 +127,23 @@ export default function HeroSection({
 
       {/* ── 내용 ──────────────────────────────── */}
       <div className={`relative z-10 w-full max-w-5xl mx-auto px-6 ${preview ? "py-16" : "py-28 sm:py-32"}`}>
+        {/* 날짜에 맞춘 이달의 여행 시즌 → 축제 */}
+        {season && !preview && (
+          <Link
+            href="/festivals"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 text-slate-900 text-sm sm:text-base font-semibold mb-3 shadow-md hover:bg-white transition-colors"
+          >
+            <span>{season.emoji}</span>
+            {month}월 · {season.text}
+            <span className="text-slate-500">이달의 축제 →</span>
+          </Link>
+        )}
         {config.badge && (
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/15 backdrop-blur-md text-white/90 text-sm sm:text-base font-medium mb-7">
-            <Sparkles className="w-4 h-4" style={{ color: c1 }} />
-            {config.badge}
+          <div className="flex">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/15 backdrop-blur-md text-white/90 text-sm sm:text-base font-medium mb-7">
+              <Sparkles className="w-4 h-4" style={{ color: c1 }} />
+              {config.badge}
+            </div>
           </div>
         )}
 
