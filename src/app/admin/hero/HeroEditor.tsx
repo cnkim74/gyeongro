@@ -8,7 +8,7 @@ import HeroSection from "@/components/HeroSection";
 import { AURORA_PRESETS, DEFAULT_HERO, type HeroConfig, type AuroraPreset, type HeroBackground } from "@/lib/hero";
 
 const BG_OPTIONS: { id: HeroBackground; label: string; desc: string }[] = [
-  { id: "video", label: "🎬 영상", desc: "기본: 시간대별 자동(낮 이륙·밤 오로라) · 직접 올리기 MP4·WebM 50MB 이하" },
+  { id: "video", label: "🎬 영상", desc: "여러 영상을 올리면 방문할 때마다 랜덤 재생 (기본: 오로라·공항 이륙)" },
   { id: "aurora", label: "🌌 오로라 애니메이션", desc: "움직이는 오로라 + 반짝이는 별 (영상 없이 가벼움)" },
   { id: "image", label: "🖼️ 사진", desc: "JPG·PNG·WebP" },
 ];
@@ -18,6 +18,7 @@ export default function HeroEditor({ initial }: { initial: HeroConfig }) {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState<"media" | "poster" | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [newUrl, setNewUrl] = useState("");
 
   const set = <K extends keyof HeroConfig>(k: K, v: HeroConfig[K]) => setC((p) => ({ ...p, [k]: v }));
 
@@ -42,7 +43,9 @@ export default function HeroEditor({ initial }: { initial: HeroConfig }) {
         body: fd,
       });
       if (!up.ok) throw new Error(`업로드 실패 (${up.status})`);
-      if (target === "media") set("mediaUrl", j.publicUrl);
+      if (target === "media" && c.background === "video") {
+        setC((p) => ({ ...p, videos: [...p.videos, { url: j.publicUrl, poster: "" }].slice(0, 10) }));
+      } else if (target === "media") set("mediaUrl", j.publicUrl);
       else set("posterUrl", j.publicUrl);
       setMsg({ ok: true, text: "업로드 완료! 아래 '저장하기'를 눌러야 메인에 반영돼요." });
     } catch (e) {
@@ -134,54 +137,100 @@ export default function HeroEditor({ initial }: { initial: HeroConfig }) {
             </div>
           )}
 
-          {c.background !== "aurora" && (
+          {c.background === "video" && (
             <div className="space-y-3">
-              <span className={label}>{c.background === "video" ? "영상" : "사진"}</span>
+              <span className={label}>영상 목록 — 방문할 때마다 랜덤 재생</span>
+              <label className="flex items-start gap-2 p-3 rounded-xl bg-blue-50 text-[15px] text-gray-800 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={c.includeBundled}
+                  onChange={(e) => set("includeBundled", e.target.checked)}
+                />
+                <span>
+                  <b>Pothos 기본 영상 포함</b>
+                  <span className="block text-sm text-gray-500">오로라 · 공항 이륙 (휴대폰용 세로 영상 포함)</span>
+                </span>
+              </label>
+
+              {c.videos.length > 0 && (
+                <ul className="space-y-2">
+                  {c.videos.map((v, i) => (
+                    <li key={v.url + i} className="flex items-center gap-2 p-2 rounded-xl border border-gray-200">
+                      <video src={v.url} muted playsInline preload="metadata" className="w-20 h-12 rounded-lg object-cover bg-black shrink-0" />
+                      <span className="flex-1 min-w-0 text-xs text-gray-500 truncate">{v.url.split("/").pop()}</span>
+                      <button
+                        type="button"
+                        onClick={() => setC((p) => ({ ...p, videos: p.videos.filter((_, j) => j !== i) }))}
+                        className="shrink-0 px-3 py-1.5 rounded-lg text-sm font-semibold text-rose-600 hover:bg-rose-50"
+                      >
+                        삭제
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <label className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-gray-300 text-[15px] font-semibold text-gray-700 cursor-pointer hover:bg-gray-50">
+                {uploading === "media" ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+                {uploading === "media" ? "올리는 중…" : "영상 추가하기 (MP4·WebM 50MB 이하)"}
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="video/mp4,video/webm"
+                  onChange={(e) => e.target.files?.[0] && upload(e.target.files[0], "media")}
+                />
+              </label>
+              <div className="flex gap-2">
+                <input
+                  className={input}
+                  placeholder="또는 영상 주소로 추가 (https://...mp4)"
+                  value={newUrl}
+                  onChange={(e) => setNewUrl(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const u = newUrl.trim();
+                    if (!/^https:\/\//.test(u)) return;
+                    setC((p) => ({ ...p, videos: [...p.videos, { url: u, poster: "" }].slice(0, 10) }));
+                    setNewUrl("");
+                  }}
+                  className="shrink-0 px-4 rounded-xl bg-slate-900 text-white text-sm font-bold"
+                >
+                  추가
+                </button>
+              </div>
+              {!c.includeBundled && c.videos.length === 0 && (
+                <p className="text-sm text-amber-700">영상이 없으면 Pothos 기본 영상이 재생돼요.</p>
+              )}
+            </div>
+          )}
+
+          {c.background === "image" && (
+            <div className="space-y-3">
+              <span className={label}>사진</span>
               <label className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-gray-300 text-[15px] font-semibold text-gray-700 cursor-pointer hover:bg-gray-50">
                 {uploading === "media" ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
                 {uploading === "media" ? "올리는 중…" : "파일 올리기"}
                 <input
                   type="file"
                   className="hidden"
-                  accept={c.background === "video" ? "video/mp4,video/webm" : "image/jpeg,image/png,image/webp"}
+                  accept="image/jpeg,image/png,image/webp"
                   onChange={(e) => e.target.files?.[0] && upload(e.target.files[0], "media")}
                 />
               </label>
               <input
                 className={input}
-                placeholder={c.background === "video" ? "비워두면 Pothos 기본 영상 (낮: 이륙하는 비행기 · 밤: 오로라)" : "또는 주소 붙여넣기 (https://...)"}
+                placeholder="또는 주소 붙여넣기 (https://...)"
                 value={c.mediaUrl}
                 onChange={(e) => set("mediaUrl", e.target.value)}
               />
-              {c.background === "video" && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    set("mediaUrl", "");
-                    set("posterUrl", "");
-                  }}
-                  className={`w-full py-2.5 rounded-xl text-sm font-semibold border ${
-                    c.mediaUrl ? "border-gray-200 text-gray-700 hover:bg-gray-50" : "border-blue-500 bg-blue-50 text-blue-700"
-                  }`}
-                >
-                  {c.mediaUrl ? "Pothos 기본 영상(낮·밤 자동)으로 되돌리기" : "✓ Pothos 기본 영상 사용 중 — 낮엔 이륙, 밤엔 오로라"}
-                </button>
-              )}
-              {c.background === "video" && (
-                <>
-                  <label className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 cursor-pointer hover:bg-gray-50">
-                    {uploading === "poster" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                    영상 로딩 전 사진 (선택)
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/jpeg,image/png,image/webp"
-                      onChange={(e) => e.target.files?.[0] && upload(e.target.files[0], "poster")}
-                    />
-                  </label>
-                  {c.posterUrl && <p className="text-xs text-gray-500 break-all">{c.posterUrl}</p>}
-                </>
-              )}
+            </div>
+          )}
+
+          {c.background !== "aurora" && (
+            <div className="space-y-3">
               <div>
                 <span className="block text-sm font-semibold text-gray-700 mb-1">어둡게 덮기 {c.overlay}% (글자가 잘 보이게)</span>
                 <input type="range" min={0} max={80} value={c.overlay} onChange={(e) => set("overlay", Number(e.target.value))} className="w-full" />

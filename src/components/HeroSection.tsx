@@ -3,13 +3,17 @@
 
 import Link from "next/link";
 import { ArrowRight, CheckCircle, Sparkles } from "lucide-react";
-import { AURORA_PRESETS, BUNDLED_HERO_VIDEOS, MONTH_SEASONS, dayPartOf, type HeroConfig } from "@/lib/hero";
+import { AURORA_PRESETS, MONTH_SEASONS, heroVideoOptions, type HeroConfig } from "@/lib/hero";
 import HeroVideo from "./HeroVideo";
 
-/** 한국 시간 기준 현재 시·월 (서버 첫 화면용 — 화면에서는 방문자 기기 시간으로 다시 맞춤) */
-function kstNow() {
-  const d = new Date(Date.now() + 9 * 3600 * 1000);
-  return { hour: d.getUTCHours(), month: d.getUTCMonth() + 1 };
+/** 한국 시간 기준 이번 달 (월별 여행 시즌 칩) */
+function kstMonth(): number {
+  return new Date(Date.now() + 9 * 3600 * 1000).getUTCMonth() + 1;
+}
+
+/** 이번 방문에 재생할 영상 번호 — 메인 페이지는 요청마다 새로 그려지므로 방문할 때마다 랜덤 */
+function pickIndex(n: number): number {
+  return Math.floor(Math.random() * n);
 }
 
 // 서버·클라이언트에서 같은 별 배치가 나오도록 고정 시드 난수
@@ -46,9 +50,10 @@ export default function HeroSection({
   const [c1, c2, c3, c4] = preset.colors;
   // 영상: 주소가 비어 있으면 내장 오로라 영상 / 사진: 주소가 있어야 표시
   const isVideo = config.background === "video";
-  const { hour, month } = kstNow();
-  const part = dayPartOf(hour);
+  const month = kstMonth();
   const season = MONTH_SEASONS[month];
+  const videoOptions = heroVideoOptions(config);
+  const video = videoOptions[preview ? 0 : pickIndex(videoOptions.length)];
   const hasMedia = isVideo || (config.background === "image" && !!config.mediaUrl);
   const showAurora = !hasMedia;
 
@@ -58,18 +63,8 @@ export default function HeroSection({
       style={{ background: preset.base }}
     >
       {/* ── 배경: 영상 / 사진 ─────────────────── */}
-      {isVideo &&
-        (config.mediaUrl ? (
-          // 관리자가 올린 영상: 시간대와 관계없이 같은 영상
-          <HeroVideo
-            day={{ desktop: config.mediaUrl, mobile: config.mediaUrl, poster: config.posterUrl || undefined }}
-            night={{ desktop: config.mediaUrl, mobile: config.mediaUrl, poster: config.posterUrl || undefined }}
-            initial={part}
-          />
-        ) : (
-          // 내장 영상: 낮엔 이륙하는 비행기, 밤엔 오로라
-          <HeroVideo day={BUNDLED_HERO_VIDEOS.day} night={BUNDLED_HERO_VIDEOS.night} initial={part} />
-        ))}
+      {/* 영상: 기본 영상 + 관리자가 올린 영상 중 랜덤 한 편 */}
+      {isVideo && <HeroVideo source={video} />}
       {hasMedia && config.background === "image" && (
         // eslint-disable-next-line @next/next/no-img-element
         <img className="absolute inset-0 w-full h-full object-cover" src={config.mediaUrl} alt="" />
