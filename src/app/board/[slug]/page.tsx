@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { extractYouTube, youtubeThumb } from "@/lib/youtube";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
@@ -20,6 +21,7 @@ export const dynamic = "force-dynamic";
 interface PostRow {
   id: string;
   title: string;
+  content?: string;
   view_count: number;
   is_pinned: boolean;
   created_at: string;
@@ -56,7 +58,7 @@ export default async function BoardPostsPage({
 
   const { data: posts, count } = await supabase
     .from("posts")
-    .select("id, title, view_count, is_pinned, created_at, user_id", {
+    .select("id, title, content, view_count, is_pinned, created_at, user_id", {
       count: "exact",
     })
     .eq("board_id", board.id)
@@ -146,6 +148,48 @@ export default async function BoardPostsPage({
           {!posts || posts.length === 0 ? (
             <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center">
               <p className="text-gray-500">아직 게시글이 없어요. 첫 글을 작성해보세요!</p>
+            </div>
+          ) : board.slug === "youtube" ? (
+            // 여행 유튜브 게시판 — 썸네일 카드 그리드
+            <div className="grid sm:grid-cols-2 gap-5">
+              {(posts as PostRow[]).map((post) => {
+                const author = usersMap[post.user_id];
+                const yt = extractYouTube(post.content ?? "");
+                const vid = yt.videoIds[0];
+                return (
+                  <Link
+                    key={post.id}
+                    href={`/board/${board.slug}/${post.id}`}
+                    className="group rounded-3xl overflow-hidden border border-red-100 bg-gradient-to-br from-white to-red-50 shadow-[0_10px_30px_-16px_rgba(220,38,38,0.45)] hover:-translate-y-0.5 transition-all"
+                  >
+                    <div className="relative aspect-video bg-gradient-to-br from-red-500 to-rose-600">
+                      {vid ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={youtubeThumb(vid)} alt={post.title} className="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-white text-4xl">▶</div>
+                      )}
+                      <span className="absolute inset-0 flex items-center justify-center">
+                        <span className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform text-white text-xl pl-1">
+                          ▶
+                        </span>
+                      </span>
+                      {!vid && yt.channels.length > 0 && (
+                        <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/90 text-red-600 text-xs font-bold">채널</span>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <h3 className="text-base font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-red-600">
+                        {post.title}
+                      </h3>
+                      <p className="mt-1.5 text-sm text-gray-500 inline-flex items-center gap-1">
+                        {author?.name ?? "익명"}
+                        {author?.role && <RoleBadge role={author.role} size="xs" />}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           ) : (
             <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden">

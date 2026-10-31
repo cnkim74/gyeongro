@@ -5,6 +5,7 @@ export const zh: Record<string, string> = {
   // Header
   "nav.planner": "规划师",
   "nav.festivals": "节庆",
+  "nav.guide": "出行准备",
   "nav.themes": "主题",
   "nav.sherpa": "夏尔巴",
   "nav.medical": "医疗",

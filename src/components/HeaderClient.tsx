@@ -76,6 +76,7 @@ export default function HeaderClient({ user, locale, labels }: HeaderClientProps
             {[
               { label: t("nav.planner"), href: "/planner" },
               { label: t("nav.festivals"), href: "/festivals" },
+              { label: t("nav.guide"), href: "/travel-guide" },
               { label: t("nav.themes"), href: "/themes" },
               { label: t("nav.sherpa"), href: "/sherpa" },
               { label: t("nav.medical"), href: "/medical" },
@@ -151,6 +152,7 @@ export default function HeaderClient({ user, locale, labels }: HeaderClientProps
             {[
               { label: t("nav.planner"), href: "/planner" },
               { label: t("nav.festivals"), href: "/festivals" },
+              { label: t("nav.guide"), href: "/travel-guide" },
               { label: t("nav.themes"), href: "/themes" },
               { label: t("nav.sherpa"), href: "/sherpa" },
               { label: t("nav.medical"), href: "/medical" },

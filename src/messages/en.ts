@@ -5,6 +5,7 @@ export const en: Record<string, string> = {
   // Header
   "nav.planner": "Planner",
   "nav.festivals": "Festivals",
+  "nav.guide": "Travel Prep",
   "nav.themes": "Themes",
   "nav.sherpa": "Sherpa",
   "nav.medical": "Medical",
