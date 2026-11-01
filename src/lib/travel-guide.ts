@@ -232,6 +232,7 @@ export const GUIDE_TOPICS: GuideTopic[] = [
 
 /**
  * 인기 여행 크리에이터 추천 영상 (유튜브 공개 영상 임베드 — 채널로 바로 연결)
+ * 영상 제목 옆 괄호는 다른 채널에 올라온 영상일 때 그 채널 이름
  * oEmbed 로 각 채널의 실제 영상인지 확인한 것만 사용
  */
 export const FEATURED_CREATORS: {
@@ -278,6 +279,46 @@ export const FEATURED_CREATORS: {
       { id: "Tbf9ZEnb6us", title: "노홍철이 포르투갈에서 이민까지 고민한 이유" },
       { id: "p_sndBe7fAY", title: "노홍철이 찾아간 한국인 90%가 모르는 그리스 비밀의 섬" },
       { id: "w0a_r0W1dDI", title: "죽기 전에 꼭 타야 하는 스위스 특급열차 '1등석' 티켓팅 성공한 노홍철" },
+    ],
+  },
+  {
+    name: "꾸준 kkujun",
+    url: "https://www.youtube.com/@kkujun",
+    desc: "가성비 여행지·물가 탐방",
+    videos: [
+      { id: "h6om6HYmFQo", title: "한국 없으면 망한다던 사이판, 직접 가봤더니…" },
+      { id: "7eq-fZPPUkY", title: "숙박 포함! 하루 3만원으로 태국 한 달 살기 (풀버전)" },
+      { id: "Sg0bm3LBqeo", title: "하루 3만원으로 여행 가능한 도시 「나하」 물가 탐방" },
+    ],
+  },
+  {
+    name: "여행가 제이 [Traveler JAY]",
+    url: "https://www.youtube.com/@Jayworldtraveler",
+    desc: "발길 닿는 대로 떠나는 방랑 여행",
+    videos: [
+      { id: "3EDpraKxL2I", title: "신형 테슬라에서 먹고 자고 떠돌아다니는 방랑생활" },
+      { id: "t9u7ywkRPSA", title: "충격의 192인실, 필리핀 배 꼴등칸에서 1박 - 필리핀7" },
+      { id: "DIHS5uxKqWk", title: "(내비x 지도x) 서울에서 국도만 타고 남쪽으로 달리면 어디가 나올까?" },
+    ],
+  },
+  {
+    name: "김계란 여행편",
+    url: "https://www.youtube.com/@%ED%94%BC%EC%A7%80%EC%BB%AC%EA%B0%A4%EB%9F%AC%EB%A6%AC",
+    desc: "피지컬갤러리 김계란과 친구들의 우정 여행",
+    videos: [
+      { id: "ntV5JTGFPV4", title: "발리 우정여행 with 김계란, 쵸단 (빠니보틀 채널)" },
+      { id: "cliGKVSwJ2g", title: "우정 여행 with 쵸단, 빠니보틀, 공혁준 (피지컬갤러리 채널)" },
+      { id: "uqNxRwVilNE", title: "빠니보틀과 김계란, 일본 원정 여행 (공혁준 채널)" },
+    ],
+  },
+  {
+    name: "아재여행 Ajae Travel",
+    url: "https://www.youtube.com/@ajaetravel",
+    desc: "혼자 떠나는 느긋한 자유여행 몰아보기",
+    videos: [
+      { id: "ukGq6gSV4n0", title: "아재 혼자 9박 10일 일본 규슈 렌터카 여행 몰아보기" },
+      { id: "vKFLpcNJJcg", title: "유럽에서 가장 가고 싶었던 곳, 할슈타트 - 오스트리아" },
+      { id: "DPkUpdtkgvk", title: "아재 혼자 8박 10일 포르투갈 여행 몰아보기" },
     ],
   },
 ];
