@@ -29,6 +29,7 @@ import {
   isKoreanCity,
 } from "@/lib/search-links";
 import TravelAdvisory from "@/components/TravelAdvisory";
+import ItineraryPdfButton from "@/components/ItineraryPdfButton";
 
 export interface TransportLeg {
   mode?: string;
@@ -148,9 +149,12 @@ export default function ItineraryView({
     <>
       {/* ── 상단 요약 카드 ───────────────────────────── */}
       <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-6 sm:p-8 text-white mb-6">
-        <div className="inline-flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1 mb-4">
-          <MapPin className="w-4 h-4" />
-          <span className="text-sm font-semibold">{destination}</span>
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+          <div className="inline-flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1">
+            <MapPin className="w-4 h-4" />
+            <span className="text-sm font-semibold">{destination}</span>
+          </div>
+          {!generating && <ItineraryPdfButton itinerary={{ ...itinerary, days }} destination={destination} />}
         </div>
         <h1 className="text-[26px] sm:text-3xl font-extrabold leading-snug mb-3">{itinerary.title}</h1>
         <p className="text-base text-blue-50 leading-relaxed mb-5">{itinerary.summary}</p>
