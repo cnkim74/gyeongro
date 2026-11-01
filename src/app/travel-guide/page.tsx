@@ -6,7 +6,7 @@ import YouTubeEmbed from "@/components/YouTubeEmbed";
 import { CheckCircle, ExternalLink, SquarePlay as Youtube, PenSquare, Compass } from "lucide-react";
 import { GUIDE_TOPICS, OWNER_CHANNEL, FEATURED_CREATORS } from "@/lib/travel-guide";
 import { getSupabaseServiceClient } from "@/lib/supabase";
-import { extractYouTube, youtubeThumb } from "@/lib/youtube";
+import { extractYouTube, youtubeThumb, youtubeWatchUrl } from "@/lib/youtube";
 import GuideTools from "./GuideTools";
 import AffiliateStrip from "@/components/AffiliateStrip";
 import { getActiveProducts } from "@/lib/affiliate";
@@ -41,6 +41,11 @@ async function getCommunityVideos() {
 
 export default async function TravelGuidePage() {
   const [community, products] = await Promise.all([getCommunityVideos(), getActiveProducts()]);
+  // 인기 여행 유튜버 영상 — 채널이 골고루 섞이도록 번갈아 배치
+  const maxLen = Math.max(...FEATURED_CREATORS.map((c) => c.videos.length));
+  const creatorVideos = Array.from({ length: maxLen }, (_, i) =>
+    FEATURED_CREATORS.flatMap((c) => (c.videos[i] ? [{ ...c.videos[i], channel: c.name }] : []))
+  ).flat();
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -159,42 +164,6 @@ export default async function TravelGuidePage() {
             ))}
           </div>
 
-          {/* 인기 여행 크리에이터 */}
-          <section className="mt-14">
-            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2 mb-1">
-              <Youtube className="w-6 h-6 text-red-600" /> 인기 여행 유튜버 추천 영상
-            </h2>
-            <p className="text-[15px] text-gray-600 mb-6">여행 가기 전 설렘 충전! 많은 여행자가 즐겨 보는 채널의 영상이에요</p>
-            <div className="space-y-8">
-              {FEATURED_CREATORS.map((c) => (
-                <div key={c.url} className="bg-white rounded-3xl border border-gray-100 p-5 sm:p-6">
-                  <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                    <div className="min-w-0">
-                      <h3 className="text-lg sm:text-xl font-bold text-gray-900">{c.name}</h3>
-                      <p className="text-sm text-gray-500">{c.desc}</p>
-                    </div>
-                    <a
-                      href={c.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl border border-red-200 text-red-600 text-sm font-bold hover:bg-red-50"
-                    >
-                      <Youtube className="w-4 h-4" /> 채널 보기
-                    </a>
-                  </div>
-                  <div className="grid sm:grid-cols-3 gap-4">
-                    {c.videos.map((v) => (
-                      <div key={v.id} className="min-w-0">
-                        <YouTubeEmbed id={v.id} title={v.title} />
-                        <p className="mt-2 text-[15px] font-semibold text-gray-900 leading-snug line-clamp-2">{v.title}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
           <div className="mt-12">
             <FirstPostEventBanner href="/board/youtube/new" cta="내 유튜브 공유하기" />
           </div>
@@ -206,7 +175,7 @@ export default async function TravelGuidePage() {
                 <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                   <Youtube className="w-7 h-7 text-red-600" /> 여행자들의 유튜브
                 </h2>
-                <p className="text-[15px] text-gray-600 mt-1">커뮤니티에 공유된 여행 영상과 채널이에요</p>
+                <p className="text-[15px] text-gray-600 mt-1">커뮤니티에 공유된 영상과 인기 여행 유튜버들의 영상이에요</p>
               </div>
               <Link
                 href="/board/youtube/new"
@@ -215,26 +184,32 @@ export default async function TravelGuidePage() {
                 <PenSquare className="w-4 h-4" /> 내 유튜브 공유하기
               </Link>
             </div>
-            {community.length === 0 ? (
-              <p className="text-[15px] text-gray-600">
+            {community.length === 0 && (
+              <p className="text-[15px] text-gray-600 mb-4">
                 아직 공유된 영상이 없어요. 첫 번째로 내 여행 영상이나 채널을 소개해 주세요!
               </p>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {community.map((c) => (
-                  <Link key={c.id} href={`/board/youtube/${c.id}`} className="group">
-                    <div className="relative aspect-video rounded-2xl overflow-hidden bg-black">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={youtubeThumb(c.videoId!)} alt={c.title} className="w-full h-full object-cover" loading="lazy" />
-                      <span className="absolute inset-0 flex items-center justify-center">
-                        <span className="w-11 h-11 rounded-full bg-red-600/90 text-white flex items-center justify-center pl-0.5">▶</span>
-                      </span>
-                    </div>
-                    <p className="mt-2 text-[15px] font-semibold text-gray-900 line-clamp-2 group-hover:text-red-600">{c.title}</p>
-                  </Link>
-                ))}
-              </div>
             )}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              {community.map((c) => (
+                <Link key={c.id} href={`/board/youtube/${c.id}`} className="group min-w-0">
+                  <VideoThumb id={c.videoId!} title={c.title} />
+                  <p className="mt-2 text-[15px] font-semibold text-gray-900 line-clamp-2 group-hover:text-red-600">{c.title}</p>
+                </Link>
+              ))}
+              {creatorVideos.map((v) => (
+                <a
+                  key={v.id}
+                  href={youtubeWatchUrl(v.id)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group min-w-0"
+                >
+                  <VideoThumb id={v.id} title={v.title} />
+                  <p className="mt-2 text-[15px] font-semibold text-gray-900 line-clamp-2 group-hover:text-red-600">{v.title}</p>
+                  <p className="text-xs text-gray-500 truncate">{v.channel}</p>
+                </a>
+              ))}
+            </div>
             <Link href="/board/youtube" className="mt-5 inline-block text-[15px] font-semibold text-red-600">
               여행 유튜브 게시판 전체 보기 →
             </Link>
@@ -246,6 +221,18 @@ export default async function TravelGuidePage() {
         </div>
       </main>
       <Footer />
+    </div>
+  );
+}
+
+function VideoThumb({ id, title }: { id: string; title: string }) {
+  return (
+    <div className="relative aspect-video rounded-2xl overflow-hidden bg-black">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={youtubeThumb(id)} alt={title} className="w-full h-full object-cover" loading="lazy" />
+      <span className="absolute inset-0 flex items-center justify-center">
+        <span className="w-11 h-11 rounded-full bg-red-600/90 text-white flex items-center justify-center pl-0.5">▶</span>
+      </span>
     </div>
   );
 }
