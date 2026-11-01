@@ -82,6 +82,7 @@ export default function HeaderClient({ user, locale, labels }: HeaderClientProps
               { label: t("nav.medical"), href: "/medical" },
               { label: t("nav.partners"), href: "/partners" },
               { label: t("nav.stories"), href: "/stories" },
+              { label: t("nav.blog"), href: "/blog" },
               { label: t("nav.community"), href: "/board" },
             ].map((item) => (
               <a
@@ -158,6 +159,7 @@ export default function HeaderClient({ user, locale, labels }: HeaderClientProps
               { label: t("nav.medical"), href: "/medical" },
               { label: t("nav.partners"), href: "/partners" },
               { label: t("nav.stories"), href: "/stories" },
+              { label: t("nav.blog"), href: "/blog" },
               { label: t("nav.community"), href: "/board" },
             ].map((item) => (
               <a

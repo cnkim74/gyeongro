@@ -11,6 +11,7 @@ export const zh: Record<string, string> = {
   "nav.medical": "医疗",
   "nav.partners": "旅伴",
   "nav.stories": "故事",
+  "nav.blog": "博客",
   "nav.community": "社区",
   "nav.flights": "机票",
   "nav.hotels": "酒店",

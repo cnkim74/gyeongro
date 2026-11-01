@@ -11,6 +11,7 @@ export const ja: Record<string, string> = {
   "nav.medical": "メディカル",
   "nav.partners": "旅仲間",
   "nav.stories": "ストーリー",
+  "nav.blog": "ブログ",
   "nav.community": "コミュニティ",
   "nav.flights": "航空券",
   "nav.hotels": "ホテル",

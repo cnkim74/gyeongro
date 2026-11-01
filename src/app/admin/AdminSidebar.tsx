@@ -18,11 +18,13 @@ import {
   Sparkles,
   Globe,
   Coins,
+  Newspaper,
 } from "lucide-react";
 
 const MENU = [
   { href: "/admin", label: "대시보드", icon: LayoutDashboard },
   { href: "/admin/hero", label: "메인 히어로", icon: Sparkles },
+  { href: "/admin/blog", label: "블로그 관리", icon: Newspaper },
   { href: "/admin/global-festivals", label: "해외 축제 큐레이션", icon: Globe },
   { href: "/admin/ai-usage", label: "AI 사용량·비용", icon: Coins },
   { href: "/admin/users", label: "사용자 관리", icon: Users },
