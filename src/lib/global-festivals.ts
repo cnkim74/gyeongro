@@ -100,7 +100,27 @@ export const GLOBAL_FESTIVALS: GlobalFestival[] = [
   { id: "dubai-shopping", name: "두바이 쇼핑 페스티벌", nameEn: "Dubai Shopping Festival", country: "아랍에미리트", flag: "🇦🇪", city: "두바이", destination: "두바이", months: [12, 1], period: "매년 12월 중순 ~ 1월", summary: "도시 전체 할인 행사와 불꽃놀이, 드론쇼가 이어지는 두바이 대표 겨울 축제.", emoji: "🛍️" },
 ];
 
+/**
+ * 해외 대표 박람회·전시 (정기 개최) — 여행과 함께 찾는 큰 행사
+ * 개최일은 해마다 달라지므로 '대표 시기'만 표기 (정확한 날짜는 공식 사이트 확인)
+ */
+export const GLOBAL_EXPOS: GlobalFestival[] = [
+  { id: "expo-ces", name: "CES 국제전자제품박람회", nameEn: "CES", country: "미국", flag: "🇺🇸", city: "라스베이거스", destination: "라스베이거스", months: [1], period: "매년 1월 초 (약 4일)", summary: "세계 IT·가전 기업이 신제품과 미래 기술을 선보이는 세계 최대 전자·IT 전시회.", emoji: "📱" },
+  { id: "expo-mwc", name: "MWC 바르셀로나", nameEn: "MWC Barcelona", country: "스페인", flag: "🇪🇸", city: "바르셀로나", destination: "바르셀로나", months: [2, 3], period: "매년 2월 말 ~ 3월 초 (약 4일)", summary: "통신·모바일 업계가 한자리에 모이는 세계 최대 모바일 전시회.", emoji: "📡" },
+  { id: "expo-itb", name: "ITB 베를린", nameEn: "ITB Berlin", country: "독일", flag: "🇩🇪", city: "베를린", destination: "베를린", months: [3], period: "매년 3월 초 (약 3일)", summary: "전 세계 관광청·항공사·여행사가 참가하는 세계 최대 규모의 관광 박람회.", emoji: "✈️" },
+  { id: "expo-salone", name: "밀라노 디자인 위크 (살로네 델 모빌레)", nameEn: "Salone del Mobile.Milano", country: "이탈리아", flag: "🇮🇹", city: "밀라노", destination: "밀라노", months: [4], period: "매년 4월 (약 1주)", summary: "세계 최대 가구·디자인 박람회. 기간 중 밀라노 시내 곳곳에서 디자인 전시가 열려요.", emoji: "🛋️" },
+  { id: "expo-canton", name: "캔톤페어 (중국수출입상품교역회)", nameEn: "Canton Fair", country: "중국", flag: "🇨🇳", city: "광저우", destination: "광저우", months: [4, 5, 10, 11], period: "매년 봄(4~5월)·가을(10~11월) 두 차례", summary: "수많은 업체가 참가하는 중국 최대 규모의 종합 무역 박람회.", emoji: "📦" },
+  { id: "expo-art-basel", name: "아트 바젤", nameEn: "Art Basel", country: "스위스", flag: "🇨🇭", city: "바젤", destination: "바젤", months: [6], period: "매년 6월 (약 1주)", summary: "세계 정상급 갤러리가 참여하는 현대미술 아트페어. 도시 전체가 미술 축제 분위기예요.", emoji: "🎨" },
+  { id: "expo-comic-con", name: "샌디에이고 코믹콘", nameEn: "San Diego Comic-Con", country: "미국", flag: "🇺🇸", city: "샌디에이고", destination: "샌디에이고", months: [7], period: "매년 7월 (약 4일)", summary: "만화·영화·드라마·게임 팬들이 모이는 세계적인 대중문화 컨벤션.", emoji: "🦸" },
+  { id: "expo-gamescom", name: "게임스컴", nameEn: "gamescom", country: "독일", flag: "🇩🇪", city: "쾰른", destination: "쾰른", months: [8], period: "매년 8월 (약 5일)", summary: "신작 게임을 직접 체험할 수 있는 유럽 최대 게임 전시회.", emoji: "🎮" },
+  { id: "expo-ifa", name: "IFA 베를린", nameEn: "IFA Berlin", country: "독일", flag: "🇩🇪", city: "베를린", destination: "베를린", months: [9], period: "매년 9월 초 (약 5일)", summary: "유럽 최대 가전·IT 전시회. 최신 가전과 생활 기술을 한눈에 볼 수 있어요.", emoji: "🔌" },
+  { id: "expo-tgs", name: "도쿄 게임쇼", nameEn: "Tokyo Game Show", country: "일본", flag: "🇯🇵", city: "지바(마쿠하리)", destination: "도쿄", months: [9], period: "매년 9월 (약 4일)", summary: "일본·아시아 게임사의 신작을 만날 수 있는 아시아 대표 게임 전시회.", emoji: "🕹️" },
+  { id: "expo-frankfurt-book", name: "프랑크푸르트 도서전", nameEn: "Frankfurter Buchmesse", country: "독일", flag: "🇩🇪", city: "프랑크푸르트", destination: "프랑크푸르트", months: [10], period: "매년 10월 중순 (약 5일)", summary: "세계 출판사가 모이는 세계 최대 규모의 도서 박람회.", emoji: "📚" },
+  { id: "expo-wtm", name: "WTM 런던 (세계여행박람회)", nameEn: "World Travel Market London", country: "영국", flag: "🇬🇧", city: "런던", destination: "런던", months: [11], period: "매년 11월 초 (약 3일)", summary: "세계 관광 업계가 모여 여행 트렌드를 나누는 대표 여행 박람회.", emoji: "🌐" },
+  { id: "expo-art-basel-miami", name: "아트 바젤 마이애미 비치", nameEn: "Art Basel Miami Beach", country: "미국", flag: "🇺🇸", city: "마이애미", destination: "마이애미", months: [12], period: "매년 12월 초 (약 4일)", summary: "아트 바젤의 미주 행사. 해변 도시 곳곳에서 위성 아트페어와 전시가 함께 열려요.", emoji: "🖼️" },
+];
+
 export function getGlobalFestival(id: string | null | undefined): GlobalFestival | null {
   if (!id) return null;
-  return GLOBAL_FESTIVALS.find((f) => f.id === id) ?? null;
+  return GLOBAL_FESTIVALS.find((f) => f.id === id) ?? GLOBAL_EXPOS.find((f) => f.id === id) ?? null;
 }

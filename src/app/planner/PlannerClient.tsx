@@ -388,7 +388,17 @@ function PlannerContent() {
   };
 
   return (
-    <main className="flex-1 pt-20">
+    <main className="relative flex-1 pt-20 isolate">
+        {/* 은은한 배경 — 하늘로 떠나는 비행기 (아래로 갈수록 배경색으로 사라짐) */}
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[560px] sm:h-[680px] -z-10 overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/planner/airport.jpg"
+            alt=""
+            className="w-full h-full object-cover object-[70%_30%] opacity-40"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-gray-50/50 to-gray-50" />
+        </div>
         {/* Step 1: Input Form */}
         {step === 1 && (
           <div className="max-w-3xl mx-auto px-4 py-12">
