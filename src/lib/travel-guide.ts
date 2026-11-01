@@ -172,7 +172,15 @@ export const GUIDE_TOPICS: GuideTopic[] = [
     links: [
       { label: "Pothos AI 일정 만들기", url: "/planner" },
     ],
-    videos: [owner("Udgwk6U3vgw")],
+    videos: [
+      owner("Udgwk6U3vgw"),
+      { id: "uYadrISOJjs", title: "일본 교통카드 뭘로 쓸까? 애플페이·삼성페이 모바일 교통카드 비교", channel: "하비루비 일본여행의 모든 것" },
+      { id: "VkZKbGvTPyI", title: "해외여행 준비 구글맵 300% 활용 방법", channel: "토모 트래블 : 유럽여행 플래너" },
+      { id: "p4zbhTaRxcg", title: "그랩(Grab) 택시 사용법 — 결제 등록부터 요금 꿀팁까지", channel: "그냥리리" },
+      { id: "Tj80XwOYjZQ", title: "유럽 기차·티켓 종류 한 번에 정리 (유럽 기차여행 처음이세요?)", channel: "여행플러스 TRIP PLUS" },
+      { id: "xNjJWtmL5Ao", title: "대만 이지카드 구매부터 충전·사용까지 총정리", channel: "대만 여행 정보 - 대여정" },
+      { id: "XBD2tSJ-VbQ", title: "홍콩 옥토퍼스 카드의 모든 것 — 잔액 확인·충전 꿀팁", channel: "WaniGogo" },
+    ],
     youtubeQuery: "해외여행 교통카드",
     shopCategories: ["connectivity"],
   },
