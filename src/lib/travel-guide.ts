@@ -25,6 +25,19 @@ export interface GuideTopic {
   shopCategories?: string[];
 }
 
+/** 운영자 유튜브 채널 — 여행 준비 페이지 맨 위 + 각 주제 추천 영상 1순위 */
+export const OWNER_CHANNEL = {
+  name: "지금이 여행의 기회 - Chance Trip",
+  url: "https://www.youtube.com/@chancetrip",
+  videos: [
+    { id: "Udgwk6U3vgw", title: "일본 여행 시 반드시 필요한 교통카드 | SUICA, PASMO, ICOCA", channel: "지금이 여행의 기회 - Chance Trip" },
+    { id: "9hXScyGSnyU", title: "비자발급 꼭 받아야 될까? | 비자발급이 필요한 국가와 무비자가 가능한 국가", channel: "지금이 여행의 기회 - Chance Trip" },
+    { id: "ANASO5uprDE", title: "해외 여행때 차가 필요하다면? | 글로벌 Top7 렌터카 회사 선정", channel: "지금이 여행의 기회 - Chance Trip" },
+    { id: "_t-x1yK1KSw", title: "이제 해외여행에서도 직접 운전해보자 | 국제면허증 사용에 대한 유용한 팁", channel: "지금이 여행의 기회 - Chance Trip" },
+  ] as GuideVideo[],
+};
+const owner = (id: string) => OWNER_CHANNEL.videos.find((v) => v.id === id)!;
+
 export const GUIDE_TOPICS: GuideTopic[] = [
   {
     id: "passport",
@@ -88,6 +101,7 @@ export const GUIDE_TOPICS: GuideTopic[] = [
       { label: "도로교통공단 안전운전 통합민원", url: "https://www.safedriving.or.kr" },
     ],
     videos: [
+      owner("_t-x1yK1KSw"),
       { id: "FBQY1Mql29s", title: "국제운전면허증 발급받는 방법", channel: "아빠가이드TV" },
       { id: "15uJlXzq99w", title: "국제운전면허증 발급! 온라인으로도 가능하네요", channel: "채널서누" },
       { id: "WvVoUhtmLrs", title: "9월 발급되는 새 국제운전면허증, 35개국서 쓸 수 있다", channel: "SBS 뉴스" },
@@ -110,6 +124,7 @@ export const GUIDE_TOPICS: GuideTopic[] = [
       { label: "도로교통공단 (국제면허 인정 국가)", url: "https://www.safedriving.or.kr" },
     ],
     videos: [
+      owner("ANASO5uprDE"),
       { id: "rmrk7H7sPUI", title: "해외에서 처음 렌트카 빌리는 사람이라면 꼭 봐야하는 영상!", channel: "오늘뭐할까 Onul" },
       { id: "Z6fbprzbrVU", title: "유럽 렌트카의 모든 것! 예약에서부터 출고, 주행, 주차, 주유, 반납까지", channel: "게으른 완벽주의자" },
       { id: "EofyyqvZeWE", title: "미국에서 렌트카 이용하기 전에 꼭 봐야하는 영상", channel: "카모아 CARMORE" },
@@ -120,7 +135,7 @@ export const GUIDE_TOPICS: GuideTopic[] = [
   {
     id: "immigration",
     emoji: "✈️",
-    title: "출국·입국심사",
+    title: "비자·출입국심사",
     summary: "공항 출국 절차와 입국심사 때 자주 묻는 질문",
     gradient: "from-violet-500 to-purple-500",
     points: [
@@ -135,10 +150,30 @@ export const GUIDE_TOPICS: GuideTopic[] = [
       { label: "관세청 (여행자 면세)", url: "https://www.customs.go.kr" },
     ],
     videos: [
+      owner("9hXScyGSnyU"),
       { id: "mVV2jgS5o3s", title: "인천공항 출국절차 이 영상 하나로 끝! 출국부터 입국까지 완벽 정리", channel: "타이거투어" },
       { id: "vtdo5qixSgs", title: "\"입국심사\" 이것만 알면 무조건 통과! 여행영어 완벽정리", channel: "왕초보 영어학교" },
     ],
     youtubeQuery: "입국심사 여행영어",
+    shopCategories: ["connectivity"],
+  },
+  {
+    id: "transport",
+    emoji: "🚇",
+    title: "현지 교통·교통카드",
+    summary: "도착하자마자 헤매지 않게, 교통카드와 대중교통 미리 알기",
+    gradient: "from-teal-500 to-emerald-500",
+    points: [
+      "일본은 Suica·PASMO·ICOCA 같은 IC 교통카드 하나로 전철·버스는 물론 편의점 결제까지 할 수 있어요.",
+      "아이폰은 Apple 지갑에 Suica 등 교통카드를 추가해 휴대폰만으로 탈 수 있어요.",
+      "많은 대도시는 1일권·여행자 패스가 있어요. 하루 이동이 많다면 미리 비교해 보세요.",
+      "Pothos 일정의 '길찾기' 버튼을 누르면 장소 사이 대중교통 경로를 바로 확인할 수 있어요.",
+    ],
+    links: [
+      { label: "Pothos AI 일정 만들기", url: "/planner" },
+    ],
+    videos: [owner("Udgwk6U3vgw")],
+    youtubeQuery: "해외여행 교통카드",
     shopCategories: ["connectivity"],
   },
   {
