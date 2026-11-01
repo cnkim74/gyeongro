@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import YouTubeEmbed from "@/components/YouTubeEmbed";
 import { CheckCircle, ExternalLink, SquarePlay as Youtube, PenSquare, Compass } from "lucide-react";
-import { GUIDE_TOPICS, OWNER_CHANNEL } from "@/lib/travel-guide";
+import { GUIDE_TOPICS, OWNER_CHANNEL, FEATURED_CREATORS } from "@/lib/travel-guide";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import { extractYouTube, youtubeThumb } from "@/lib/youtube";
 import GuideTools from "./GuideTools";
@@ -158,6 +158,42 @@ export default async function TravelGuidePage() {
               </section>
             ))}
           </div>
+
+          {/* 인기 여행 크리에이터 */}
+          <section className="mt-14">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2 mb-1">
+              <Youtube className="w-6 h-6 text-red-600" /> 인기 여행 유튜버 추천 영상
+            </h2>
+            <p className="text-[15px] text-gray-600 mb-6">여행 가기 전 설렘 충전! 많은 여행자가 즐겨 보는 채널의 영상이에요</p>
+            <div className="space-y-8">
+              {FEATURED_CREATORS.map((c) => (
+                <div key={c.url} className="bg-white rounded-3xl border border-gray-100 p-5 sm:p-6">
+                  <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <div className="min-w-0">
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900">{c.name}</h3>
+                      <p className="text-sm text-gray-500">{c.desc}</p>
+                    </div>
+                    <a
+                      href={c.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl border border-red-200 text-red-600 text-sm font-bold hover:bg-red-50"
+                    >
+                      <Youtube className="w-4 h-4" /> 채널 보기
+                    </a>
+                  </div>
+                  <div className="grid sm:grid-cols-3 gap-4">
+                    {c.videos.map((v) => (
+                      <div key={v.id} className="min-w-0">
+                        <YouTubeEmbed id={v.id} title={v.title} />
+                        <p className="mt-2 text-[15px] font-semibold text-gray-900 leading-snug line-clamp-2">{v.title}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
 
           <div className="mt-12">
             <FirstPostEventBanner href="/board/youtube/new" cta="내 유튜브 공유하기" />
