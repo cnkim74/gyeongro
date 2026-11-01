@@ -229,3 +229,55 @@ export const GUIDE_TOPICS: GuideTopic[] = [
     shopCategories: ["luggage", "comfort", "power", "health"],
   },
 ];
+
+/**
+ * 인기 여행 크리에이터 추천 영상 (유튜브 공개 영상 임베드 — 채널로 바로 연결)
+ * oEmbed 로 각 채널의 실제 영상인지 확인한 것만 사용
+ */
+export const FEATURED_CREATORS: {
+  name: string;
+  url: string;
+  desc: string;
+  videos: { id: string; title: string }[];
+}[] = [
+  {
+    name: "빠니보틀 Pani Bottle",
+    url: "https://www.youtube.com/@PaniBottle",
+    desc: "가성비·날것의 배낭여행",
+    videos: [
+      { id: "PEEYyRpV1bM", title: "인도에서 10,000원으로 하루 보내기 【유라시아30】" },
+      { id: "Buf25jpXMEc", title: "아이슬란드 공짜 온천 찾아다니기 【유라시아114】" },
+      { id: "vCYO6HRSJJE", title: "밥까지 나오는 34시간 베트남 종단 기차 탑승기 【베트남5】" },
+    ],
+  },
+  {
+    name: "곽튜브",
+    url: "https://www.youtube.com/@JBKWAK",
+    desc: "현지인과 어울리는 세계여행·먹방",
+    videos: [
+      { id: "DVvYAZuYgss", title: "미식의 나라 스페인, 드디어 입성 - 세계여행(32)" },
+      { id: "Vqjyh_m-5a8", title: "통통맨 듀오의 다낭 식도락 원정기 - 베트남(上)" },
+      { id: "e9RvaN6PxmA", title: "한국보다 더 한국 같은 수상한 나라 - 몽골(1)" },
+    ],
+  },
+  {
+    name: "원지의하루",
+    url: "https://www.youtube.com/@im1G",
+    desc: "감성 가득한 도시·자연 여행",
+    videos: [
+      { id: "j2k_IaCp9sI", title: "예술의 도시 비엔나에서 밥먹고 돌아다니기 ⎪ 오스트리아1" },
+      { id: "_HjT5IMOXHo", title: "로컬처럼 먹고 돌아본 대힐링 벤쿠버 ⎥ 캐나다3" },
+      { id: "qt2IBGm6EjU", title: "미지의 얼음국 여행 가능..? ⎪ 아이슬란드1" },
+    ],
+  },
+  {
+    name: "노홍철",
+    url: "https://www.youtube.com/@luckyhongchul",
+    desc: "즉흥과 낭만의 유럽·아시아 여행",
+    videos: [
+      { id: "Tbf9ZEnb6us", title: "노홍철이 포르투갈에서 이민까지 고민한 이유" },
+      { id: "p_sndBe7fAY", title: "노홍철이 찾아간 한국인 90%가 모르는 그리스 비밀의 섬" },
+      { id: "w0a_r0W1dDI", title: "죽기 전에 꼭 타야 하는 스위스 특급열차 '1등석' 티켓팅 성공한 노홍철" },
+    ],
+  },
+];
