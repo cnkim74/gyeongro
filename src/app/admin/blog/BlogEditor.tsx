@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import BlogMarkdown from "@/components/blog/BlogMarkdown";
 import BlogCover from "@/components/blog/BlogCover";
-import { normalizeSlug, readMinutes, tocOf, type BlogFaq } from "@/lib/blog-utils";
+import { normalizeSlug, readMinutes, tocOf, COVER_STYLES, COVER_STYLE_KEYS, type BlogFaq } from "@/lib/blog-utils";
 import type { BlogPost } from "@/lib/blog";
 import { ArrowLeft, ImagePlus, Loader2, Plus, Trash2, Eye, PenLine } from "lucide-react";
 
@@ -79,6 +79,7 @@ export default function BlogEditor({ initial }: { initial?: BlogPost }) {
   const [category, setCategory] = useState(initial?.category ?? "");
   const [excerpt, setExcerpt] = useState(initial?.excerpt ?? "");
   const [cover, setCover] = useState(initial?.cover_image_url ?? "");
+  const [coverStyle, setCoverStyle] = useState<string | null>(initial?.cover_style ?? null);
   const [content, setContent] = useState(initial?.content ?? "");
   const [tags, setTags] = useState((initial?.tags ?? []).join(", "));
   const [faq, setFaq] = useState<BlogFaq[]>(initial?.faq ?? []);
@@ -122,7 +123,9 @@ export default function BlogEditor({ initial }: { initial?: BlogPost }) {
     setBusy("save");
     setMsg(null);
     try {
-      const body = { title, slug, category, excerpt, cover_image_url: cover, content, tags, faq, is_published: publish };
+      const body: Record<string, unknown> = { title, slug, category, excerpt, cover_image_url: cover, content, tags, faq, is_published: publish };
+      // 템플릿 색은 자동 작성 항목이 있는 DB에서만 저장 (예전 글·직접 쓴 글은 바꿨을 때만)
+      if ((initial && "cover_style" in initial) || coverStyle) body.cover_style = coverStyle;
       const r = await fetch(initial ? `/api/admin/blog/${initial.id}` : "/api/admin/blog", {
         method: initial ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -198,7 +201,7 @@ export default function BlogEditor({ initial }: { initial?: BlogPost }) {
           <label className={label}>커버 사진 (없으면 제목으로 자동 디자인)</label>
           <div className="grid sm:grid-cols-[240px_1fr] gap-4 items-start">
             <div className="aspect-[16/10] rounded-xl overflow-hidden bg-gray-100">
-              <BlogCover title={title || "제목을 입력하세요"} category={category} image={cover || null} />
+              <BlogCover title={title || "제목을 입력하세요"} category={category} image={cover || null} coverStyle={coverStyle} />
             </div>
             <div className="space-y-2">
               <label className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold cursor-pointer hover:bg-gray-50">
@@ -211,6 +214,24 @@ export default function BlogEditor({ initial }: { initial?: BlogPost }) {
                   커버 사진 빼기
                 </button>
               )}
+              <div>
+                <p className="text-xs font-bold text-gray-500 mb-1.5">템플릿 색 (사진 위에 제목 카드로 덮기)</p>
+                <div className="flex flex-wrap gap-1.5">
+                  <button type="button" onClick={() => setCoverStyle(null)} className={`px-2.5 h-7 rounded-full border text-[11px] font-bold ${!coverStyle ? "border-slate-900" : "border-gray-200"}`}>
+                    {cover ? "사진만" : "자동"}
+                  </button>
+                  {COVER_STYLE_KEYS.map((k) => (
+                    <button
+                      key={k}
+                      type="button"
+                      title={COVER_STYLES[k].label}
+                      onClick={() => setCoverStyle(k)}
+                      className={`w-7 h-7 rounded-full ring-offset-2 ${coverStyle === k ? "ring-2 ring-slate-900" : ""}`}
+                      style={{ background: `linear-gradient(135deg, ${COVER_STYLES[k].from}, ${COVER_STYLES[k].to})` }}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>

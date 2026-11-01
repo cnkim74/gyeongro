@@ -21,14 +21,22 @@ export interface BlogPost {
   view_count: number;
   created_at: string;
   updated_at: string;
+  // 자동 작성 (migration_blog_auto.sql) — 실행 전에는 없을 수 있음
+  cover_style?: string | null;
+  source?: string;
+  topic?: string | null;
+  naver_draft?: string | null;
+  threads_text?: string | null;
+  naver_posted?: boolean;
 }
 
 export type BlogCard = Pick<
   BlogPost,
-  "id" | "slug" | "title" | "excerpt" | "category" | "cover_image_url" | "published_at" | "created_at" | "content"
+  "id" | "slug" | "title" | "excerpt" | "category" | "cover_image_url" | "published_at" | "created_at" | "content" | "cover_style"
 >;
 
-const CARD_COLUMNS = "id, slug, title, excerpt, category, cover_image_url, published_at, created_at, content";
+// 컬럼 추가(자동 작성) 전후 모두 동작하도록 전체 선택
+const CARD_COLUMNS = "*";
 
 /** 공개된 글 목록 (최신순). 테이블이 없으면 빈 목록 */
 export async function listPublishedPosts(limit = 60): Promise<BlogCard[]> {

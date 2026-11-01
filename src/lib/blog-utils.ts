@@ -81,3 +81,20 @@ export function coverGradient(seed: string): string {
   for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   return COVER_GRADIENTS[h % COVER_GRADIENTS.length];
 }
+
+/** 대표 이미지 템플릿 색 (사진 위에 덮거나, 사진 없을 때 배경) */
+export const COVER_STYLES: Record<string, { label: string; from: string; to: string }> = {
+  midnight: { label: "미드나잇", from: "#0b1533", to: "#1e293b" },
+  blue: { label: "블루", from: "#1d4ed8", to: "#1e3a8a" },
+  violet: { label: "바이올렛", from: "#7c3aed", to: "#4c1d95" },
+  teal: { label: "틸", from: "#0f766e", to: "#134e4a" },
+  green: { label: "그린", from: "#15803d", to: "#14532d" },
+  orange: { label: "선셋", from: "#c2410c", to: "#7c2d12" },
+  rose: { label: "로즈", from: "#be123c", to: "#881337" },
+  charcoal: { label: "차콜", from: "#27272a", to: "#09090b" },
+};
+export const COVER_STYLE_KEYS = Object.keys(COVER_STYLES);
+
+export function isCoverStyle(v: unknown): v is string {
+  return typeof v === "string" && v in COVER_STYLES;
+}

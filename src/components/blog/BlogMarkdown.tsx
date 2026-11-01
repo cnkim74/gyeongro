@@ -3,7 +3,7 @@
 
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import type { ReactNode } from "react";
+import { isValidElement, type ReactNode } from "react";
 import YouTubeEmbed from "@/components/YouTubeEmbed";
 import { extractYouTube } from "@/lib/youtube";
 import { headingId } from "@/lib/blog-utils";
@@ -100,7 +100,32 @@ export default function BlogMarkdown({ content }: { content: string }) {
           td: ({ children }) => <td className="px-4 py-3 border-b border-slate-100 align-top">{children}</td>,
           hr: () => <hr className="my-12 border-slate-200" />,
           code: ({ children }) => <code className="px-1.5 py-0.5 rounded bg-slate-100 text-[0.9em] text-slate-800">{children}</code>,
-          pre: ({ children }) => <pre className="my-6 p-4 rounded-2xl bg-slate-900 text-slate-100 overflow-x-auto text-sm [&_code]:bg-transparent [&_code]:text-slate-100">{children}</pre>,
+          pre: ({ children }) => {
+            // ```checklist 블록 → 체크리스트 카드 (첫 줄 = 제목)
+            const child = Array.isArray(children) ? children[0] : children;
+            const cls = isValidElement(child) ? String((child.props as { className?: string }).className ?? "") : "";
+            if (cls.includes("language-checklist")) {
+              const lines = textOf(child).split("\n").map((l) => l.replace(/^[-*\s]+/, "").trim()).filter(Boolean);
+              const [head, ...items] = lines;
+              return (
+                <div className="my-9 rounded-3xl bg-gradient-to-br from-slate-900 to-blue-950 text-white p-7 sm:p-9">
+                  <p className="text-[11px] font-bold tracking-[0.2em] text-blue-300">CHECKLIST</p>
+                  <p className="mt-2 text-2xl font-extrabold">{head}</p>
+                  <span className="block w-10 h-0.5 bg-blue-400 mt-3 mb-6" />
+                  <ul className="space-y-3">
+                    {items.map((it, i) => (
+                      <li key={i} className="flex items-start gap-3 text-[16px]">
+                        <span className="mt-0.5 shrink-0 w-5 h-5 rounded-md bg-blue-500 flex items-center justify-center text-xs">✓</span>
+                        <span>{it}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-7 text-xs text-white/40">pothostravel.com/blog</p>
+                </div>
+              );
+            }
+            return <pre className="my-6 p-4 rounded-2xl bg-slate-900 text-slate-100 overflow-x-auto text-sm [&_code]:bg-transparent [&_code]:text-slate-100">{children}</pre>;
+          },
         }}
       >
         {content}

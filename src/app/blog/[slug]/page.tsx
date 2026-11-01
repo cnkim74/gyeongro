@@ -105,7 +105,7 @@ export default async function BlogPostPage({ params }: Params) {
           {post.excerpt && <p className="mt-5 text-lg text-slate-500 leading-relaxed">{post.excerpt}</p>}
 
           <div className="mt-9 aspect-[16/9] rounded-3xl overflow-hidden">
-            <BlogCover title={post.title} category={post.category} image={post.cover_image_url} size="hero" />
+            <BlogCover title={post.title} category={post.category} image={post.cover_image_url} coverStyle={post.cover_style} size="hero" />
           </div>
 
           {toc.length >= 2 && (

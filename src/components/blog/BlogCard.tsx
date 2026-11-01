@@ -8,7 +8,7 @@ export default function BlogCard({ post, compact = false }: { post: Card; compac
     <Link href={`/blog/${post.slug}`} className="group block min-w-0">
       <div className="aspect-[16/10] rounded-2xl overflow-hidden bg-slate-100 shadow-sm group-hover:shadow-lg transition-shadow">
         <div className="w-full h-full group-hover:scale-[1.03] transition-transform duration-300">
-          <BlogCover title={post.title} category={post.category} image={post.cover_image_url} />
+          <BlogCover title={post.title} category={post.category} image={post.cover_image_url} coverStyle={post.cover_style} />
         </div>
       </div>
       <div className="mt-4">
