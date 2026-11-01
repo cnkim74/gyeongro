@@ -1,9 +1,10 @@
 // 샘플 콘텐츠 채우기 (관리자 전용)
-// POST -> { boardCreated, posts, stories, skipped }
+// POST -> { boardCreated, posts, stories, storiesUpdated, skipped }
 //
 // - '여행 유튜브' 게시판이 없으면 생성
 // - 게시판 글·스토리를 관리자 계정으로 등록 (제목에 [Pothos 에디터]·[공지] 표기)
-// - 같은 제목이 이미 있으면 건너뜀 → 여러 번 눌러도 중복 없음
+// - 게시판 글: 같은 제목이 이미 있으면 건너뜀 → 여러 번 눌러도 중복 없음
+// - 에디터 스토리: 같은 제목이 있으면 최신 내용으로 덮어씀
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
@@ -69,12 +70,15 @@ export async function POST() {
     await supabase.from("boards").update({ post_count: count ?? 0 }).eq("id", bid);
   }
 
-  // 3) 스토리
+  // 3) 스토리 — 같은 제목이 있으면 최신 내용으로 갱신 (사진·영상·참고 자료 보강분 반영)
   let stories = 0;
+  let storiesUpdated = 0;
   for (const s of SEED_STORIES) {
     const { data: exists } = await supabase.from("stories").select("id").eq("title", s.title).limit(1);
     if (exists && exists.length > 0) {
-      skipped++;
+      const { error } = await supabase.from("stories").update({ ...s }).eq("id", exists[0].id);
+      if (error) return Response.json({ error: `스토리 갱신 실패: ${error.message}` }, { status: 500 });
+      storiesUpdated++;
       continue;
     }
     const { error } = await supabase.from("stories").insert({ user_id: userId, ...s });
@@ -86,5 +90,5 @@ export async function POST() {
   revalidatePath("/stories", "layout");
   revalidatePath("/travel-guide");
 
-  return Response.json({ boardCreated, posts, stories, skipped, missingBoards: [...missingBoards] });
+  return Response.json({ boardCreated, posts, stories, storiesUpdated, skipped, missingBoards: [...missingBoards] });
 }
