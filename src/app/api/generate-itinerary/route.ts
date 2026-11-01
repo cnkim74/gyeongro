@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { auth } from "@/lib/auth";
 import { consumeQuota, QuotaExceededError } from "@/lib/ai-quota";
 import { resolvePlaces, type PlaceQuery } from "@/lib/places";
+import { recordAiRun } from "@/lib/ai-runs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -347,6 +348,7 @@ ${placeRules}`;
 
       const t0 = Date.now();
       let tSkeleton = 0;
+      let ok = false;
       try {
         send({ progress: "전체 여행 동선을 설계하고 있어요" });
 
@@ -425,6 +427,7 @@ ${placeRules}`;
           send({ chunk: payload.slice(i, i + 1000) });
         }
         send({ done: true });
+        ok = true;
       } catch (err) {
         const message = err instanceof Error ? err.message : "오류가 발생했습니다.";
         send({ error: message });
@@ -434,6 +437,17 @@ ${placeRules}`;
             `input_tokens=${usageTotals.input} output_tokens=${usageTotals.output} ` +
             `cost_usd=${usageTotals.usd.toFixed(4)} cost_krw≈${Math.round(usageTotals.usd * 1400)}`
         );
+        // 실제 비용 기록 (관리자 'AI 사용량·비용' 화면)
+        await recordAiRun({
+          userId: session.user.id,
+          action: "planner",
+          calls: usageTotals.calls,
+          input: usageTotals.input,
+          output: usageTotals.output,
+          usd: usageTotals.usd,
+          ok,
+          meta: { days: totalDays, destination: String(destination).slice(0, 60), ms: Date.now() - t0 },
+        });
         clearInterval(ping);
         controller.close();
       }
