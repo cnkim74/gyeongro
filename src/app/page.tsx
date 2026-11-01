@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import StarRating from "@/components/StarRating";
 import HeroSection from "@/components/HeroSection";
 import WhyPothos from "@/components/WhyPothos";
+import HomeInspiration from "@/components/HomeInspiration";
 import { getHeroConfig } from "@/lib/hero-server";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import {
@@ -357,6 +358,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* 여행 영감 — 블로그·스토리·유튜브 랜덤 노출 */}
+      <HomeInspiration />
 
       {/* Features - Modern card grid */}
       <section className="py-24 bg-slate-50">
