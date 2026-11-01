@@ -56,37 +56,10 @@ export default async function TravelGuidePage() {
             <p className="text-base sm:text-lg text-gray-600">공식 정보와 추천 영상으로 해외여행 준비를 한 번에</p>
           </div>
 
-          {/* 운영자 채널 — 가장 먼저 */}
-          <section className="mb-8 rounded-3xl p-5 sm:p-6 border border-red-100 bg-gradient-to-br from-red-50 via-white to-orange-50 shadow-[0_12px_32px_-18px_rgba(220,38,38,0.4)]">
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-              <div>
-                <p className="text-sm font-bold text-red-600">Pothos 운영자 채널</p>
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{OWNER_CHANNEL.name}</h2>
-                <p className="text-[15px] text-gray-600 mt-0.5">직접 다녀오고 정리한 여행 준비 영상이에요</p>
-              </div>
-              <a
-                href={OWNER_CHANNEL.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-5 py-3 rounded-2xl bg-red-600 text-white text-[15px] font-bold"
-              >
-                <Youtube className="w-5 h-5" /> 채널 구독하기
-              </a>
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {OWNER_CHANNEL.videos.map((v) => (
-                <div key={v.id}>
-                  <YouTubeEmbed id={v.id} title={v.title} />
-                  <p className="mt-2 text-[15px] font-semibold text-gray-900 leading-snug line-clamp-2">{v.title}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
           <GuideTools />
 
           {/* 주제 바로가기 */}
-          <nav className="flex gap-2 overflow-x-auto pb-2 mt-10 mb-6 -mx-4 px-4">
+          <nav className="flex flex-wrap gap-2 mt-10 mb-6">
             {GUIDE_TOPICS.map((t) => (
               <a
                 key={t.id}
