@@ -11,6 +11,7 @@ export const en: Record<string, string> = {
   "nav.medical": "Medical",
   "nav.partners": "Companions",
   "nav.stories": "Stories",
+  "nav.blog": "Blog",
   "nav.community": "Community",
   "nav.flights": "Flights",
   "nav.hotels": "Hotels",
