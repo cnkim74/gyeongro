@@ -14,6 +14,7 @@ const ACTION_LABEL: Record<string, string> = {
   planner: "AI 여행 플래너",
   optimizer: "동선 최적화",
   translation: "번역",
+  blog: "블로그 AI 작성",
 };
 
 function won(usd: number) {

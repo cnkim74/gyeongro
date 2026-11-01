@@ -1,6 +1,6 @@
 // 블로그 글 저장용 입력 정리 (관리자 API 전용)
 
-import { normalizeFaq, normalizeSlug } from "./blog-utils";
+import { normalizeFaq, normalizeSlug, isCoverStyle } from "./blog-utils";
 
 function safeImage(v: unknown): string | null {
   if (typeof v !== "string") return null;
@@ -28,5 +28,7 @@ export function sanitizeBlogInput(body: Record<string, unknown>) {
     tags,
     faq: normalizeFaq(body.faq),
     is_published,
+    // 대표 이미지 색 — 화면에서 보낸 경우에만 (자동 작성 컬럼이 없을 때도 저장되도록)
+    ...("cover_style" in body ? { cover_style: isCoverStyle(body.cover_style) ? body.cover_style : null } : {}),
   };
 }
