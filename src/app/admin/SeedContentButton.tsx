@@ -19,6 +19,7 @@ export default function SeedContentButton() {
         j.boardCreated ? "여행 유튜브 게시판 생성" : null,
         `글 ${j.posts}개`,
         `스토리 ${j.stories}개 등록`,
+        j.storiesUpdated ? `기존 스토리 ${j.storiesUpdated}개 최신 내용으로 갱신` : null,
         j.skipped ? `이미 있는 ${j.skipped}개는 건너뜀` : null,
         j.missingBoards?.length ? `게시판 없음: ${j.missingBoards.join(", ")}` : null,
       ].filter(Boolean);

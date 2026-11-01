@@ -5,7 +5,9 @@ import { isAdmin, parseRole } from "@/lib/admin";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import Header from "@/components/Header";
 import RoleBadge from "@/components/RoleBadge";
-import { ArrowLeft, MapPin, Calendar, Eye } from "lucide-react";
+import YouTubeEmbed from "@/components/YouTubeEmbed";
+import { extractYouTube } from "@/lib/youtube";
+import { ArrowLeft, MapPin, Calendar, Eye, ExternalLink, Camera } from "lucide-react";
 import StoryActions from "./StoryActions";
 import LikeButton from "./LikeButton";
 
@@ -15,6 +17,37 @@ interface Section {
   title: string;
   image_url: string;
   content: string;
+  image_credit?: string;
+  image_credit_url?: string;
+  videos?: { url: string; title?: string }[];
+  links?: { label?: string; url: string }[];
+}
+
+/** https 주소만 링크로 허용 (사용자 입력 보호) */
+function safeUrl(v: unknown): string | null {
+  return typeof v === "string" && /^https:\/\/[^\s]+$/.test(v.trim()) ? v.trim() : null;
+}
+
+function sectionVideos(section: Section) {
+  if (!Array.isArray(section.videos)) return [];
+  return section.videos
+    .map((v) => {
+      const id = typeof v?.url === "string" ? extractYouTube(v.url).videoIds[0] : undefined;
+      return id ? { id, title: typeof v.title === "string" ? v.title.slice(0, 120) : "" } : null;
+    })
+    .filter((v): v is { id: string; title: string } => !!v)
+    .slice(0, 4);
+}
+
+function sectionLinks(section: Section) {
+  if (!Array.isArray(section.links)) return [];
+  return section.links
+    .map((l) => {
+      const url = safeUrl(l?.url);
+      return url ? { url, label: typeof l.label === "string" && l.label.trim() ? l.label.slice(0, 120) : url } : null;
+    })
+    .filter((l): l is { url: string; label: string } => !!l)
+    .slice(0, 12);
 }
 
 export default async function StoryDetailPage({
@@ -185,28 +218,75 @@ export default async function StoryDetailPage({
 
           {/* 챕터들 */}
           <article className="space-y-12 mb-12">
-            {sections.map((section, idx) => (
-              <section key={idx}>
-                {section.image_url && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={section.image_url}
-                    alt={section.title}
-                    className="w-full aspect-[16/9] object-cover rounded-3xl mb-6"
-                  />
-                )}
-                {section.title && (
-                  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 mb-4">
-                    {section.title}
-                  </h2>
-                )}
-                {section.content && (
-                  <div className="text-base text-slate-700 leading-relaxed whitespace-pre-wrap">
-                    {section.content}
-                  </div>
-                )}
-              </section>
-            ))}
+            {sections.map((section, idx) => {
+              const videos = sectionVideos(section);
+              const links = sectionLinks(section);
+              const creditUrl = safeUrl(section.image_credit_url);
+              return (
+                <section key={idx}>
+                  {section.image_url && (
+                    <figure className="mb-6">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={section.image_url}
+                        alt={section.title}
+                        loading="lazy"
+                        className="w-full aspect-[16/9] object-cover rounded-3xl"
+                      />
+                      {section.image_credit && (
+                        <figcaption className="mt-2 flex items-center gap-1 text-[11px] text-slate-400">
+                          <Camera className="w-3 h-3 shrink-0" />
+                          {creditUrl ? (
+                            <a href={creditUrl} target="_blank" rel="noopener noreferrer" className="hover:underline truncate">
+                              사진: {section.image_credit}
+                            </a>
+                          ) : (
+                            <span className="truncate">사진: {section.image_credit}</span>
+                          )}
+                        </figcaption>
+                      )}
+                    </figure>
+                  )}
+                  {section.title && (
+                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 mb-4">
+                      {section.title}
+                    </h2>
+                  )}
+                  {section.content && (
+                    <div className="text-base text-slate-700 leading-relaxed whitespace-pre-wrap">
+                      {section.content}
+                    </div>
+                  )}
+                  {videos.length > 0 && (
+                    <div className={`mt-6 grid gap-4 ${videos.length > 1 ? "sm:grid-cols-2" : ""}`}>
+                      {videos.map((v) => (
+                        <div key={v.id} className="min-w-0">
+                          <YouTubeEmbed id={v.id} title={v.title} />
+                          {v.title && <p className="mt-2 text-sm text-slate-500 line-clamp-2">▶ {v.title}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {links.length > 0 && (
+                    <ul className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 divide-y divide-slate-200 overflow-hidden">
+                      {links.map((l) => (
+                        <li key={l.url + l.label}>
+                          <a
+                            href={l.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-4 py-3 text-sm text-slate-700 hover:bg-white hover:text-blue-600 transition-colors"
+                          >
+                            <ExternalLink className="w-4 h-4 shrink-0 text-slate-400" />
+                            <span className="min-w-0 truncate">{l.label}</span>
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              );
+            })}
           </article>
 
           {/* 태그 */}
