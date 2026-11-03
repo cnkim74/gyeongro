@@ -151,6 +151,7 @@ export default function HeaderClient({ user, locale, labels }: HeaderClientProps
         <div className="md:hidden bg-white border-t border-gray-100 shadow-lg max-h-[80vh] overflow-y-auto">
           <div className="px-4 py-4 space-y-3">
             {[
+              { label: "💱 환율 계산기", href: "/exchange" },
               { label: t("nav.planner"), href: "/planner" },
               { label: t("nav.festivals"), href: "/festivals" },
               { label: t("nav.guide"), href: "/travel-guide" },
