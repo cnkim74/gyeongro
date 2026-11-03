@@ -5,6 +5,7 @@ import StarRating from "@/components/StarRating";
 import HeroSection from "@/components/HeroSection";
 import WhyPothos from "@/components/WhyPothos";
 import HomeInspiration from "@/components/HomeInspiration";
+import ExchangeCalculator from "@/components/ExchangeCalculator";
 import { getHeroConfig } from "@/lib/hero-server";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import {
@@ -196,6 +197,22 @@ export default async function HomePage() {
 
       {/* Hero — 움직이는 오로라 + 반짝이는 별 (관리자 페이지에서 문구·배경 수정) */}
       <HeroSection config={hero} />
+
+      {/* 여행 중 바로 쓰는 환율 계산기 — 휴대폰 사용이 많아 히어로 바로 아래 */}
+      <section className="bg-white py-10 sm:py-14 border-b border-slate-100">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 grid md:grid-cols-[1fr_420px] gap-6 md:gap-10 items-center">
+          <div className="hidden md:block">
+            <p className="text-sm font-semibold text-emerald-600 mb-2 tracking-wide">TRAVEL TOOL</p>
+            <h2 className="text-3xl font-bold text-slate-900 tracking-tight mb-3">여행 중에도, 환율은 바로</h2>
+            <p className="text-slate-500 leading-relaxed">
+              엔·달러·유로·바트·동까지 26개 통화. 마지막에 고른 통화를 기억해서 여행지에서 열면 바로 계산돼요. 어느 화면에서든 오른쪽 아래
+              <span className="font-semibold text-emerald-700"> 💱 환율</span> 버튼으로도 열 수 있어요.
+            </p>
+            <a href="/exchange" className="mt-4 inline-block text-sm font-semibold text-emerald-700">전체 화면 계산기 →</a>
+          </div>
+          <ExchangeCalculator variant="compact" remember title="💱 여행 환율 계산기" />
+        </div>
+      </section>
 
       {/* 그냥 AI 와 무엇이 다른지 */}
       <WhyPothos />

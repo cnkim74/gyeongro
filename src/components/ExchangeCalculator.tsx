@@ -32,18 +32,36 @@ function parse(v: string): number {
   return Number(v.replace(/[^0-9.]/g, "")) || 0;
 }
 
+const MEMORY_KEY = "pothos-fx-currency";
+
+/** 마지막으로 고른 통화 (여행 중 다시 열면 그대로) */
+function rememberedCurrency(): string | null {
+  try {
+    const v = typeof window !== "undefined" ? window.localStorage.getItem(MEMORY_KEY) : null;
+    return v && currencyInfo(v) ? v : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function ExchangeCalculator({
   defaultCurrency = "JPY",
   variant = "card",
+  remember = false,
+  title = "💱 환율 계산기",
 }: {
   defaultCurrency?: string;
-  variant?: "card" | "compact";
+  variant?: "card" | "compact" | "plain";
+  /** 마지막으로 고른 통화를 기억 (메인·빠른 버튼) */
+  remember?: boolean;
+  title?: string;
 }) {
   const [data, setData] = useState<Rates | null>(null);
   const [error, setError] = useState(false);
-  const [code, setCode] = useState(currencyInfo(defaultCurrency) ? defaultCurrency : "JPY");
+  // 환율이 오기 전에는 통화를 화면에 그리지 않으므로 저장값을 바로 읽어도 화면이 어긋나지 않음
+  const [code, setCode] = useState(() => (remember && rememberedCurrency()) || (currencyInfo(defaultCurrency) ? defaultCurrency : "JPY"));
   const info = currencyInfo(code)!;
-  const [foreign, setForeign] = useState(String(info.unit === 100 ? 1000 : 100));
+  const [foreign, setForeign] = useState(() => String(currencyInfo(code)?.unit === 100 ? 1000 : 100));
   const [krw, setKrw] = useState<string | null>(null); // 원화 칸을 직접 고쳤을 때만 값
 
   useEffect(() => {
@@ -69,7 +87,9 @@ export default function ExchangeCalculator({
   const quick = info.unit === 100 ? [1000, 5000, 10000, 50000] : code === "USD" || code === "EUR" || code === "GBP" || code === "CHF" ? [10, 50, 100, 500] : [100, 500, 1000, 5000];
 
   const compact = variant === "compact";
-  const box = compact
+  const box = variant === "plain"
+    ? ""
+    : compact
     ? "rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-4 sm:p-5"
     : "min-w-0 rounded-3xl p-5 sm:p-6 border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-teal-50 shadow-[0_10px_30px_-16px_rgba(16,185,129,0.4)]";
   const input = "w-full min-w-0 bg-transparent text-xl sm:text-2xl font-extrabold text-gray-900 focus:outline-none tabular-nums";
@@ -77,14 +97,14 @@ export default function ExchangeCalculator({
   return (
     <section className={box}>
       <div className="flex items-start justify-between gap-2 mb-1">
-        <h2 className={`flex items-center gap-2 font-bold text-gray-900 ${compact ? "text-lg" : "text-xl"}`}>💱 환율 계산기</h2>
+        <h2 className={`flex items-center gap-2 font-bold text-gray-900 ${compact ? "text-lg" : "text-xl"}`}>{title}</h2>
         {data && (
           <span className="text-[11px] text-gray-400 text-right leading-tight pt-1">
             {updated} 기준
           </span>
         )}
       </div>
-      {!compact && <p className="text-[15px] text-gray-500 mb-4">여행 경비를 원화로 바로 계산해 보세요</p>}
+      {variant === "card" && <p className="text-[15px] text-gray-500 mb-4">여행 경비를 원화로 바로 계산해 보세요</p>}
 
       {error ? (
         <div className="py-6 text-center text-sm text-gray-500">
