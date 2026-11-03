@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "여행 인사이트 블로그 - Pothos",
   description: "여행지 고르기부터 일정·예산·교통·축제까지, 떠나기 전에 알아두면 좋은 여행 정보를 정리했어요.",
-  alternates: { canonical: "/blog" },
+  alternates: { canonical: "/blog", types: { "application/rss+xml": [{ url: "/rss.xml", title: "Pothos 여행 인사이트" }] } },
 };
 
 export default async function BlogListPage() {
