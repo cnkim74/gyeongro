@@ -25,11 +25,18 @@ function Badge({ tone, children }: { tone: "ok" | "no" | "warn" | "gray"; childr
   return <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${cls}`}>{children}</span>;
 }
 
-function NaverCell({ r }: { r?: Result["naver"] }) {
+function NaverCell({ r, title }: { r?: Result["naver"]; title: string }) {
+  if (r?.status === "no-key") {
+    // 네이버 검색 API 없이 — 눌러서 네이버에서 직접 확인
+    return (
+      <a href={`https://search.naver.com/search.naver?where=web&query=${encodeURIComponent(title)}`} target="_blank" rel="noopener noreferrer">
+        <Badge tone="gray">직접 확인 ↗</Badge>
+      </a>
+    );
+  }
   if (!r) return <Badge tone="gray">미점검</Badge>;
   if (r.status === "indexed") return <Badge tone="ok">노출 · {r.rank}위</Badge>;
   if (r.status === "not-found") return <Badge tone="no">아직 안 보임</Badge>;
-  if (r.status === "no-key") return <Badge tone="gray">API 키 필요</Badge>;
   return <Badge tone="warn">오류</Badge>;
 }
 
@@ -122,7 +129,7 @@ export default function SeoChecker({
       ok: setup.naverApi,
       optional: true,
       label: "네이버 노출 자동 확인 (선택)",
-      desc: setup.naverApi ? "연결됨" : "네이버 개발자센터 검색 API 키 → Vercel NAVER_SEARCH_CLIENT_ID / SECRET",
+      desc: setup.naverApi ? "연결됨" : "검색 API 키가 있을 때만 (없으면 글마다 '직접 확인' 버튼으로)",
       href: "https://developers.naver.com/apps/#/register",
     },
     {
@@ -201,7 +208,7 @@ export default function SeoChecker({
                     </button>
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className="text-[11px] text-gray-400">네이버</span>
-                      <NaverCell r={r?.naver} />
+                      <NaverCell r={r?.naver} title={p.title} />
                       <span className="text-[11px] text-gray-400 ml-1">구글</span>
                       <GoogleCell r={r?.google} />
                       {r && <Badge tone={basicsOk >= r.basics.length - 1 ? "ok" : "warn"}>기본 {basicsOk}/{r.basics.length}</Badge>}
