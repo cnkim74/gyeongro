@@ -63,6 +63,7 @@ export default function ExchangeCalculator({
   const info = currencyInfo(code)!;
   const [foreign, setForeign] = useState(() => String(currencyInfo(code)?.unit === 100 ? 1000 : 100));
   const [krw, setKrw] = useState<string | null>(null); // 원화 칸을 직접 고쳤을 때만 값
+  const [swapped, setSwapped] = useState(false); // true = 원화를 위에서 입력
 
   useEffect(() => {
     let alive = true;
@@ -126,7 +127,9 @@ export default function ExchangeCalculator({
         </div>
       ) : (
         <>
-          <div className={`rounded-2xl bg-white border border-gray-100 px-4 py-3 ${compact ? "mt-2" : ""}`}>
+          {(() => {
+            const foreignBox = (
+              <div key="foreign" className="rounded-2xl bg-white border border-gray-100 px-4 py-3">
             <div className="flex items-center gap-2">
               {/* 보이는 건 국기+코드, 누르면 전체 목록 (이름까지) */}
               <label className="relative shrink-0 w-[104px] rounded-xl bg-gray-50 border border-gray-200 px-2.5 py-1.5 text-sm font-semibold text-gray-800 flex items-center justify-between">
@@ -165,14 +168,9 @@ export default function ExchangeCalculator({
             </div>
             <p className="mt-1 text-[11px] text-gray-400">{info.name}</p>
           </div>
-
-          <div className="flex justify-center -my-2 relative z-10">
-            <span className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow">
-              <ArrowDownUp className="w-4 h-4" />
-            </span>
-          </div>
-
-          <div className="rounded-2xl bg-white border border-gray-100 px-4 py-3">
+            );
+            const krwBox = (
+              <div key="krw" className="rounded-2xl bg-white border border-gray-100 px-4 py-3">
             <div className="flex items-center gap-2">
               <span className="shrink-0 w-[104px] rounded-xl bg-gray-50 border border-gray-200 px-2.5 py-1.5 text-sm font-semibold text-gray-800">🇰🇷 KRW</span>
               <input
@@ -183,20 +181,52 @@ export default function ExchangeCalculator({
                 aria-label="원화 금액"
               />
             </div>
+            <p className="mt-1 text-[11px] text-gray-400">대한민국 원</p>
           </div>
+            );
+            const [top, bottom] = swapped ? [krwBox, foreignBox] : [foreignBox, krwBox];
+            return (
+              <div className={compact ? "mt-2" : ""}>
+                {top}
+                <div className="flex justify-center -my-2 relative z-10">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // 위아래 바꾸기: 위 칸이 '내가 입력하는 금액'
+                      if (!swapped) setKrw(String(Math.round(krwNum)));
+                      else {
+                        setForeign(String(Math.round(foreignNum * 100) / 100));
+                        setKrw(null);
+                      }
+                      setSwapped((v) => !v);
+                    }}
+                    className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow ring-4 ring-white hover:bg-emerald-600 active:scale-90 transition"
+                    aria-label="원화와 외화 위치 바꾸기"
+                    title="위아래 바꾸기"
+                  >
+                    <ArrowDownUp className={`w-4 h-4 transition-transform ${swapped ? "rotate-180" : ""}`} />
+                  </button>
+                </div>
+                {bottom}
+              </div>
+            );
+          })()}
 
           <div className="flex flex-wrap gap-1.5 mt-3">
-            {quick.map((q) => (
+            {(swapped ? [10000, 50000, 100000, 500000] : quick).map((q) => (
               <button
                 key={q}
                 type="button"
                 onClick={() => {
-                  setForeign(String(q));
-                  setKrw(null);
+                  if (swapped) setKrw(String(q));
+                  else {
+                    setForeign(String(q));
+                    setKrw(null);
+                  }
                 }}
                 className="px-3 py-1.5 rounded-full bg-white border border-emerald-100 text-xs font-semibold text-emerald-700 hover:bg-emerald-50"
               >
-                {fmt(q)} {code}
+                {fmt(q)} {swapped ? "원" : code}
               </button>
             ))}
           </div>
