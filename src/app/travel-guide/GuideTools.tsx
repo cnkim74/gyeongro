@@ -1,9 +1,10 @@
 "use client";
 
-// 여행 준비 도구 — 나라별 여행경보(외교부 공공데이터) · 여행지 날씨(Open-Meteo)
+// 여행 준비 도구 — 나라별 여행경보(외교부 공공데이터) · 여행지 날씨(Open-Meteo) · 환율 계산기
 
 import { useState } from "react";
 import { ShieldAlert, CloudSun, Search, Loader2, ExternalLink } from "lucide-react";
+import ExchangeCalculator from "@/components/ExchangeCalculator";
 
 interface Alarm {
   country: string;
@@ -87,7 +88,7 @@ export default function GuideTools() {
     "shrink-0 inline-flex items-center justify-center gap-1.5 px-5 rounded-2xl text-white text-base font-bold disabled:opacity-50";
 
   return (
-    <div className="grid md:grid-cols-2 gap-5">
+    <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
       {/* 여행경보 */}
       <section className="min-w-0 rounded-3xl p-5 sm:p-6 border border-rose-100 bg-gradient-to-br from-rose-50 via-white to-orange-50 shadow-[0_10px_30px_-16px_rgba(225,29,72,0.35)]">
         <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-1">
@@ -222,6 +223,8 @@ export default function GuideTools() {
           </div>
         )}
       </section>
+      {/* 환율 */}
+      <ExchangeCalculator />
     </div>
   );
 }

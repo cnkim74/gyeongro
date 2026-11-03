@@ -30,6 +30,8 @@ import {
 } from "@/lib/search-links";
 import TravelAdvisory from "@/components/TravelAdvisory";
 import ItineraryPdfButton from "@/components/ItineraryPdfButton";
+import ExchangeCalculator from "@/components/ExchangeCalculator";
+import { currencyForDestination } from "@/lib/currency";
 
 export interface TransportLeg {
   mode?: string;
@@ -196,6 +198,13 @@ export default function ItineraryView({
           </div>
         )}
       </div>
+
+      {/* ── 해외 여행이면 현지 통화 환율 계산기 ─────────── */}
+      {currencyForDestination(destination) && (
+        <div className="mb-6">
+          <ExchangeCalculator variant="compact" defaultCurrency={currencyForDestination(destination)!} />
+        </div>
+      )}
 
       {/* ── 전체 여행 지도 ─────────────────────────── */}
       {days.length > 0 && (
