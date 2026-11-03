@@ -98,3 +98,35 @@ export const COVER_STYLE_KEYS = Object.keys(COVER_STYLES);
 export function isCoverStyle(v: unknown): v is string {
   return typeof v === "string" && v in COVER_STYLES;
 }
+
+/**
+ * AI가 쓴 자주 묻는 질문 텍스트 → [{q, a}]
+ * "Q: / Q1. / **Q.** / - Q) / 질문:" 과 "A: / A1. / 답:" 등 여러 형식을 모두 받아들임
+ */
+export function parseFaqText(text: string): BlogFaq[] {
+  const lines = text
+    .split("\n")
+    .map((l) => l.replace(/\*\*/g, "").replace(/^\s*(?:[-*•]|#{1,6})\s*/, "").trim())
+    .filter(Boolean);
+  const Q = /^(?:Q\s*\d*|질문\s*\d*)\s*[.:：)\]]\s*/i;
+  const A = /^(?:A\s*\d*|답변?\s*\d*)\s*[.:：)\]]\s*/i;
+  const out: { q: string; a: string }[] = [];
+  let cur: { q: string; a: string } | null = null;
+  let mode: "q" | "a" | null = null;
+  for (const line of lines) {
+    if (Q.test(line)) {
+      if (cur) out.push(cur);
+      cur = { q: line.replace(Q, ""), a: "" };
+      mode = "q";
+    } else if (A.test(line) && cur) {
+      cur.a = line.replace(A, "");
+      mode = "a";
+    } else if (cur && mode === "a") {
+      cur.a += (cur.a ? "\n" : "") + line;
+    } else if (cur && mode === "q") {
+      cur.q += " " + line;
+    }
+  }
+  if (cur) out.push(cur);
+  return normalizeFaq(out);
+}
