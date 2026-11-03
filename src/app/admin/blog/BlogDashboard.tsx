@@ -158,9 +158,14 @@ export default function BlogDashboard({
     <div className="p-5 sm:p-8 max-w-6xl">
       <div className="flex flex-wrap items-end justify-between gap-3 mb-2">
         <h1 className="text-3xl font-extrabold text-gray-900">블로그 관리</h1>
-        <Link href="/admin/blog/new" className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-700">
-          <PenSquare className="w-4 h-4" /> 직접 쓰기
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/admin/blog/seo" className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-700">
+            🔎 검색 노출 점검
+          </Link>
+          <Link href="/admin/blog/new" className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-700">
+            <PenSquare className="w-4 h-4" /> 직접 쓰기
+          </Link>
+        </div>
       </div>
       <p className="text-[15px] text-gray-500 mb-6">
         AI가 검색 유입용 여행 글을 써서 홈페이지 블로그(/blog)에 올리고, 같은 주제의 네이버 블로그 원고와 스레드 홍보 글도 함께 만들어요.

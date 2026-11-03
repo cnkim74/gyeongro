@@ -4,6 +4,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
 import { getSupabaseServiceClient } from "@/lib/supabase";
+import { pingIndexNow, postUrl } from "@/lib/search-index";
 import { isCoverStyle } from "@/lib/blog-utils";
 
 export const runtime = "nodejs";
@@ -39,5 +40,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const { data, error } = await supabase.from("blog_posts").update(patch).eq("id", id).select("*").single();
   if (error) return Response.json({ error: error.message }, { status: 400 });
   revalidatePath("/blog", "layout");
+  // 공개 상태면 검색엔진(네이버·Bing)에 새 글/수정 알림
+  if (patch.is_published === true && data?.is_published) await pingIndexNow([postUrl(data.slug)]).catch(() => null);
   return Response.json({ post: data });
 }

@@ -16,6 +16,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL ?? "https://pothostravel.com"),
+  // 검색엔진 소유 확인 — Vercel 환경변수에 값을 넣으면 <meta> 로 들어감
+  verification: {
+    ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
+    ...(process.env.NAVER_SITE_VERIFICATION ? { other: { "naver-site-verification": process.env.NAVER_SITE_VERIFICATION } } : {}),
+  },
   title: "Pothos - 먼 곳을 향한 동경, 그리고 여정",
   description:
     "AI가 설계하는 맞춤 여행 일정과 함께 떠날 동료, 영감을 주는 스토리. 그리스어 '동경'에서 시작된 글로벌 여행 플랫폼 Pothos.",
