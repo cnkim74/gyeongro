@@ -4,7 +4,7 @@
 //           (NAVER_SEARCH_CLIENT_ID / NAVER_SEARCH_CLIENT_SECRET — 지도 블로그 후기와 같은 키)
 // - 구글:   Google Search Console URL 검사 API (서비스 계정)
 //           GOOGLE_SC_CLIENT_EMAIL / GOOGLE_SC_PRIVATE_KEY / (선택) GOOGLE_SC_SITE
-// - 수집 요청: IndexNow (네이버 서치어드바이저 · Bing 등) — 키 파일은 /api/indexnow-key
+// - 수집 요청: IndexNow (네이버 서치어드바이저 · Bing 등) — 키 파일은 /indexnow-key.txt (루트)
 
 import crypto from "node:crypto";
 import jwt from "jsonwebtoken";
@@ -167,7 +167,7 @@ export function indexNowKey(): string {
 export async function pingIndexNow(urls: string[]): Promise<{ engine: string; ok: boolean; status: number }[]> {
   if (urls.length === 0) return [];
   const host = new URL(SITE).host;
-  const body = JSON.stringify({ host, key: indexNowKey(), keyLocation: `${SITE}/api/indexnow-key`, urlList: urls.slice(0, 10000) });
+  const body = JSON.stringify({ host, key: indexNowKey(), keyLocation: `${SITE}/indexnow-key.txt`, urlList: urls.slice(0, 10000) });
   const engines = [
     ["네이버", "https://searchadvisor.naver.com/indexnow"],
     ["Bing 등", "https://api.indexnow.org/indexnow"],
