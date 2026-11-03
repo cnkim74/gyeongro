@@ -7,20 +7,22 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowDownUp, Loader2, RefreshCw } from "lucide-react";
 import { CURRENCIES, currencyInfo } from "@/lib/currency";
 
-type Rates = { rates: Record<string, number>; updatedAt: string; source: string };
+type Rates = { rates: Record<string, number>; updatedAt: string; source: string; live?: boolean };
 
-// 같은 페이지에서 여러 번 불러오지 않도록 공유
-let cache: Promise<Rates> | null = null;
-function loadRates(): Promise<Rates> {
-  if (!cache) {
-    cache = fetch("/api/exchange")
+// 같은 페이지에서 여러 번 불러오지 않도록 공유 + 5분 지나면 새로 받기 (여행 중 켜 둔 화면도 최신으로)
+const FRESH_MS = 5 * 60 * 1000;
+let cache: { at: number; p: Promise<Rates> } | null = null;
+function loadRates(force = false): Promise<Rates> {
+  if (!cache || force || Date.now() - cache.at > FRESH_MS) {
+    const p = fetch("/api/exchange", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error("fail"))))
       .catch((e) => {
         cache = null;
         throw e;
       });
+    cache = { at: Date.now(), p };
   }
-  return cache;
+  return cache.p;
 }
 
 function fmt(n: number, max = 2): string {
@@ -67,11 +69,19 @@ export default function ExchangeCalculator({
 
   useEffect(() => {
     let alive = true;
-    loadRates()
-      .then((d) => alive && setData(d))
-      .catch(() => alive && setError(true));
+    const refresh = () =>
+      loadRates()
+        .then((d) => alive && setData(d))
+        .catch(() => alive && setError(true));
+    refresh();
+    // 켜 둔 동안 5분마다, 다른 앱 갔다 돌아오면 바로 최신 환율로
+    const timer = setInterval(refresh, FRESH_MS);
+    const onVisible = () => document.visibilityState === "visible" && refresh();
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       alive = false;
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
 
@@ -82,7 +92,7 @@ export default function ExchangeCalculator({
   const updated = useMemo(() => {
     if (!data) return "";
     const d = new Date(data.updatedAt);
-    return d.toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "numeric", minute: "2-digit" });
   }, [data]);
 
   const quick = info.unit === 100 ? [1000, 5000, 10000, 50000] : code === "USD" || code === "EUR" || code === "GBP" || code === "CHF" ? [10, 50, 100, 500] : [100, 500, 1000, 5000];
@@ -101,6 +111,18 @@ export default function ExchangeCalculator({
         <h2 className={`flex items-center gap-2 font-bold text-gray-900 ${compact ? "text-lg" : "text-xl"}`}>{title}</h2>
         {data && (
           <span className="text-[11px] text-gray-400 text-right leading-tight pt-1">
+            {data.live ? (
+              <span className="inline-flex items-center gap-1 font-bold text-emerald-600">
+                <span className="relative flex w-1.5 h-1.5">
+                  <span className="absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                  <span className="relative inline-flex w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                </span>
+                실시간
+              </span>
+            ) : (
+              <span className="font-semibold text-amber-600">일일 환율</span>
+            )}
+            <br />
             {updated} 기준
           </span>
         )}
@@ -235,7 +257,7 @@ export default function ExchangeCalculator({
             {info.flag} {fmt(info.unit)} {code} ≈ {fmt(rate * info.unit, rate * info.unit < 100 ? 2 : 0)}원
           </p>
           <p className="mt-1 text-[11px] text-gray-400 leading-relaxed">
-            시장 기준 환율({data.source})이에요. 은행·카드·환전소 실제 환율은 수수료로 1~3% 다를 수 있어요.
+            {data.live ? "당일 실시간 시장 환율(매매기준, 5분마다 갱신)" : "시장 기준 환율(실시간 연결이 잠시 안 돼 일일 환율로 표시)"} · 출처 {data.source}. 은행·카드·환전소 실제 환율은 수수료로 1~3% 다를 수 있어요.
           </p>
         </>
       )}
