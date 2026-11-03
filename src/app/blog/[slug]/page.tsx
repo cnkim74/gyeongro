@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return {
     title: `${post.title} | Pothos 블로그`,
     description: post.excerpt || undefined,
-    alternates: { canonical: `/blog/${post.slug}` },
+    alternates: { canonical: `/blog/${post.slug}`, types: { "application/rss+xml": [{ url: "/rss.xml", title: "Pothos 여행 인사이트" }] } },
     openGraph: {
       type: "article",
       title: post.title,

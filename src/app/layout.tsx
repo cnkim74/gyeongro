@@ -22,6 +22,8 @@ export const metadata: Metadata = {
     ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
     ...(process.env.NAVER_SITE_VERIFICATION ? { other: { "naver-site-verification": process.env.NAVER_SITE_VERIFICATION } } : {}),
   },
+  // 블로그 RSS 자동 발견
+  alternates: { types: { "application/rss+xml": [{ url: "/rss.xml", title: "Pothos 여행 인사이트" }] } },
   title: "Pothos - 먼 곳을 향한 동경, 그리고 여정",
   description:
     "AI가 설계하는 맞춤 여행 일정과 함께 떠날 동료, 영감을 주는 스토리. 그리스어 '동경'에서 시작된 글로벌 여행 플랫폼 Pothos.",

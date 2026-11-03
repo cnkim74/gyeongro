@@ -97,6 +97,7 @@ export default function SeoChecker({
   const steps = [
     { ok: true, label: "사이트맵 (/sitemap.xml)", desc: "공개 글이 자동으로 들어가요", href: `${site}/sitemap.xml` },
     { ok: true, label: "robots.txt", desc: "검색엔진 수집 허용 + 사이트맵 안내", href: `${site}/robots.txt` },
+    { ok: true, label: "RSS (/rss.xml)", desc: "네이버 서치어드바이저 'RSS 제출'에 등록", href: `${site}/rss.xml` },
     { ok: setup.naverVerification, label: "네이버 서치어드바이저 소유 확인", desc: "Vercel 환경변수 NAVER_SITE_VERIFICATION", href: "https://searchadvisor.naver.com/console/board" },
     { ok: setup.googleVerification, label: "구글 서치 콘솔 소유 확인", desc: "Vercel 환경변수 GOOGLE_SITE_VERIFICATION (도메인 DNS 인증이면 불필요)", href: "https://search.google.com/search-console" },
     { ok: setup.naverApi, label: "네이버 검색 API (노출 확인용)", desc: "NAVER_SEARCH_CLIENT_ID / SECRET", href: "https://developers.naver.com/apps/#/register" },
