@@ -47,7 +47,14 @@ export default function SeoChecker({
   site,
 }: {
   posts: Post[];
-  setup: { naverApi: boolean; googleConsole: boolean; naverVerification: boolean; googleVerification: boolean };
+  setup: {
+    naverApi: boolean;
+    googleConsole: boolean;
+    naverVerification: boolean;
+    naverHow: string;
+    googleVerification: boolean;
+    googleHow: string;
+  };
   site: string;
 }) {
   const [results, setResults] = useState<Record<string, Result>>({});
@@ -94,15 +101,39 @@ export default function SeoChecker({
     }
   };
 
-  const steps = [
+  // 필수: 검색엔진 등록 / 선택: 점검 화면에서 자동 확인용 API
+  const steps: { ok: boolean; label: string; desc: string; href: string; optional?: boolean }[] = [
     { ok: true, label: "사이트맵 (/sitemap.xml)", desc: "공개 글이 자동으로 들어가요", href: `${site}/sitemap.xml` },
     { ok: true, label: "robots.txt", desc: "검색엔진 수집 허용 + 사이트맵 안내", href: `${site}/robots.txt` },
-    { ok: true, label: "RSS (/rss.xml)", desc: "네이버 서치어드바이저 'RSS 제출'에 등록", href: `${site}/rss.xml` },
-    { ok: setup.naverVerification, label: "네이버 서치어드바이저 소유 확인", desc: "Vercel 환경변수 NAVER_SITE_VERIFICATION", href: "https://searchadvisor.naver.com/console/board" },
-    { ok: setup.googleVerification, label: "구글 서치 콘솔 소유 확인", desc: "Vercel 환경변수 GOOGLE_SITE_VERIFICATION (도메인 DNS 인증이면 불필요)", href: "https://search.google.com/search-console" },
-    { ok: setup.naverApi, label: "네이버 검색 API (노출 확인용)", desc: "NAVER_SEARCH_CLIENT_ID / SECRET", href: "https://developers.naver.com/apps/#/register" },
-    { ok: setup.googleConsole, label: "구글 서치콘솔 API (색인 확인용)", desc: "GOOGLE_SC_CLIENT_EMAIL / GOOGLE_SC_PRIVATE_KEY", href: "https://console.cloud.google.com/apis/library/searchconsole.googleapis.com" },
+    { ok: true, label: "RSS (/rss.xml)", desc: "새 글 알림용 피드", href: `${site}/rss.xml` },
+    {
+      ok: setup.naverVerification,
+      label: "네이버 서치어드바이저 등록",
+      desc: setup.naverVerification ? `소유 확인됨 (${setup.naverHow})` : "서치어드바이저에서 사이트 등록·소유 확인",
+      href: "https://searchadvisor.naver.com/console/board",
+    },
+    {
+      ok: setup.googleVerification,
+      label: "구글 서치 콘솔 등록",
+      desc: setup.googleVerification ? `소유 확인됨 (${setup.googleHow})` : "서치 콘솔에서 도메인 등록·소유 확인",
+      href: "https://search.google.com/search-console",
+    },
+    {
+      ok: setup.naverApi,
+      optional: true,
+      label: "네이버 노출 자동 확인 (선택)",
+      desc: setup.naverApi ? "연결됨" : "네이버 개발자센터 검색 API 키 → Vercel NAVER_SEARCH_CLIENT_ID / SECRET",
+      href: "https://developers.naver.com/apps/#/register",
+    },
+    {
+      ok: setup.googleConsole,
+      optional: true,
+      label: "구글 색인 자동 확인 (선택)",
+      desc: setup.googleConsole ? "연결됨" : "서비스 계정 → Vercel GOOGLE_SC_CLIENT_EMAIL / GOOGLE_SC_PRIVATE_KEY",
+      href: "https://console.cloud.google.com/apis/library/searchconsole.googleapis.com",
+    },
   ];
+
 
   return (
     <div className="p-5 sm:p-8 max-w-5xl">
@@ -114,11 +145,20 @@ export default function SeoChecker({
 
       {/* 준비 상태 */}
       <section className="bg-white rounded-3xl border border-gray-100 p-5 sm:p-6 mb-6">
-        <h2 className="font-bold text-gray-900 mb-3">준비 상태</h2>
+        <h2 className="font-bold text-gray-900 mb-1">준비 상태</h2>
+        <p className="text-xs text-gray-500 mb-3">
+          ✅ 완료 · ❌ 해야 할 일 · 점선 = 선택 (안 해도 검색 노출에는 영향 없고, 이 화면에서 결과를 자동으로 보여주는 기능만 꺼져 있어요)
+        </p>
         <ul className="grid sm:grid-cols-2 gap-2">
           {steps.map((s) => (
             <li key={s.label} className="flex items-start gap-2 rounded-2xl bg-gray-50 px-3 py-2.5">
-              {s.ok ? <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> : <XCircle className="w-5 h-5 text-gray-300 shrink-0" />}
+              {s.ok ? (
+                <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+              ) : s.optional ? (
+                <span className="w-5 h-5 shrink-0 rounded-full border-2 border-dashed border-gray-300" />
+              ) : (
+                <XCircle className="w-5 h-5 text-rose-400 shrink-0" />
+              )}
               <div className="min-w-0">
                 <a href={s.href} target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-gray-900 hover:text-blue-600 inline-flex items-center gap-1">
                   {s.label} <ExternalLink className="w-3 h-3" />

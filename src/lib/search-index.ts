@@ -16,12 +16,40 @@ export function postUrl(slug: string): string {
 }
 
 // ── 설정 상태 (값은 노출하지 않고 있는지만) ─────────────
-export function searchSetupStatus() {
+/** 네이버 서치어드바이저 HTML 파일 확인용 파일 (public/ 에 있음) */
+const NAVER_VERIFY_FILE = "navercfa0af4118b061c5a9804d33effaa87f.html";
+
+/** 구글: 도메인 DNS 의 TXT 기록(google-site-verification) 을 실제로 조회 */
+async function googleDnsVerified(): Promise<boolean> {
+  try {
+    const host = new URL(SITE).host.replace(/^www\./, "");
+    const r = await fetch(`https://dns.google/resolve?name=${host}&type=TXT`, { cache: "no-store", signal: AbortSignal.timeout(5000) });
+    const j = (await r.json()) as { Answer?: { data?: string }[] };
+    return (j.Answer ?? []).some((a) => String(a.data ?? "").includes("google-site-verification="));
+  } catch {
+    return false;
+  }
+}
+
+/** 네이버: 확인 파일이 실제로 열리는지 */
+async function naverFileVerified(): Promise<boolean> {
+  try {
+    const r = await fetch(`${SITE}/${NAVER_VERIFY_FILE}`, { cache: "no-store", signal: AbortSignal.timeout(5000) });
+    return r.ok && (await r.text()).includes("naver-site-verification");
+  } catch {
+    return false;
+  }
+}
+
+export async function searchSetupStatus() {
+  const [googleDns, naverFile] = await Promise.all([googleDnsVerified(), naverFileVerified()]);
   return {
     naverApi: !!(process.env.NAVER_SEARCH_CLIENT_ID && process.env.NAVER_SEARCH_CLIENT_SECRET),
     googleConsole: !!(process.env.GOOGLE_SC_CLIENT_EMAIL && process.env.GOOGLE_SC_PRIVATE_KEY),
-    naverVerification: !!process.env.NAVER_SITE_VERIFICATION,
-    googleVerification: !!process.env.GOOGLE_SITE_VERIFICATION,
+    naverVerification: !!process.env.NAVER_SITE_VERIFICATION || naverFile,
+    naverHow: process.env.NAVER_SITE_VERIFICATION ? "HTML 태그" : naverFile ? "HTML 파일" : "",
+    googleVerification: !!process.env.GOOGLE_SITE_VERIFICATION || googleDns,
+    googleHow: googleDns ? "도메인(DNS)" : process.env.GOOGLE_SITE_VERIFICATION ? "HTML 태그" : "",
   };
 }
 

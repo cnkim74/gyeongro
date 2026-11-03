@@ -17,7 +17,7 @@ export default async function BlogSeoPage() {
   return (
     <SeoChecker
       posts={(data ?? []) as { id: string; slug: string; title: string; published_at: string | null }[]}
-      setup={searchSetupStatus()}
+      setup={await searchSetupStatus()}
       site={SITE}
     />
   );
