@@ -9,7 +9,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getSupabaseServiceClient } from "./supabase";
 import { recordAiRun } from "./ai-runs";
 import { pingIndexNow } from "./search-index";
-import { COVER_STYLE_KEYS, isCoverStyle, normalizeFaq, normalizeSlug, type BlogFaq } from "./blog-utils";
+import { COVER_STYLE_KEYS, isCoverStyle, normalizeSlug, parseFaqText, type BlogFaq } from "./blog-utils";
 import type { BlogAutoSettings } from "./blog-auto";
 
 const MODEL = "claude-sonnet-5-5";
@@ -219,15 +219,7 @@ A: 답변3</faq>
     let content = tag(text, "content");
     if (!title || content.length < 500) throw new Error("AI가 글을 완성하지 못했어요. 다시 시도해 주세요.");
 
-    const faq = normalizeFaq(
-      tag(text, "faq")
-        .split(/\n(?=Q[:：])/)
-        .map((blk) => {
-          const q = /Q[:：]\s*([\s\S]*?)(?:\nA[:：]|$)/.exec(blk)?.[1]?.trim() ?? "";
-          const a = /A[:：]\s*([\s\S]*)$/.exec(blk)?.[1]?.trim() ?? "";
-          return { q, a };
-        })
-    );
+    const faq = parseFaqText(tag(text, "faq"));
 
     const styleRaw = tag(text, "cover_style").toLowerCase();
     const cover_style = s.coverMode === "fixed" ? s.coverStyle : isCoverStyle(styleRaw) ? styleRaw : s.coverStyle;
