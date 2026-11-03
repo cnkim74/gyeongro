@@ -4,6 +4,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
 import { getSupabaseServiceClient } from "@/lib/supabase";
+import { pingIndexNow, postUrl } from "@/lib/search-index";
 import { sanitizeBlogInput } from "@/lib/blog-admin";
 
 export const runtime = "nodejs";
@@ -35,5 +36,7 @@ export async function POST(req: Request) {
     return Response.json({ error: msg }, { status: 400 });
   }
   revalidatePath("/blog", "layout");
+  // 공개 상태면 검색엔진(네이버·Bing)에 새 글/수정 알림
+  if (data?.is_published) await pingIndexNow([postUrl(data.slug)]).catch(() => null);
   return Response.json({ post: data });
 }

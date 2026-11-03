@@ -8,6 +8,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getSupabaseServiceClient } from "./supabase";
 import { recordAiRun } from "./ai-runs";
+import { pingIndexNow } from "./search-index";
 import { COVER_STYLE_KEYS, isCoverStyle, normalizeFaq, normalizeSlug, type BlogFaq } from "./blog-utils";
 import type { BlogAutoSettings } from "./blog-auto";
 
@@ -324,5 +325,7 @@ export async function saveWrittenPost(
     }
     throw new Error(error.message);
   }
+  // 발행했으면 검색엔진에 새 글 알림 (실패해도 무시)
+  if (opts.publish) await pingIndexNow([url]).catch(() => null);
   return data as { id: string; slug: string };
 }
