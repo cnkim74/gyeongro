@@ -44,14 +44,20 @@ export default function BlogDashboard({
   tableMissing,
   autoReady,
   cronSecret,
+  threads,
+  threadsNotice,
 }: {
   initialPosts: BlogPost[];
   initialSettings: BlogAutoSettings;
   tableMissing: boolean;
   autoReady: boolean;
   cronSecret: boolean;
+  threads: { appConfigured: boolean; connected: boolean; username: string | null; expiresAt: string | null; ready: boolean };
+  /** 스레드 연결 후 돌아왔을 때 결과 (connected / denied / failed / invalid) */
+  threadsNotice: string | null;
 }) {
   const router = useRouter();
+  const [threadsBusy, setThreadsBusy] = useState<string | null>(null);
   const [posts, setPosts] = useState(initialPosts);
   const [settings, setSettings] = useState(initialSettings);
   const [topicsText, setTopicsText] = useState(initialSettings.topics.join("\n"));
@@ -318,6 +324,62 @@ export default function BlogDashboard({
             </label>
           </div>
 
+          {/* 스레드 자동 게시 */}
+          <div className="mt-4 rounded-2xl bg-gray-50 p-4">
+            <p className="text-sm font-bold text-gray-800 mb-2">🧵 스레드(Threads) 자동 게시</p>
+            {threadsNotice && (
+              <p className={`mb-2 text-xs font-semibold ${threadsNotice === "connected" ? "text-emerald-600" : "text-red-600"}`}>
+                {threadsNotice === "connected"
+                  ? "스레드 계정이 연결됐어요!"
+                  : threadsNotice === "denied"
+                    ? "스레드에서 권한을 허용하지 않았어요."
+                    : "스레드 연결에 실패했어요. 앱 설정(리디렉션 주소·테스터 등록)을 확인해 주세요."}
+              </p>
+            )}
+            {!threads.appConfigured ? (
+              <p className="text-xs text-gray-500 leading-relaxed">
+                Meta 개발자 앱을 만들고 Vercel 환경변수 <code>THREADS_APP_ID</code>, <code>THREADS_APP_SECRET</code> 을 넣으면 연결할 수 있어요.
+              </p>
+            ) : threads.connected ? (
+              <>
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold">연결됨 @{threads.username}</span>
+                  {threads.expiresAt && (
+                    <span className="text-xs text-gray-400">토큰 {new Date(threads.expiresAt).toLocaleDateString("ko-KR")}까지 (자동 갱신)</span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!confirm("스레드 연결을 끊을까요?")) return;
+                      await fetch("/api/admin/threads", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "disconnect" }) });
+                      router.refresh();
+                    }}
+                    className="ml-auto text-xs text-gray-400 hover:text-red-500"
+                  >
+                    연결 끊기
+                  </button>
+                </div>
+                <label className="mt-3 flex items-center gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={settings.threadsAuto}
+                    disabled={!threads.ready}
+                    onChange={(e) => setSettings((s) => ({ ...s, threadsAuto: e.target.checked }))}
+                  />
+                  공개된 블로그 글을 하루 1개씩 스레드에 자동 게시 (오전 8시대)
+                </label>
+                {!threads.ready && (
+                  <p className="mt-1 text-xs text-amber-700">먼저 Supabase에서 <code>supabase/migration_threads.sql</code> 을 실행해 주세요.</p>
+                )}
+                {settings.lastThreadsDate && <p className="mt-1 text-xs text-gray-400">마지막 자동 게시 {settings.lastThreadsDate}</p>}
+              </>
+            ) : (
+              <a href="/api/admin/threads/connect" className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-black text-white text-sm font-bold">
+                🧵 스레드 계정 연결하기
+              </a>
+            )}
+          </div>
+
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <button
               type="button"
@@ -355,6 +417,9 @@ export default function BlogDashboard({
                   </span>
                 )}
                 {p.source === "ai" && <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600">AI</span>}
+                {(p as BlogPost & { threads_posted_at?: string | null }).threads_posted_at && (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-black text-white">스레드 ✓</span>
+                )}
                 <span className="ml-auto text-xs text-gray-400">
                   {p.is_published ? `발행 ${formatBlogDate(p.published_at)}` : `작성 ${formatBlogDate(p.created_at)}`}
                 </span>
@@ -387,6 +452,28 @@ export default function BlogDashboard({
                 {p.naver_draft && (
                   <button type="button" onClick={() => setNaverPost(p)} className="px-3.5 py-2 rounded-xl bg-green-50 text-sm font-bold text-green-700">
                     네이버 원고
+                  </button>
+                )}
+                {threads.connected && threads.ready && p.is_published && !(p as BlogPost & { threads_posted_at?: string | null }).threads_posted_at && (
+                  <button
+                    type="button"
+                    disabled={threadsBusy === p.id}
+                    onClick={async () => {
+                      if (!confirm("이 글을 지금 스레드에 올릴까요?")) return;
+                      setThreadsBusy(p.id);
+                      const r = await fetch("/api/admin/threads", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ action: "post", postId: p.id }),
+                      });
+                      const j = await r.json();
+                      setThreadsBusy(null);
+                      if (!r.ok) alert(j.error ?? "스레드 게시 실패");
+                      else router.refresh();
+                    }}
+                    className="px-3.5 py-2 rounded-xl bg-black text-sm font-bold text-white disabled:opacity-50"
+                  >
+                    {threadsBusy === p.id ? "올리는 중…" : "스레드에 올리기"}
                   </button>
                 )}
                 <button
