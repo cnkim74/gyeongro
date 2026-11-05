@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { Trash2, Loader2, Pencil } from "lucide-react";
 
 export default function StoryActions({ storyId }: { storyId: string }) {
   const router = useRouter();
@@ -23,6 +24,13 @@ export default function StoryActions({ storyId }: { storyId: string }) {
   };
 
   return (
+    <div className="flex items-center gap-1">
+      <Link
+        href={`/stories/${storyId}/edit`}
+        className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+      >
+        <Pencil className="w-4 h-4" /> 수정
+      </Link>
     <button
       onClick={handleDelete}
       disabled={deleting}
@@ -31,5 +39,6 @@ export default function StoryActions({ storyId }: { storyId: string }) {
     >
       {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
     </button>
+    </div>
   );
 }
