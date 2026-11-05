@@ -1,16 +1,22 @@
 "use client";
 
-// 해외 축제 AI 큐레이션 — 나라·연·월로 웹 검색 후보 생성 → 출처 확인 후 게시/거절
+// 축제·박람회 AI 큐레이션 — 나라·연·월로 웹 검색 후보 생성 → 출처 확인 후 게시/거절
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Search, ExternalLink, Check, X, Trash2 } from "lucide-react";
-import type { GlobalFestivalRow } from "@/lib/global-festivals-db";
+import { kindOf, type GlobalFestivalRow, type CurationKind } from "@/lib/global-festivals-db";
 
 const COUNTRIES = [
   "일본", "중국", "대만", "홍콩", "태국", "베트남", "필리핀", "인도네시아", "싱가포르", "말레이시아",
   "인도", "미국", "캐나다", "멕시코", "브라질", "영국", "프랑스", "독일", "스페인", "이탈리아",
   "포르투갈", "네덜란드", "오스트리아", "스위스", "체코", "호주", "뉴질랜드", "아랍에미리트", "튀르키예",
 ];
+
+const AUDIENCE: Record<string, { label: string; cls: string }> = {
+  public: { label: "일반 관람 가능", cls: "bg-blue-50 text-blue-700" },
+  mixed: { label: "일부 일반 공개", cls: "bg-violet-50 text-violet-700" },
+  trade: { label: "업계 관계자 전용", cls: "bg-gray-100 text-gray-600" },
+};
 
 const STATUS: Record<GlobalFestivalRow["status"], { label: string; cls: string }> = {
   pending: { label: "검수 대기", cls: "bg-amber-100 text-amber-800" },
@@ -21,10 +27,14 @@ const STATUS: Record<GlobalFestivalRow["status"], { label: string; cls: string }
 export default function GlobalFestivalManager({
   initial,
   tableMissing,
+  expoReady,
 }: {
   initial: GlobalFestivalRow[];
   tableMissing: boolean;
+  /** migration_global_expos.sql 실행 여부 */
+  expoReady: boolean;
 }) {
+  const [kind, setKind] = useState<CurationKind>("festival");
   const router = useRouter();
   const now = new Date();
   const [country, setCountry] = useState("일본");
@@ -43,7 +53,7 @@ export default function GlobalFestivalManager({
       const r = await fetch("/api/admin/global-festivals/curate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ country, year, month, count }),
+        body: JSON.stringify({ country, year, month, count, kind }),
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error ?? "실패");
@@ -80,15 +90,41 @@ export default function GlobalFestivalManager({
     }
   };
 
-  const rows = initial.filter((r) => filter === "all" || r.status === filter);
+  const ofKind = initial.filter((r) => kindOf(r) === kind);
+  const rows = ofKind.filter((r) => filter === "all" || r.status === filter);
+  const countries = kind === "expo" ? ["한국", ...COUNTRIES] : COUNTRIES;
+  const word = kind === "expo" ? "박람회" : "축제";
   const sel = "px-3 py-3 rounded-xl border border-gray-200 bg-white text-base";
 
   return (
     <div className="p-5 sm:p-8 max-w-5xl">
-      <h1 className="text-2xl font-bold text-gray-900">해외 축제 큐레이션</h1>
-      <p className="text-[15px] text-gray-500 mt-1 mb-6">
-        AI가 웹 검색으로 실제 개최일과 출처를 찾아 후보를 만들어요. 출처를 확인한 뒤 게시하면 축제 페이지 &lsquo;세계 대표 축제&rsquo;에 나와요.
+      <h1 className="text-2xl font-bold text-gray-900">축제·박람회 큐레이션</h1>
+      <p className="text-[15px] text-gray-500 mt-1 mb-4">
+        AI가 웹 검색으로 실제 개최일과 출처를 찾아 후보를 만들어요. 출처를 확인한 뒤 게시하면 축제 페이지의{" "}
+        {kind === "expo" ? <>&lsquo;박람회·전시&rsquo; 탭</> : <>&lsquo;세계 대표 축제&rsquo; 탭</>}에 나와요.
       </p>
+
+      <div className="inline-flex gap-1 rounded-2xl bg-gray-100 p-1 mb-6">
+        {(["festival", "expo"] as const).map((k) => (
+          <button
+            key={k}
+            onClick={() => {
+              setKind(k);
+              setMsg(null);
+              if (k === "festival" && country === "한국") setCountry("일본");
+            }}
+            className={`px-5 py-2.5 rounded-xl text-[15px] font-bold ${kind === k ? "bg-white shadow-sm text-gray-900" : "text-gray-500"}`}
+          >
+            {k === "festival" ? "🎉 해외 축제" : "🏛️ 박람회·전시"}
+          </button>
+        ))}
+      </div>
+
+      {kind === "expo" && !expoReady && !tableMissing && (
+        <div className="mb-6 rounded-2xl bg-amber-50 border border-amber-200 p-4 text-[15px] text-amber-900">
+          박람회 큐레이션을 쓰려면 Supabase SQL Editor 에서 <code>supabase/migration_global_expos.sql</code> 을 한 번 실행해 주세요.
+        </div>
+      )}
 
       {tableMissing && (
         <div className="mb-6 rounded-2xl bg-amber-50 border border-amber-200 p-4 text-[15px] text-amber-900">
@@ -101,7 +137,7 @@ export default function GlobalFestivalManager({
           <label className="text-sm font-semibold text-gray-600">
             나라
             <select className={`${sel} block mt-1`} value={country} onChange={(e) => setCountry(e.target.value)}>
-              {COUNTRIES.map((c) => (
+              {countries.map((c) => (
                 <option key={c}>{c}</option>
               ))}
             </select>
@@ -132,11 +168,11 @@ export default function GlobalFestivalManager({
           </label>
           <button
             onClick={curate}
-            disabled={loading || tableMissing}
+            disabled={loading || tableMissing || (kind === "expo" && !expoReady)}
             className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 text-white text-base font-bold disabled:opacity-50"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
-            {loading ? "웹에서 찾는 중… (1~2분)" : "AI로 축제 찾기"}
+            {loading ? "웹에서 찾는 중… (1~2분)" : `AI로 ${word} 찾기`}
           </button>
         </div>
         {msg && <p className={`mt-3 text-[15px] font-semibold ${msg.ok ? "text-emerald-600" : "text-rose-600"}`}>{msg.text}</p>}
@@ -150,7 +186,7 @@ export default function GlobalFestivalManager({
             onClick={() => setFilter(f)}
             className={`px-4 py-2 rounded-full text-sm font-semibold ${filter === f ? "bg-slate-900 text-white" : "bg-white border border-gray-200 text-gray-600"}`}
           >
-            {f === "all" ? "전체" : STATUS[f].label} ({f === "all" ? initial.length : initial.filter((r) => r.status === f).length})
+            {f === "all" ? "전체" : STATUS[f].label} ({f === "all" ? ofKind.length : ofKind.filter((r) => r.status === f).length})
           </button>
         ))}
       </div>
@@ -167,6 +203,9 @@ export default function GlobalFestivalManager({
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-base font-bold text-gray-900">{r.name}</p>
                     <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${STATUS[r.status].cls}`}>{STATUS[r.status].label}</span>
+                    {r.audience && AUDIENCE[r.audience] && (
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${AUDIENCE[r.audience].cls}`}>{AUDIENCE[r.audience].label}</span>
+                    )}
                   </div>
                   <p className="text-sm text-gray-500">
                     {r.flag} {r.country} · {r.city} → 플래너 목적지 {r.destination} · {r.name_en}

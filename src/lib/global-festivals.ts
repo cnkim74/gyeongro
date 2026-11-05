@@ -21,6 +21,8 @@ export interface GlobalFestival {
   startDate?: string | null;
   endDate?: string | null;
   sourceUrl?: string | null;
+  /** 박람회 큐레이션: 관람 대상 (public 일반 관람 / trade 업계 전용 / mixed 일부 일반 공개) */
+  audience?: "public" | "trade" | "mixed" | null;
 }
 
 export const GLOBAL_FESTIVALS: GlobalFestival[] = [
