@@ -1017,4 +1017,416 @@ Day 3 · 섭지코지 → 광치기해변 → (가을이면) 다랑쉬오름 억
       },
     ],
   },
+
+  // ── 부산 ──────────────────────────
+  {
+    title: "[Pothos 에디터] 부산 1박 2일, 바다 따라 걷는 코스",
+    subtitle: "해운대·광안리 야경, 감천문화마을, 해동용궁사, 자갈치",
+    destination: "부산",
+    cover_image_url: "/stories/busan-1.jpg",
+    intro:
+      "부산은 KTX로 금방 닿고, 바다와 시장과 골목이 한 도시에 다 있어서 1박 2일로도 알차요. 동쪽(해운대·광안리·기장)과 서쪽(감천·남포동)으로 하루씩 나누면 이동이 훨씬 편해요.",
+    duration_text: "1박 2일",
+    tags: ["부산", "국내여행", "바다", "야경"],
+    sections: [
+      {
+        title: "Day 1 · 해운대에서 시작",
+        image_url: "/stories/busan-2.jpg",
+        image_credit: "StephNurnberg · CC BY 2.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Haeundae_Beach_in_Busan.jpg",
+        content: `부산역이나 김해공항에서 지하철로 해운대까지 바로 갈 수 있어요. 숙소를 해운대·광안리 쪽에 잡으면 첫날 동선이 편해요.
+
+• 해운대 해변 산책 → 동백섬 해안 산책로
+• 점심은 근처 시장에서 돼지국밥이나 밀면
+• 여름이 아니어도 바다 앞 카페에서 쉬기 좋아요`,
+      },
+      {
+        title: "Day 1 오후 · 해동용궁사",
+        image_url: "/stories/busan-4.jpg",
+        image_credit: "Christian Bolz · CC BY-SA 4.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Haedong_Yonggungsa_Temple_near_Busan.jpg",
+        content: `해운대에서 동쪽 기장 방향으로 가면 바닷가 바위 위에 지어진 해동용궁사가 있어요. 파도 소리를 들으며 계단을 내려가는 길이 인상적이에요.
+
+• 주말엔 사람이 많으니 평일 오전이나 오후 늦게
+• 운영 시간은 방문 전에 확인하세요`,
+      },
+      {
+        title: "Day 1 밤 · 광안대교 야경",
+        image_url: "",
+        content: `저녁엔 광안리 해변으로 이동해요. 해가 지면 광안대교에 조명이 켜지고(표지 사진), 해변을 따라 횟집과 카페가 늘어서 있어요.
+
+• 해변 모래사장에 앉아 야경 감상
+• 바다가 보이는 2층 카페나 루프톱에서 보는 것도 추천
+• 광안리에서는 드론 라이트쇼가 열리는 날도 있어요 — 일정은 미리 확인`,
+      },
+      {
+        title: "Day 2 · 감천문화마을",
+        image_url: "/stories/busan-3.jpg",
+        image_credit: "Basile Morin · CC BY-SA 4.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Colorful_houses_in_Gamcheon_Culture_Village_at_sunset_in_Busan_South_Korea.jpg",
+        content: `둘째 날은 서쪽으로! 산비탈을 따라 알록달록한 집들이 계단처럼 이어진 감천문화마을은 '한국의 마추픽추'라고도 불려요.
+
+• 골목이 좁고 경사가 있어 편한 신발 필수
+• 실제로 주민이 사는 마을이에요 — 조용히, 집 안을 들여다보지 않기
+• 전망 포인트에서 마을 전체를 내려다보는 사진이 가장 예뻐요`,
+        links: [{ label: "감천문화마을 공식", url: "https://www.gamcheon.or.kr/" }],
+      },
+      {
+        title: "Day 2 오후 · 자갈치시장과 남포동",
+        image_url: "/stories/busan-5.jpg",
+        image_credit: "Bernard Gagnon · CC0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Jagalchi_Market_01.jpg",
+        content: `감천에서 내려와 자갈치시장으로 가요. 1층에서 해산물을 고르고 2층 식당에서 바로 먹을 수 있어요.
+
+• 근처 국제시장·BIFF 광장에서 씨앗호떡, 어묵 등 길거리 간식
+• 부산역이 가까워 KTX 타기 전 마지막 코스로 딱`,
+      },
+      {
+        title: "참고 영상·자료",
+        image_url: "",
+        content: "부산은 지하철이 잘 되어 있어 대부분 대중교통으로 다닐 수 있어요. 출발 전 영상으로 동선을 잡아 보세요.",
+        videos: [
+          { url: "https://www.youtube.com/watch?v=m9bWOxd5qAo", title: "부산 여행, 음식·교통·지역 하나부터 차근차근 (트립콤파니)" },
+          { url: "https://www.youtube.com/watch?v=nCVpf0cqgxU", title: "동선 낭비 없는 1박 2일 부산 여행 (티플 TIPLE)" },
+        ],
+        links: [
+          { label: "비짓부산 — 부산 공식 관광포털", url: "https://www.visitbusan.net/kr/index.do" },
+          { label: "김해국제공항 (한국공항공사)", url: "https://www.airport.co.kr/gimhae/index.do" },
+          {
+            label: "표지 사진 출처 — lumoplank · CC0 · Wikimedia Commons",
+            url: "https://commons.wikimedia.org/wiki/File:Gwangan_Bridge_and_Gwangalli_Beach_-_Gwangalli2721.jpg",
+          },
+        ],
+      },
+    ],
+  },
+
+  // ── 도쿄 ──────────────────────────
+  {
+    title: "[Pothos 에디터] 처음 가는 도쿄 3박 4일, 동네별로 나눠 걷기",
+    subtitle: "아사쿠사·시부야·하라주쿠·신주쿠, 지하철로 하루씩",
+    destination: "도쿄",
+    cover_image_url: "/stories/tokyo-1.jpg",
+    intro:
+      "도쿄는 너무 넓어서 욕심내면 하루 종일 지하철만 타게 돼요. 동쪽의 전통(아사쿠사), 서쪽의 트렌드(시부야·하라주쿠), 밤의 신주쿠처럼 동네별로 하루씩 묶으면 여유롭게 즐길 수 있어요.",
+    duration_text: "3박 4일",
+    tags: ["도쿄", "일본", "첫해외여행", "도시여행"],
+    sections: [
+      {
+        title: "도착 · 나리타에서 도심까지",
+        image_url: "",
+        content: `나리타공항에서 도심까지는 게이세이 '스카이라이너'가 빠르고 편해요. 공식 안내 기준 최단 36분, 게이세이우에노역까지 최고 속도로 41분이에요.
+
+• 하네다공항으로 들어오면 도심이 더 가까워요
+• 교통카드(Suica·PASMO 등)를 만들거나 휴대폰에 추가해 두면 지하철 환승이 편해요`,
+        links: [{ label: "게이세이 스카이라이너 (한국어)", url: "https://www.keisei.co.jp/keisei/tetudou/skyliner/kr/" }],
+      },
+      {
+        title: "Day 1 · 아사쿠사 센소지",
+        image_url: "/stories/tokyo-3.jpg",
+        image_credit: "Guilhem Vellut · CC BY 2.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Senso-ji_Temple_@_Asakusa_(13824517393).jpg",
+        content: `도쿄에서 가장 오래된 사찰 센소지는 628년에 세워졌고, 지금 건물은 제2차 세계대전 때 소실된 뒤 다시 지은 거예요. 아사쿠사역에서 걸어서 5분 정도이고 무료로 둘러볼 수 있어요(GO TOKYO 안내 기준).
+
+• 큰 붉은 등이 달린 가미나리몬 → 나카미세 상점가 → 본당 순서로
+• 상점가에서 닌교야키, 멜론빵 같은 간식 맛보기
+• 근처 스미다강 건너 도쿄 스카이트리가 보여요`,
+        links: [{ label: "GO TOKYO — 센소지 (한국어)", url: "https://www.gotokyo.org/kr/spot/15/index.html" }],
+      },
+      {
+        title: "Day 2 · 메이지 신궁과 하라주쿠",
+        image_url: "/stories/tokyo-4.jpg",
+        image_credit: "Asanagi · CC0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Meiji_Shrine_Minami-sando-torii_2023-01-26.jpg",
+        content: `오전엔 울창한 숲길을 따라 걷는 메이지 신궁으로 가요. 큰 나무 도리이를 지나면 도심 한가운데라는 게 믿기지 않을 만큼 조용해요.
+
+• 신궁을 나오면 바로 하라주쿠 — 다케시타 거리의 크레페와 개성 있는 가게들
+• 오모테산도 거리를 따라 걸으며 쇼핑`,
+        links: [{ label: "메이지 신궁 공식", url: "https://www.meijijingu.or.jp/" }],
+      },
+      {
+        title: "Day 2 밤 · 시부야 스크램블 교차로",
+        image_url: "/stories/tokyo-2.jpg",
+        image_credit: "Bruce from Sydney, Australia · CC BY 2.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Shibuya_Crossing_(25790725888).jpg",
+        content: `하라주쿠에서 걸어서 시부야로 내려가요. 신호가 바뀌면 사방에서 수많은 사람이 한꺼번에 건너는 스크램블 교차로는 도쿄를 대표하는 풍경이에요.
+
+• 교차로가 내려다보이는 건물 위 카페나 전망대에서 보면 더 실감 나요
+• 시부야 스카이 같은 전망대는 일몰 시간대 예약이 빨리 차요`,
+        links: [{ label: "SHIBUYA SKY 공식", url: "https://www.shibuya-scramble-square.com/sky/" }],
+      },
+      {
+        title: "Day 3 · 도쿄 타워와 전망",
+        image_url: "/stories/tokyo-5.jpg",
+        image_credit: "Daniel L. Lu (user:dllu) · CC BY-SA 4.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Tokyo_Tower_as_seen_from_Mori_Tower.jpg",
+        content: `셋째 날은 도쿄 타워 주변과 롯폰기를 돌아봐요. 사진은 롯폰기 힐스 전망대에서 본 도쿄 타워예요. 맑은 겨울날엔 신주쿠 고층 빌딩 너머로 후지산이 보이기도 해요(표지 사진).
+
+• 저녁엔 신주쿠 오모이데요코초 같은 좁은 골목 이자카야 체험
+• 마지막 날은 공항 가는 길에 쇼핑`,
+        links: [{ label: "도쿄 타워 공식", url: "https://www.tokyotower.co.jp/" }],
+      },
+      {
+        title: "참고 영상·자료",
+        image_url: "",
+        content: "인기 전망대·레스토랑은 예약이 기본이에요. 출발 전 영상으로 동네별 분위기를 먼저 보고 일정을 짜 보세요.",
+        videos: [
+          { url: "https://www.youtube.com/watch?v=T55KlNxUQaY", title: "도쿄 여행코스 일정별 총정리 (여니버스 Yeoniverse)" },
+          { url: "https://www.youtube.com/watch?v=9rpdxzOhb5E", title: "2026년, 도쿄를 즐기는 57가지 방법 (산보노트 sanbonote)" },
+        ],
+        links: [
+          { label: "도쿄 관광 공식 GO TOKYO (한국어)", url: "https://www.gotokyo.org/kr/" },
+          {
+            label: "표지 사진 출처 — Morio · CC BY-SA 3.0 · Wikimedia Commons",
+            url: "https://commons.wikimedia.org/wiki/File:Skyscrapers_of_Shinjuku_2009_January_(revised).jpg",
+          },
+        ],
+      },
+    ],
+  },
+
+  // ── 싱가포르 ──────────────────────────
+  {
+    title: "[Pothos 에디터] 싱가포르 3박 4일, 작아서 더 알찬 도시",
+    subtitle: "마리나베이, 슈퍼트리 쇼, 호커센터, 센토사",
+    destination: "싱가포르",
+    cover_image_url: "/stories/singapore-5.jpg",
+    intro:
+      "싱가포르는 도시가 작고 대중교통이 잘 되어 있어 처음 가도 다니기 쉬워요. 낮엔 덥고 비가 자주 오니 실내·실외 일정을 섞고, 저녁엔 마리나베이 야경과 호커센터 음식으로 마무리하는 3박 4일 코스예요.",
+    duration_text: "3박 4일",
+    tags: ["싱가포르", "동남아", "도시여행", "가족여행"],
+    sections: [
+      {
+        title: "출발 전 · SG 입국 카드",
+        image_url: "",
+        content: `싱가포르에 들어가려면 온라인 'SG 입국 카드(SG Arrival Card)'를 내야 해요. 싱가포르 이민국(ICA) 안내 기준으로 무료이고, 도착일을 포함해 도착 3일 전부터 제출할 수 있어요.
+
+• 꼭 공식 사이트에서 제출하세요 — 수수료를 받는 대행 사이트가 있어요`,
+        links: [{ label: "SG 입국 카드 공식 안내 (ICA)", url: "https://www.ica.gov.sg/enter-transit-depart/entering-singapore/sg-arrival-card" }],
+      },
+      {
+        title: "Day 1 · 마리나베이",
+        image_url: "",
+        content: `첫날은 싱가포르의 상징 마리나베이 샌즈와 주변 산책로로 시작해요(표지 사진). 바다를 둘러싼 산책로를 따라 머라이언 공원까지 걸으면 도시의 대표 풍경을 한 번에 볼 수 있어요.
+
+• 한낮엔 무척 더우니 오후 늦게 시작하는 게 좋아요
+• 쇼핑몰이 실내로 연결되어 있어 비 올 때 피하기 좋아요`,
+      },
+      {
+        title: "Day 1 밤 · 가든스 바이 더 베이 슈퍼트리",
+        image_url: "/stories/singapore-2.jpg",
+        image_credit: "Dietmar Rabich · CC BY-SA 4.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Singapore_(SG),_Gardens_by_the_Bay,_Supertree_Grove_--_2019_--_4752.jpg",
+        content: `거대한 나무 모양 구조물이 모인 슈퍼트리 그로브는 무료로 들어갈 수 있고 매일 오전 5시~새벽 2시에 열어요. 밤에는 음악과 조명 쇼 '가든 랩소디'가 저녁 7시 45분, 8시 45분 두 번 열려요(공식 안내 기준).
+
+• 쇼는 슈퍼트리 아래 바닥에 누워서 올려다보는 게 최고
+• 실내 온실(플라워 돔·클라우드 포레스트)은 별도 유료`,
+        links: [{ label: "가든스 바이 더 베이 공식", url: "https://www.gardensbythebay.com.sg/" }],
+      },
+      {
+        title: "Day 2 · 호커센터에서 먹는 싱가포르",
+        image_url: "/stories/singapore-3.jpg",
+        image_credit: "kallerna · CC BY-SA 4.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Lau_Pa_Sat_Singapore_2.jpg",
+        content: `싱가포르 음식의 진짜 맛은 호커센터(야외 푸드코트)에 있어요. 금융가 한가운데 있는 라우파삿은 아름다운 옛 시장 건물로도 유명해요.
+
+꼭 먹어 볼 것
+• 치킨라이스, 락사, 칠리크랩, 사테(꼬치구이)
+• 자리를 먼저 잡고(휴지를 올려 두는 현지 문화가 있어요) 음식을 사 오세요
+• 차이나타운, 리틀인디아도 함께 둘러보면 하루가 알차요`,
+        links: [{ label: "라우파삿 공식", url: "https://www.laupasat.sg/" }],
+      },
+      {
+        title: "Day 3 · 센토사 섬",
+        image_url: "/stories/singapore-4.jpg",
+        image_credit: "Moheen Reeyad · CC BY-SA 4.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Palawan_Beach,_Sentosa_(184328).jpg",
+        content: `셋째 날은 리조트 섬 센토사로 가요. 테마파크와 수족관, 그리고 팔라완 비치 같은 해변에서 쉬어 가기 좋아요.
+
+• 아이와 함께라면 테마파크 하루, 커플이라면 해변과 비치 클럽
+• 마지막 날은 창이공항의 실내 폭포와 쇼핑을 즐기고 출국`,
+        links: [{ label: "센토사 공식", url: "https://www.sentosa.com.sg/" }],
+      },
+      {
+        title: "참고 영상·자료",
+        image_url: "",
+        content: "싱가포르는 규칙이 엄격한 편이에요(공공장소 흡연·음식물 등). 출발 전 영상과 공식 안내로 미리 확인하세요.",
+        videos: [
+          { url: "https://www.youtube.com/watch?v=O3-p3OpprE0", title: "싱가포르 여행을 0부터 제대로 알려드림 (트립콤파니)" },
+          { url: "https://www.youtube.com/watch?v=0ZuTDv6-m_M", title: "싱가포르 여행코스 총정리 — 맛집·쇼핑·숙소·교통 (여니버스 Yeoniverse)" },
+        ],
+        links: [
+          { label: "비짓싱가포르 (싱가포르관광청)", url: "https://www.visitsingapore.com/ko_kr/" },
+          { label: "창이공항 공식", url: "https://www.changiairport.com/" },
+          {
+            label: "표지 사진 출처 — Basile Morin · CC BY-SA 4.0 · Wikimedia Commons",
+            url: "https://commons.wikimedia.org/wiki/File:Marina_Bays_Sands_Hotel_and_skyline_of_the_Central_Business_District_Singapore.jpg",
+          },
+        ],
+      },
+    ],
+  },
+
+  // ── 스위스 ──────────────────────────
+  {
+    title: "[Pothos 에디터] 스위스 인터라켄·융프라우 5박 7일",
+    subtitle: "호수와 폭포의 마을, 그리고 해발 3,454m 융프라우요흐",
+    destination: "인터라켄",
+    cover_image_url: "/stories/switzerland-1.jpg",
+    intro:
+      "인터라켄은 두 호수 사이에 자리한 마을로, 융프라우 지역을 여행하는 베이스캠프예요. 한곳에 숙소를 잡고 기차와 케이블카로 매일 다른 마을과 산을 오가는 5박 7일 코스를 정리했어요. 산 위 일정은 날씨에 맞춰 바꾸는 게 핵심이에요.",
+    duration_text: "5박 7일",
+    tags: ["스위스", "융프라우", "유럽여행", "자연"],
+    sections: [
+      {
+        title: "Day 1~2 · 인터라켄과 호수",
+        image_url: "/stories/switzerland-2.jpg",
+        image_credit: "Nicojonesgodel · CC BY-SA 4.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Brienzersee_with_a_coastal_town.jpg",
+        content: `취리히 등 큰 도시에 도착해 기차로 인터라켄까지 이동해요. 첫날은 마을을 산책하고 쉬어요.
+
+둘째 날은 호수! 인터라켄 양쪽의 브리엔츠 호수(사진)와 툰 호수는 물빛이 정말 맑아요.
+• 유람선을 타고 호숫가 마을에 내려 산책
+• 호수 위에서 보는 설산 풍경이 압도적이에요 (다음 사진)`,
+        links: [{ label: "인터라켄 관광청", url: "https://www.interlaken.ch/" }],
+      },
+      {
+        title: "툰 호수에서 본 아이거·묀히·융프라우",
+        image_url: "/stories/switzerland-5.jpg",
+        image_credit: "Paradise Chronicle · CC BY-SA 4.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Sail_boat_on_Lake_Thun_with_Eiger_M%C3%B6nch_und_Jungfrau_in_background.jpg",
+        content: `호수 너머로 보이는 세 봉우리가 아이거, 묀히, 융프라우예요. 이 중 융프라우 아래 고개에 있는 기차역이 다음 일정인 융프라우요흐예요.`,
+      },
+      {
+        title: "Day 3 · 융프라우요흐, Top of Europe",
+        image_url: "/stories/switzerland-3.jpg",
+        image_credit: "Leonhard Lenz · CC0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Jungfrau_seen_from_viewpoint_Sphinx_at_Jungfraujoch_2022-10-02_01.jpg",
+        content: `융프라우요흐는 해발 3,454m에 있는 '유럽에서 가장 높은 기차역'이에요. 인터라켄 동역에서 아이거 익스프레스(곤돌라)를 거쳐 약 1시간 30분, 그린델발트 터미널에서는 약 45분 걸려요. 왕복 요금은 CHF 129.60부터예요(융프라우 철도 공식 안내 기준, 요금은 바뀔 수 있어요).
+
+• 스핑크스 전망대(해발 3,571m)는 엘리베이터로 25초 만에 108m를 올라가요
+• 길이 22km의 알레치 빙하가 내려다보여요 (유네스코 세계유산)
+• 고도가 높아 숨이 찰 수 있어요 — 천천히 걷고 물 많이 마시기
+• 맑은 날을 골라 가는 게 중요해요. 산 위 웹캠으로 날씨를 확인하고 출발하세요`,
+        links: [{ label: "융프라우 철도 — 융프라우요흐 공식", url: "https://www.jungfrau.ch/en-gb/jungfraujoch-top-of-europe/" }],
+      },
+      {
+        title: "Day 4 · 라우터브루넨 계곡",
+        image_url: "",
+        content: `거대한 절벽 사이로 폭포가 떨어지는 라우터브루넨 계곡은 동화 속 마을 같아요(표지 사진). 마을에서 가장 눈에 띄는 슈타우바흐 폭포는 걸어서 가까이 갈 수 있어요.
+
+• 계곡을 따라 평평한 길이 이어져 가벼운 산책 하이킹에 좋아요
+• 케이블카로 위쪽 마을(뮈렌·벵엔 등)에 올라가면 또 다른 풍경`,
+      },
+      {
+        title: "Day 5~7 · 그린델발트 하이킹과 귀국",
+        image_url: "/stories/switzerland-4.jpg",
+        image_credit: "W. Bulach · CC BY-SA 4.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:00_0020_Grindelwald_-_Wetterhorn.jpg",
+        content: `그린델발트는 웅장한 봉우리 바로 아래 자리한 산악 마을이에요. 케이블카로 올라가 산 위 호수까지 걷는 하이킹 코스가 인기예요.
+
+• 여름엔 하이킹, 겨울엔 스키·썰매
+• 스위스는 물가가 높아요 — 마트 도시락과 피크닉으로 식비를 아끼는 여행자가 많아요
+• 마지막 날은 공항까지 기차 시간을 넉넉히`,
+        links: [{ label: "스위스 연방철도 SBB", url: "https://www.sbb.ch/en" }],
+      },
+      {
+        title: "참고 영상·자료",
+        image_url: "",
+        content: "융프라우 지역은 교통 패스 종류가 많아요. 일정과 가고 싶은 산에 맞춰 어떤 패스가 이득인지 영상과 공식 안내로 비교해 보세요.",
+        videos: [
+          { url: "https://www.youtube.com/watch?v=cv8LTWadVLU", title: "스위스 여행코스 일정별로 총정리 (여니버스 Yeoniverse)" },
+          { url: "https://www.youtube.com/watch?v=xqGp7sVBD7U", title: "융프라우 가는 3가지 방법 + 티켓·하이킹 총정리 (차가운순대 Swissfriends)" },
+        ],
+        links: [
+          { label: "스위스관광청 MySwitzerland", url: "https://www.myswitzerland.com/ko/" },
+          {
+            label: "표지 사진 출처 — chensiyuan · CC BY-SA 4.0 · Wikimedia Commons",
+            url: "https://commons.wikimedia.org/wiki/File:1_lauterbrunnen_valley_2012b.jpg",
+          },
+        ],
+      },
+    ],
+  },
+
+  // ── 발리 ──────────────────────────
+  {
+    title: "[Pothos 에디터] 발리 4박 6일, 우붓의 초록과 바다의 일몰",
+    subtitle: "뜨갈랄랑 계단식 논, 몽키 포레스트, 따나롯 사원, 스미냑 해변",
+    destination: "발리",
+    cover_image_url: "/stories/bali-1.jpg",
+    intro:
+      "발리는 정글과 논이 있는 우붓, 서핑과 일몰의 해변 마을이 완전히 다른 매력을 가지고 있어요. 앞의 이틀은 우붓, 뒤의 이틀은 해변에서 보내는 4박 6일 코스를 정리했어요. 섬 안 이동은 교통 체증이 심하니 숙소를 두 곳으로 나누는 걸 추천해요.",
+    duration_text: "4박 6일",
+    tags: ["발리", "인도네시아", "휴양", "신혼여행"],
+    sections: [
+      {
+        title: "출발 전 · 발리 관광세",
+        image_url: "",
+        content: `발리를 찾는 외국인 관광객은 1인당 IDR 150,000의 관광세를 내야 해요. 발리 주정부 공식 사이트 'Love Bali'에서 미리 낼 수 있어요.
+
+• 공식 사이트에서만 결제하세요
+• 그 외 비자 등 입국 요건은 출발 전 최신 공식 안내를 확인하세요`,
+        links: [{ label: "발리 관광세 공식 (Love Bali)", url: "https://lovebali.baliprov.go.id/" }],
+      },
+      {
+        title: "Day 1~2 · 우붓의 계단식 논",
+        image_url: "",
+        content: `우붓 북쪽의 뜨갈랄랑 계단식 논은 발리를 대표하는 풍경이에요(표지 사진). 야자수 사이로 초록 논이 층층이 이어져 있어요.
+
+• 사람이 적고 빛이 부드러운 이른 아침에 가세요
+• 논 사이 길은 미끄러울 수 있어요 — 운동화 추천
+• 근처 카페에서 논을 내려다보며 쉬어 가기`,
+      },
+      {
+        title: "우붓 몽키 포레스트",
+        image_url: "/stories/bali-3.jpg",
+        image_credit: "Jorge Franganillo · CC BY 2.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Sacred_Monkey_Forest_Sanctuary_(49818583963).jpg",
+        content: `우붓 시내의 몽키 포레스트는 원숭이 수백 마리가 사는 숲속 사원이에요. 공식 안내 기준 오전 9시~오후 6시 운영(마지막 입장 오후 5시)이에요.
+
+• 원숭이에게 먹이를 주거나 눈을 오래 마주치지 마세요
+• 선글라스·모자·물병처럼 낚아채기 쉬운 물건은 가방에 넣어 두기`,
+        links: [{ label: "우붓 몽키 포레스트 공식", url: "https://monkeyforestubud.com/" }],
+      },
+      {
+        title: "Day 3 · 따나롯 사원의 일몰",
+        image_url: "/stories/bali-2.jpg",
+        image_credit: "CEphoto, Uwe Aranas · CC BY-SA 3.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Tanah-Lot_Bali_Indonesia_Pura-Tanah-Lot-01.jpg",
+        content: `해변 쪽으로 숙소를 옮기는 날, 오후 늦게 따나롯 사원에 들러요. 바다 위 바위섬에 세워진 사원 뒤로 해가 지는 풍경이 유명해요.
+
+• 물때에 따라 바위섬 가까이 걸어갈 수 있는 때가 달라요
+• 일몰 시간엔 매우 붐비니 조금 일찍 도착하기
+• 사원은 종교 시설이에요 — 노출이 심한 옷은 피하고 예절을 지켜 주세요`,
+      },
+      {
+        title: "Day 4~6 · 스미냑 해변에서 쉬기",
+        image_url: "/stories/bali-4.jpg",
+        image_credit: "Christophe95 · CC BY-SA 4.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Seminyak_Beach_at_sunset.jpg",
+        content: `마지막 이틀은 스미냑 해변에서 여유롭게! 해변 앞 빈백 소파에 앉아 일몰을 보는 게 발리의 하루 마무리예요.
+
+• 낮엔 풀빌라·스파, 저녁엔 해변 레스토랑
+• 공항이 가까운 편이라 마지막 날 일정 잡기도 편해요 (교통 체증은 감안)
+• 수돗물은 마시지 말고 생수를 드세요`,
+      },
+      {
+        title: "참고 영상·자료",
+        image_url: "",
+        content: "발리는 지역마다 분위기가 완전히 달라요. 영상으로 지역별 특징을 보고 숙소 위치를 정하면 여행이 훨씬 편해져요.",
+        videos: [
+          { url: "https://www.youtube.com/watch?v=goUvvgXHnuY", title: "발리, 0부터 체계적으로 알려드림 — 지역과 여행지 (트립콤파니)" },
+          { url: "https://www.youtube.com/watch?v=UTYXtmWcxz0", title: "발리 여행코스 취향·기간별 추천 (여니버스 Yeoniverse)" },
+        ],
+        links: [
+          { label: "인도네시아 관광청 Wonderful Indonesia", url: "https://www.indonesia.travel/" },
+          {
+            label: "표지 사진 출처 — Philip Nalangan · CC BY 4.0 · Wikimedia Commons",
+            url: "https://commons.wikimedia.org/wiki/File:Tegallalang_Rice_Terraces_Bali.jpg",
+          },
+        ],
+      },
+    ],
+  },
 ];
