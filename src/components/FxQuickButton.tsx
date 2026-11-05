@@ -12,7 +12,8 @@ import ExchangeCalculator from "@/components/ExchangeCalculator";
 export default function FxQuickButton() {
   const pathname = usePathname() ?? "";
   const [open, setOpen] = useState(false);
-  if (pathname.startsWith("/admin") || pathname.startsWith("/exchange") || pathname.startsWith("/festivals/")) return null;
+  // 글쓰기·수정 화면에서는 입력을 가리지 않게 숨김
+  if (pathname.startsWith("/admin") || pathname.startsWith("/exchange") || pathname.startsWith("/festivals/") || /\/(new|edit)$/.test(pathname)) return null;
 
   return (
     <>

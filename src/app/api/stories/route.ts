@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { grantFirstPostReward } from "@/lib/events";
 import { auth } from "@/lib/auth";
 import { getSupabaseServiceClient } from "@/lib/supabase";
+import { cleanSections } from "@/lib/story-sections";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,9 +37,9 @@ export async function POST(req: NextRequest) {
       title: title.trim(),
       subtitle: subtitle?.trim() || null,
       destination: destination?.trim() || null,
-      cover_image_url: cover_image_url || null,
+      cover_image_url: typeof cover_image_url === "string" && /^(https:\/\/|\/(?!\/))\S+$/.test(cover_image_url.trim()) ? cover_image_url.trim().slice(0, 500) : null,
       intro: intro?.trim() || null,
-      sections: Array.isArray(sections) ? sections : [],
+      sections: cleanSections(sections),
       tags: Array.isArray(tags) ? tags : [],
       duration_text: duration_text?.trim() || null,
     })

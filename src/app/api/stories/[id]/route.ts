@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
 import { getSupabaseServiceClient } from "@/lib/supabase";
+import { cleanSections } from "@/lib/story-sections";
 
 export const runtime = "nodejs";
 
@@ -44,6 +45,16 @@ export async function PATCH(
     "is_published",
   ]) {
     if (key in body) update[key] = body[key];
+  }
+  // 챕터·표지 주소 정리 (위험한 주소·과도한 길이 제거)
+  if ("sections" in update) update.sections = cleanSections(update.sections);
+  if ("cover_image_url" in update) {
+    const c = typeof update.cover_image_url === "string" ? update.cover_image_url.trim() : "";
+    update.cover_image_url = /^(https:\/\/|\/(?!\/))\S+$/.test(c) ? c.slice(0, 500) : null;
+  }
+  if ("tags" in update) update.tags = Array.isArray(update.tags) ? (update.tags as unknown[]).map(String).slice(0, 15) : [];
+  if ("title" in update && !String(update.title ?? "").trim()) {
+    return Response.json({ error: "제목을 입력해주세요." }, { status: 400 });
   }
 
   const { error } = await supabase.from("stories").update(update).eq("id", id);
