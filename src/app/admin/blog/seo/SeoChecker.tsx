@@ -243,12 +243,18 @@ export default function SeoChecker({
                         <a href={`https://www.google.com/search?q=${encodeURIComponent(`site:${r.url}`)}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-bold">
                           구글 site: 검색
                         </a>
-                        <a href="https://searchadvisor.naver.com/console/board" target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-700">
-                          네이버 웹페이지 수집 요청
-                        </a>
-                        <a href={`https://search.google.com/search-console/inspect?resource_id=${encodeURIComponent(`sc-domain:${new URL(site).host}`)}&id=${encodeURIComponent(r.url)}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-700">
-                          구글 색인 생성 요청
-                        </a>
+                        <RequestButton
+                          url={r.url}
+                          label="네이버 웹페이지 수집 요청"
+                          open="https://searchadvisor.naver.com/console/board"
+                          hint="서치어드바이저에서 pothostravel.com → 요청 → 웹 페이지 수집에 붙여 넣으세요"
+                        />
+                        <RequestButton
+                          url={r.url}
+                          label="구글 색인 생성 요청"
+                          open={`https://search.google.com/search-console?resource_id=${encodeURIComponent(`sc-domain:${new URL(site).host}`)}`}
+                          hint="서치 콘솔 맨 위 'URL 검사' 칸에 붙여 넣고 → 색인 생성 요청을 누르세요"
+                        />
                       </div>
                     </div>
                   )}
@@ -264,3 +270,36 @@ export default function SeoChecker({
     </div>
   );
 }
+
+/** 글 주소를 복사한 뒤 콘솔을 새 탭으로 열기 — 콘솔 안 특정 페이지 주소는 계정·형식에 따라 404가 나서 홈으로 연다 */
+function RequestButton({ url, label, open, hint }: { url: string; label: string; open: string; hint: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <span className="inline-flex flex-col">
+      <button
+        type="button"
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(url);
+            setCopied(true);
+          } catch {
+            // 복사가 막힌 브라우저 — 주소를 아래에 보여줌
+            setCopied(true);
+          }
+          window.open(open, "_blank", "noopener,noreferrer");
+        }}
+        className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-700 hover:bg-white"
+      >
+        {label}
+      </button>
+      {copied && (
+        <span className="mt-1 max-w-[260px] text-[11px] leading-snug text-emerald-700">
+          ✓ 글 주소를 복사했어요. {hint}
+          <br />
+          <span className="text-gray-400 break-all select-all">{url}</span>
+        </span>
+      )}
+    </span>
+  );
+}
+
