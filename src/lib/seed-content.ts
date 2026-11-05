@@ -487,4 +487,534 @@ Day 3 · 섭지코지 → 광치기해변 → (가을이면) 다랑쉬오름 억
       },
     ],
   },
+
+  // ── 오사카 ──────────────────────────
+  {
+    title: "[Pothos 에디터] 첫 오사카 2박 3일, 먹고 걷기만 해도 꽉 찬 코스",
+    subtitle: "도톤보리 네온부터 오사카성, 신세카이까지",
+    destination: "오사카",
+    cover_image_url: "/stories/osaka-1.jpg",
+    intro:
+      "오사카는 '먹다가 망한다(구이다오레)'는 말이 있을 만큼 먹거리의 도시예요. 비행시간이 짧고 공항에서 시내까지 가까워 2박 3일 첫 일본 여행지로 딱이에요. 미나미(난바)를 거점으로 동선을 짧게 묶은 코스를 정리했어요.",
+    duration_text: "2박 3일",
+    tags: ["오사카", "일본", "먹방여행", "첫해외여행"],
+    sections: [
+      {
+        title: "공항에서 난바까지, 숙소는 미나미에",
+        image_url: "/stories/osaka-2.jpg",
+        image_credit: "blieusong · CC BY-SA 2.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:D%C5%8Dtonbori_canal_at_sunset,_in_Osaka;_October_2018.jpg",
+        content: `간사이공항에서 난바까지는 난카이 전철 특급 '라피트'로 약 38분, 공항급행으로 약 44분 걸려요(난카이 안내 기준, 시간은 대략).
+
+숙소는 난바·신사이바시 쪽(미나미)을 추천해요.
+• 도톤보리, 구로몬 시장, 신세카이까지 걸어서 또는 지하철 몇 정거장
+• 밤늦게까지 먹고 걸어서 숙소로 돌아오기 좋아요
+• 교통카드(ICOCA 등)를 하나 만들면 전철·편의점 결제가 편해요`,
+        links: [{ label: "난카이 전철 간사이공항역 교통 안내", url: "https://www.nankai.co.jp/en_railway/traffic/kix.html" }],
+      },
+      {
+        title: "Day 1 · 도톤보리의 밤",
+        image_url: "",
+        content: `첫날 저녁은 무조건 도톤보리예요. 에비스바시 다리 위 글리코 간판 앞 사진은 오사카 여행 인증샷이에요(표지 사진).
+
+먹어 볼 것
+• 타코야키: 겉은 바삭, 속은 촉촉. 가게마다 맛이 달라 두세 군데 비교해 보는 재미
+• 오코노미야키·쿠시카츠: 오사카 대표 서민 음식
+• 늦은 밤엔 라멘 한 그릇
+
+💡 소스가 뜨거우니 타코야키는 반으로 갈라서 식혀 드세요.`,
+      },
+      {
+        title: "Day 2 · 오사카성과 신세카이",
+        image_url: "/stories/osaka-3.jpg",
+        image_credit: "663highland · CC BY 2.5 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Osaka_Castle_02bs3200.jpg",
+        content: `오전엔 오사카성 공원을 걸어요. 넓은 해자와 돌담, 천수각이 어우러진 풍경이 멋져요. 천수각 안은 박물관이라 관람 시간·요금은 공식 사이트에서 확인하세요.
+
+오후엔 레트로 분위기의 신세카이로 이동해요. 츠텐카쿠 타워 아래 골목에 쿠시카츠 가게가 모여 있어요.
+• 쿠시카츠 소스는 '두 번 찍기 금지'가 이 동네 규칙이에요
+• 저녁엔 다시 난바로 돌아와 쇼핑·야식`,
+        links: [{ label: "오사카성 천수각 공식", url: "https://www.osakacastle.net/" }],
+      },
+      {
+        title: "Day 3 · 구로몬 시장 아침, 그리고 귀국",
+        image_url: "/stories/osaka-4.jpg",
+        image_credit: "Dick Thomas Johnson · CC BY 2.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Shinsekai_Tsutenkaku_at_night_2022-04-23.jpg",
+        content: `마지막 날 아침은 '오사카의 부엌' 구로몬 시장에서 해산물 꼬치나 과일로 가볍게 먹어요. 난바역에서 걸어갈 수 있어서 공항 가기 전에 들르기 좋아요.
+
+• 시장은 오전이 활기차고, 오후엔 일찍 문 닫는 가게도 있어요
+• 기념품은 공항보다 시내 드럭스토어·돈키호테가 선택지가 많아요
+(사진은 Day 2에 들른 신세카이 츠텐카쿠 거리)`,
+      },
+      {
+        title: "참고 영상·자료",
+        image_url: "",
+        content: "출발 전에 영상으로 동선과 맛집 분위기를 미리 보면 좋아요. 운영 시간과 요금은 계절마다 바뀌니 공식 안내를 확인하세요.",
+        videos: [
+          { url: "https://www.youtube.com/watch?v=DK0XrbsnXUo", title: "오사카 맛집·카페·코스 총정리 (또 떠나는 남자 ddoddunam)" },
+          { url: "https://www.youtube.com/watch?v=B8ywoLREVIE", title: "찐 일본 덕후의 오사카 여행 가이드 (산보노트 sanbonote)" },
+        ],
+        links: [
+          { label: "오사카 관광국 공식 (한국어)", url: "https://osaka-info.jp/ko/" },
+          {
+            label: "표지 사진 출처 — そらみみ · CC BY-SA 4.0 · Wikimedia Commons",
+            url: "https://commons.wikimedia.org/wiki/File:Glico_Man_Neon_Sign_and_Ebisubashi_Bridge_at_night.jpg",
+          },
+        ],
+      },
+    ],
+  },
+
+  // ── 타이베이 ──────────────────────────
+  {
+    title: "[Pothos 에디터] 타이베이 3박 4일, 야시장과 근교 소도시까지",
+    subtitle: "타이베이 101 야경, 지우펀 홍등, 스펀 천등",
+    destination: "타이베이",
+    cover_image_url: "/stories/taipei-1.jpg",
+    intro:
+      "타이베이는 시내 여행과 근교 소도시 여행을 함께 할 수 있는 도시예요. 낮엔 MRT로 편하게 다니고, 밤엔 야시장에서 저렴하게 배를 채우는 3박 4일 코스를 정리했어요.",
+    duration_text: "3박 4일",
+    tags: ["타이베이", "대만", "야시장", "근교여행"],
+    sections: [
+      {
+        title: "도착 · 공항철도와 이지카드",
+        image_url: "",
+        content: `타오위안공항에서 타이베이역까지는 공항 MRT 직통열차로 제1터미널에서 약 35분, 제2터미널에서 약 39분 걸려요.
+
+도착하면 이지카드(悠遊卡)부터 만들어요.
+• MRT·버스·기차·택시는 물론 편의점·마트 결제까지 돼요
+• 잔액이 남으면 편의점 간식 사는 데 쓰면 끝`,
+        links: [
+          { label: "타오위안 공항 MRT 안내", url: "https://travel.tycg.gov.tw/en/traffic/airportmrt" },
+          { label: "이지카드 공식 사용 범위", url: "https://www.easycard.com.tw/en/use-range" },
+        ],
+      },
+      {
+        title: "Day 1 · 타이베이 101과 야시장",
+        image_url: "/stories/taipei-3.jpg",
+        image_credit: "Ji Soo Song · CC BY 2.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Raohe_Night_Market_2022.jpg",
+        content: `해 질 무렵 타이베이 101 근처로 가서 도시 야경을 봐요(표지 사진). 전망대 대신 근처 샹산(코끼리산) 트레일에 오르면 101이 정면으로 보여요.
+
+저녁은 야시장으로!
+• 라오허 야시장: 한 줄로 길게 이어져 둘러보기 쉬워요 (사진)
+• 스린 야시장: 가장 크고 유명해요
+• 후추빵, 지파이(닭튀김), 망고빙수는 꼭`,
+      },
+      {
+        title: "Day 2 · 근교 투어 — 예류·스펀·지우펀",
+        image_url: "/stories/taipei-4.jpg",
+        image_credit: "xiquinhosilva · CC BY 2.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:TRA_DRC1029_and_Pingxi_Sky_Lanterns_at_Shifen_Old_Street_20171028.jpg",
+        content: `근교 세 곳을 하루에 도는 '예스진지' 코스는 이동이 많아 단체 투어나 택시 투어를 많이 이용해요.
+
+• 예류: 바닷바람이 깎은 기묘한 바위 공원
+• 스펀: 기찻길 위에서 소원을 적은 천등을 날려요 (사진)
+• 지우펀: 해 질 녘 홍등이 켜지는 계단 골목이 하이라이트 (다음 사진)
+지우펀은 저녁에 가장 붐비니 사진은 계단 아래쪽보다 위쪽 찻집 테라스에서 찍는 걸 추천해요.`,
+      },
+      {
+        title: "지우펀의 밤",
+        image_url: "/stories/taipei-2.jpg",
+        image_credit: "Sunkenbean · CC BY-SA 4.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Jiufen_at_night_lantern_glow.jpg",
+        content: `홍등이 켜진 지우펀 계단은 영화 속 장면 같아요. 골목이 좁고 계단이 많으니 편한 신발은 필수예요.
+
+• 비가 자주 오는 지역이라 작은 우산을 챙기세요
+• 막차·투어 출발 시간을 미리 확인해 두면 여유롭게 즐길 수 있어요`,
+      },
+      {
+        title: "Day 3~4 · 시내 산책과 귀국",
+        image_url: "",
+        content: `셋째 날은 시내를 천천히 걸어요. 중정기념당, 융캉제(망고빙수·딤섬), 시먼딩 쇼핑 거리가 MRT로 가까워요.
+
+마지막 날은 공항철도 시간을 넉넉히 잡고, 남은 이지카드 잔액은 공항 편의점에서 써요.`,
+      },
+      {
+        title: "참고 영상·자료",
+        image_url: "",
+        content: "근교 투어는 날씨 영향을 많이 받아요. 출발 전 일기예보를 확인하고, 비 오는 날엔 시내 일정과 바꾸는 것도 방법이에요.",
+        videos: [
+          { url: "https://www.youtube.com/watch?v=yrlPDeprz5A", title: "대만 타이베이 여행 13분 가이드 (산보노트 sanbonote)" },
+          { url: "https://www.youtube.com/watch?v=5mA9RNmbrhs", title: "타이베이 근교여행 — 예류·지우펀·스펀·단수이 (트립콤파니)" },
+        ],
+        links: [
+          { label: "타이베이 101 공식", url: "https://www.taipei-101.com.tw/" },
+          {
+            label: "표지 사진 출처 — Ken Marshall · CC BY 4.0 · Wikimedia Commons",
+            url: "https://commons.wikimedia.org/wiki/File:Taipei_Skyline_at_twilight_20251014.jpg",
+          },
+        ],
+      },
+    ],
+  },
+
+  // ── 다낭·호이안 ──────────────────────────
+  {
+    title: "[Pothos 에디터] 다낭·호이안 3박 5일, 바다와 등불의 도시",
+    subtitle: "미케 비치에서 쉬고, 바나힐 골든브릿지, 호이안 야경까지",
+    destination: "다낭",
+    cover_image_url: "/stories/danang-1.jpg",
+    intro:
+      "다낭은 휴양과 관광을 한 번에 즐길 수 있어 가족·커플 모두에게 인기예요. 낮엔 해변과 바나힐, 저녁엔 호이안 올드타운의 등불을 보는 3박 5일 코스를 정리했어요. (밤 비행기 출발·도착 기준)",
+    duration_text: "3박 5일",
+    tags: ["다낭", "호이안", "베트남", "휴양"],
+    sections: [
+      {
+        title: "Day 1~2 · 미케 비치에서 쉬기",
+        image_url: "/stories/danang-2.jpg",
+        image_credit: "Jpatokal · CC BY-SA 4.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:My_Khe_Beach_Danang_Highrises.jpg",
+        content: `늦은 밤 도착이 많아서 첫날은 숙소에서 쉬고, 둘째 날은 미케 비치에서 여유롭게 시작해요. 해변을 따라 호텔과 해산물 식당이 모여 있어요.
+
+• 시내 이동은 그랩(Grab) 같은 차량 호출 앱이 편해요
+• 햇볕이 강하니 선크림·모자 필수
+• 저녁엔 한강 변 용다리 주변을 산책해요`,
+      },
+      {
+        title: "Day 3 · 바나힐 골든브릿지",
+        image_url: "",
+        content: `바나힐은 긴 케이블카를 타고 산 위에 올라가는 테마파크예요. 거대한 두 손이 다리를 받치는 '골든브릿지'(표지 사진)는 2018년 문을 연 뒤 다낭의 상징이 됐어요.
+
+• 산 위는 시내보다 쌀쌀하고 날씨가 자주 바뀌어요 — 얇은 겉옷 챙기기
+• 사람이 몰리기 전 오전 일찍 가면 다리 사진이 훨씬 여유로워요
+• 입장권은 공식 판매처나 믿을 만한 예약 사이트에서 미리`,
+        links: [
+          { label: "썬월드(바나힐 운영사) 공식", url: "https://sunworld.vn/en/" },
+          {
+            label: "다낭시 공식 — 골든브릿지 소개",
+            url: "https://danangfantasticity.com/en/news/golden-bridge-in-da-nang-tops-the-list-of-fresh-wonders-of-the-world",
+          },
+        ],
+      },
+      {
+        title: "Day 4 · 호이안 올드타운의 등불",
+        image_url: "/stories/danang-3.jpg",
+        image_credit: "Christophe95 · CC BY-SA 4.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Lanterns_in_Hoi_An_3.jpg",
+        content: `다낭에서 차로 갈 수 있는 호이안은 오래된 무역항 마을이에요. 해 질 무렵부터 골목마다 색색의 등불이 켜져요.
+
+• 낮에 도착해 골목을 걷고, 노란 벽과 등불 사진을 찍어요
+• 저녁엔 투본강에서 소원 등불을 띄우는 쪽배를 타 봐요 (다음 사진)
+• 올드타운 입장권 제도·요금은 바뀔 수 있으니 현지 안내를 확인하세요`,
+      },
+      {
+        title: "투본강의 밤",
+        image_url: "/stories/danang-4.jpg",
+        image_credit: "Nguyen QuocTrung · CC BY-SA 4.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Thu_B%E1%BB%93n_River_at_night_-_H%E1%BB%99i_An_2022.jpg",
+        content: `강 위에 떠다니는 등불과 강변 불빛이 어우러진 풍경은 호이안 여행의 하이라이트예요. 밤 비행기라면 이 일정을 마지막 날로 잡고 바로 공항으로 가도 좋아요.
+
+• 야시장에서 반미, 까오러우(호이안 국수) 맛보기
+• 우기(대략 가을~초겨울)에는 비가 잦으니 일정에 여유를 두세요`,
+      },
+      {
+        title: "참고 영상·자료",
+        image_url: "",
+        content: "바나힐·호이안은 일정에 따라 순서를 바꿔도 돼요. 출발 전 영상으로 동선을 잡아 보세요.",
+        videos: [
+          { url: "https://www.youtube.com/watch?v=H4iL4OC0RgI", title: "다낭 여행의 하이라이트, 호이안 완벽 가이드 (트립콤파니)" },
+          { url: "https://www.youtube.com/watch?v=xev4AUFrOn0", title: "다낭 여행 꼭 해야 할 3가지 — 코스·꿀팁·호이안·바나힐 (탁사장 여행일지)" },
+        ],
+        links: [
+          { label: "다낭시 공식 관광 (Danang Fantasticity)", url: "https://danangfantasticity.com/en" },
+          {
+            label: "표지 사진 출처 — DvTor8303 · CC0 · Wikimedia Commons",
+            url: "https://commons.wikimedia.org/wiki/File:Golden_Bridge_at_Ba_Na_Hills_20250718.jpg",
+          },
+        ],
+      },
+    ],
+  },
+
+  // ── 방콕 ──────────────────────────
+  {
+    title: "[Pothos 에디터] 방콕 3박 5일, 사원과 강, 그리고 시장",
+    subtitle: "왕궁·왓포·왓아룬부터 짜뚜짝 주말시장까지",
+    destination: "방콕",
+    cover_image_url: "/stories/bangkok-1.jpg",
+    intro:
+      "방콕은 화려한 사원과 강변 풍경, 끝없는 시장과 길거리 음식이 한 도시에 모여 있어요. 더위를 피해 오전엔 사원, 오후엔 쇼핑몰·마사지, 저녁엔 강변과 야시장으로 리듬을 잡는 3박 5일 코스예요.",
+    duration_text: "3박 5일",
+    tags: ["방콕", "태국", "사원", "야시장"],
+    sections: [
+      {
+        title: "Day 1 · 왕궁 — 복장 규정 꼭 확인",
+        image_url: "/stories/bangkok-2.jpg",
+        image_credit: "Andy Marchand · CC BY-SA 3.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Grand_Palace_Bangkok,_Thailand.jpg",
+        content: `왕궁은 매일 오전 8시 30분~오후 4시 30분에 열고, 표는 오후 3시 30분까지 팔아요. 외국인 입장료는 500바트로 에메랄드 사원(왓 프라깨우) 관람이 포함돼요. (왕궁 공식 안내 기준)
+
+복장 규정이 엄격해요. 아래 차림은 입장할 수 없어요.
+• 민소매, 크롭티, 비치는 옷
+• 반바지·핫팬츠, 찢어진 바지, 몸에 붙는 레깅스·바이크 팬츠, 미니스커트
+• 잠옷
+얇은 긴바지와 소매 있는 셔츠를 입고, 땀 대비 손수건을 챙기세요. 드론은 금지예요.`,
+        links: [{ label: "왕궁 공식 방문 안내", url: "https://www.royalgrandpalace.th/en/visit/practical-information" }],
+      },
+      {
+        title: "Day 1 · 왓포의 와불",
+        image_url: "/stories/bangkok-3.jpg",
+        image_credit: "Manoonp · CC BY-SA 4.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Wat_Phra_Chettuphon_Wimon_Mangkhalaram_Ratchaworamahawihan_(Wat_Pho).jpg",
+        content: `왕궁 바로 옆 왓포에는 거대한 누운 부처(와불)가 있어요. 전통 타이 마사지의 본산으로도 알려져 있어서, 사원 구경 후 마사지로 다리를 쉬어 가는 코스가 인기예요.`,
+      },
+      {
+        title: "Day 2 · 짜오프라야강과 왓 아룬",
+        image_url: "",
+        content: `강 건너편 왓 아룬(새벽 사원)은 수상 보트로 금방이에요. 해 질 녘 강 건너에서 바라보는 왓 아룬 실루엣이 가장 아름다워요(표지 사진).
+
+• 강을 따라 다니는 수상 버스는 교통 체증 없는 이동 수단
+• 저녁엔 강변 루프톱 레스토랑에서 야경 감상`,
+      },
+      {
+        title: "Day 3 · 짜뚜짝 주말시장",
+        image_url: "/stories/bangkok-4.jpg",
+        image_credit: "Ian Gratton · CC BY 2.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Chatuchak_Market_(8270018927).jpg",
+        content: `주말에 여행한다면 짜뚜짝 시장은 꼭 가 보세요. 옷·그릇·소품·식물까지 수많은 가게가 미로처럼 이어져 있어요.
+
+• 오전 일찍 가야 덜 더워요
+• 구역이 넓으니 지도를 사진으로 찍어 두고 다니기
+• 시원한 코코넛 아이스크림은 필수`,
+        links: [{ label: "짜뚜짝 시장 공식", url: "https://www.chatuchakmarket.org/" }],
+      },
+      {
+        title: "Day 4~5 · 쇼핑·마사지 후 밤 비행기",
+        image_url: "",
+        content: `마지막 날은 대형 쇼핑몰과 마사지로 여유롭게 보내고, 짐을 맡긴 뒤 밤 비행기를 타는 일정이 일반적이에요. 공항까지는 교통 체증을 고려해 넉넉히 출발하세요.`,
+      },
+      {
+        title: "참고 영상·자료",
+        image_url: "",
+        content: "사원은 종교 시설이에요. 조용히 관람하고, 불상보다 높은 곳에 올라가거나 발끝을 불상 쪽으로 향하지 않는 등 예절을 지켜 주세요.",
+        videos: [
+          { url: "https://www.youtube.com/watch?v=PaNj0aiyGNk", title: "방콕 여행을 0부터 제대로 알려드림 (트립콤파니)" },
+          { url: "https://www.youtube.com/watch?v=j6K9cBT9voc", title: "30분 만에 방콕을 이해하는 영상 (산보노트 sanbonote)" },
+        ],
+        links: [
+          { label: "태국관광청 (TAT)", url: "https://www.tourismthailand.org/" },
+          {
+            label: "표지 사진 출처 — Tee-12838 · CC BY-SA 4.0 · Wikimedia Commons",
+            url: "https://commons.wikimedia.org/wiki/File:Wat_Arun_Ratchawararam_and_the_Royal_Barge_Procession.jpg",
+          },
+        ],
+      },
+    ],
+  },
+
+  // ── 파리 ──────────────────────────
+  {
+    title: "[Pothos 에디터] 파리 4박 6일, 처음이라면 이 순서로",
+    subtitle: "에펠탑과 센강, 루브르, 몽마르트르",
+    destination: "파리",
+    cover_image_url: "/stories/paris-1.jpg",
+    intro:
+      "파리는 볼거리가 너무 많아 처음엔 동선 짜기가 막막해요. 센강을 중심으로 서쪽(에펠탑)·중앙(루브르·시테섬)·북쪽(몽마르트르)을 하루씩 나누면 이동이 훨씬 편해요. 미술관 휴관일만 피하면 돼요.",
+    duration_text: "4박 6일",
+    tags: ["파리", "프랑스", "유럽여행", "미술관"],
+    sections: [
+      {
+        title: "Day 1~2 · 에펠탑과 센강",
+        image_url: "/stories/paris-2.jpg",
+        image_credit: "Ginevrajocosa88 · CC BY-SA 4.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Eiffel_tower_across_river_seine.jpg",
+        content: `도착 다음 날은 에펠탑과 센강 주변으로 시작해요. 트로카데로 광장에서 바라보는 에펠탑, 샹드마르스 공원 잔디밭이 대표 포인트예요.
+
+• 해 질 무렵 센강 유람선을 타면 파리의 다리와 건물을 한 번에 볼 수 있어요
+• 에펠탑 전망대는 대기 줄이 길어 공식 사이트 사전 예매를 추천해요`,
+      },
+      {
+        title: "Day 3 · 루브르 — 화요일 휴관 주의",
+        image_url: "",
+        content: `루브르는 하루를 다 써도 모자라요. 보고 싶은 작품(모나리자, 밀로의 비너스, 사모트라케의 니케 등)을 미리 정해 두고 동선을 짜세요.
+
+공식 안내 기준(2026년 11월 확인)
+• 일반 관람: 월·목·토·일 9:00~18:00, 수·금 9:00~21:00
+• 화요일 휴관, 1월 1일·5월 1일·12월 25일 휴관
+• 입장료: 유럽경제지역(EEA) 외 방문객 32유로 (18세 미만 무료)
+※ 운영 시간·요금은 바뀔 수 있어요(파업 등으로 늦게 열기도 해요). 꼭 출발 전 공식 사이트에서 확인하고 시간 지정 예매를 하세요.`,
+        links: [{ label: "루브르 박물관 관람 시간·요금 (공식)", url: "https://www.louvre.fr/en/visit/hours-admission" }],
+      },
+      {
+        title: "Day 4 · 몽마르트르 언덕",
+        image_url: "/stories/paris-4.jpg",
+        image_credit: "Fernando Losada Rodríguez · CC BY-SA 4.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Basilique_du_Sacr%C3%A9-C%C5%93ur.001_-_Montmartre.jpg",
+        content: `하얀 사크레쾨르 대성당이 있는 몽마르트르 언덕은 파리 시내를 내려다보기 좋은 곳이에요. 화가들이 그림을 그리는 테르트르 광장과 골목 카페를 천천히 걸어요.
+
+• 언덕 계단이 가파르니 편한 신발 필수
+• 관광객이 많은 곳이라 소지품(특히 휴대폰·지갑) 관리에 신경 쓰세요`,
+      },
+      {
+        title: "Day 5~6 · 마레 지구 산책과 귀국",
+        image_url: "",
+        content: `마지막 날은 마레 지구의 작은 상점과 카페, 빵집을 둘러보며 기념품을 사요. 공항으로 가는 시간은 교통 상황을 고려해 넉넉히 잡으세요.
+
+• 파리 대중교통은 지하철(메트로)이 가장 편해요
+• 미술관을 여러 곳 간다면 통합 패스가 이득인지 미리 계산해 보세요`,
+      },
+      {
+        title: "참고 영상·자료",
+        image_url: "",
+        content: "인기 명소는 대부분 사전 예매가 기본이에요. 영상으로 동선을 잡고, 예매는 꼭 공식 사이트에서 하세요.",
+        videos: [
+          { url: "https://www.youtube.com/watch?v=QetTbhRcEME", title: "파리 여행코스 완벽 총정리 (여니버스 Yeoniverse)" },
+          { url: "https://www.youtube.com/watch?v=EuqPhwqGi_E", title: "이것만 보면 파리 완전 정복 — 걸어서 세계속으로 (KBS)" },
+        ],
+        links: [
+          { label: "파리 관광청", url: "https://parisjetaime.com/" },
+          { label: "에펠탑 공식", url: "https://www.toureiffel.paris/" },
+          {
+            label: "표지 사진 출처 — ThePromenader · CC BY-SA 3.0 · Wikimedia Commons",
+            url: "https://commons.wikimedia.org/wiki/File:Eiffel_st-jacques_horz_jms.jpg",
+          },
+        ],
+      },
+    ],
+  },
+
+  // ── 경주 ──────────────────────────
+  {
+    title: "[Pothos 에디터] 경주 1박 2일, 낮의 신라와 밤의 월지",
+    subtitle: "불국사·대릉원·첨성대, 그리고 동궁과 월지 야경",
+    destination: "경주",
+    cover_image_url: "/stories/gyeongju-1.jpg",
+    intro:
+      "경주는 도시 전체가 박물관 같은 곳이에요. 낮에는 천년 신라의 유적을 걷고, 밤에는 조명이 켜진 동궁과 월지를 보는 1박 2일 코스를 정리했어요. 유적이 모여 있어 걸어서 다니기 좋아요.",
+    duration_text: "1박 2일",
+    tags: ["경주", "국내여행", "역사여행", "야경"],
+    sections: [
+      {
+        title: "Day 1 · 대릉원과 첨성대",
+        image_url: "/stories/gyeongju-3.jpg",
+        image_credit: "Bernard Gagnon · CC0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Daereungwon_Tomb_Complex.jpg",
+        content: `첫날은 시내 중심의 대릉원부터 시작해요. 커다란 신라 왕릉이 언덕처럼 모여 있는 풍경이 경주만의 모습이에요.
+
+• 근처 황리단길에서 점심과 카페 (한옥 카페·디저트 가게가 많아요)
+• 대릉원에서 첨성대까지는 걸어서 금방 (다음 사진)`,
+      },
+      {
+        title: "첨성대",
+        image_url: "/stories/gyeongju-4.jpg",
+        image_credit: "Basile Morin · CC BY-SA 4.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Cheomseongdae_Observatory_under_blue_sky_in_Gyeongju_South_Korea.jpg",
+        content: `동양에서 가장 오래된 천문대로 알려진 첨성대는 넓은 들판 한가운데 서 있어요. 주변 꽃밭이 계절마다 바뀌어 사진 찍기 좋고, 밤에는 조명이 들어와 또 다른 분위기예요.`,
+      },
+      {
+        title: "Day 1 밤 · 동궁과 월지",
+        image_url: "",
+        content: `경주 야경의 하이라이트예요. 해 진 직후 하늘이 짙은 파란색일 때 연못에 비친 전각이 가장 아름다워요(표지 사진).
+
+한국관광공사 안내 기준
+• 운영 09:00~22:00 (입장·매표 마감 21:30), 연중무휴
+• 입장료 어른 3,000원, 청소년 2,000원, 어린이 1,000원
+※ 요금·시간은 바뀔 수 있으니 방문 전 확인하세요.`,
+        links: [
+          { label: "한국관광공사 — 동궁과 월지", url: "https://english.visitkorea.or.kr/svc/whereToGo/locIntrdn/rgnContentsView.do?vcontsId=94404" },
+          { label: "경주시 — 경주 야경 10선", url: "https://www.gyeongju.go.kr/tour/page.do?mnu_uid=4859" },
+        ],
+      },
+      {
+        title: "Day 2 · 불국사",
+        image_url: "/stories/gyeongju-2.jpg",
+        image_credit: "Basile Morin · CC BY-SA 4.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Bulguksa_temple_entrance_gate_stairs_flower_bed_and_blue_sky_in_Gyeongju_South_Korea.jpg",
+        content: `둘째 날은 시내에서 조금 떨어진 불국사로 가요. 청운교·백운교 돌계단과 다보탑·석가탑을 천천히 둘러보세요. 2023년 5월부터 국가유산 관람료 면제 정책으로 현재 무료 입장이에요.
+
+• 사람이 몰리기 전 오전 일찍 가면 한결 조용해요
+• 시간이 되면 근처 석굴암까지 함께 둘러보는 코스도 좋아요`,
+        links: [{ label: "불국사 공식", url: "https://www.bulguksa.or.kr/" }],
+      },
+      {
+        title: "참고 영상·자료",
+        image_url: "",
+        content: "유적지 사이 이동은 버스·택시·자전거를 섞으면 편해요. 출발 전 영상으로 동선을 잡아 보세요.",
+        videos: [
+          { url: "https://www.youtube.com/watch?v=PCXFIRB6o9I", title: "경주여행 기본 개념부터 잡아주는 12분 가이드 (트립콤파니)" },
+          { url: "https://www.youtube.com/watch?v=KsP6fr2IPu0", title: "경주 1박 2일은 이 3구간으로 (여행하는크림이)" },
+        ],
+        links: [
+          { label: "경주시 문화관광 공식", url: "https://www.gyeongju.go.kr/tour/index.do" },
+          {
+            label: "표지 사진 출처 — Basile Morin · CC BY-SA 4.0 · Wikimedia Commons",
+            url: "https://commons.wikimedia.org/wiki/File:Water_reflection_of_Donggung_Palace_in_Wolji_Pond_at_blue_hour_in_Gyeongju_South_Korea.jpg",
+          },
+        ],
+      },
+    ],
+  },
+
+  // ── 삿포로 ──────────────────────────
+  {
+    title: "[Pothos 에디터] 겨울 삿포로 3박 4일, 눈축제와 오타루",
+    subtitle: "2027 삿포로 눈축제(2월 4~11일)에 맞춰 떠나는 겨울 여행",
+    destination: "삿포로",
+    cover_image_url: "/stories/sapporo-1.jpg",
+    intro:
+      "삿포로의 겨울은 눈 그 자체가 볼거리예요. 2027년 삿포로 눈축제는 2월 4일부터 11일까지 오도리·츠도무·스스키노 세 곳에서 열려요(공식 발표 기준). 축제 기간에 맞춰 삿포로와 오타루를 함께 도는 3박 4일 코스를 정리했어요.",
+    duration_text: "3박 4일",
+    tags: ["삿포로", "홋카이도", "눈축제", "겨울여행"],
+    sections: [
+      {
+        title: "도착 · 신치토세 공항에서 삿포로역",
+        image_url: "",
+        content: `신치토세 공항에서 삿포로역까지 JR 쾌속 '에어포트'로 약 37분, 특별쾌속으로 약 33분 걸려요(삿포로 관광 공식 안내 기준).
+
+• 축제 기간엔 숙소가 빨리 차요 — 최대한 일찍 예약하세요
+• 오도리공원·스스키노 근처에 숙소를 잡으면 밤 축제 보기 편해요`,
+        links: [{ label: "삿포로 공식 교통 안내", url: "https://www.sapporo.travel/en/info/about/transportation/" }],
+      },
+      {
+        title: "Day 1~2 · 오도리공원 눈축제",
+        image_url: "/stories/sapporo-2.jpg",
+        image_credit: "Materialscientist · CC BY-SA 3.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:SapporoFestival8.JPG",
+        content: `메인 무대인 오도리공원에는 건물만 한 대형 눈 조각과 얼음 조각이 길게 늘어서요. 낮에 한 번, 조명과 프로젝션 매핑이 켜지는 밤에 한 번 보는 걸 추천해요(표지 사진).
+
+• 길이 매우 미끄러워요 — 미끄럼 방지 신발이나 신발용 아이젠 필수
+• 핫팩, 장갑, 귀까지 덮는 모자로 단단히
+• 삿포로 TV타워 전망대에서 축제장을 내려다보는 것도 좋아요`,
+        links: [{ label: "삿포로 눈축제 공식", url: "https://www.snowfes.com/" }],
+      },
+      {
+        title: "Day 2 밤 · 스스키노",
+        image_url: "/stories/sapporo-4.jpg",
+        image_credit: "Chatama · Public domain · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Spectaculars_of_Susukino-Sapporo.jpg",
+        content: `스스키노는 삿포로 최대의 번화가예요. 축제 기간에는 얼음 조각 회장이 열리고, 주변엔 미소 라멘, 수프카레, 징기스칸(양고기 구이) 맛집이 가득해요.`,
+      },
+      {
+        title: "Day 3 · 오타루 운하",
+        image_url: "/stories/sapporo-3.jpg",
+        image_credit: "t-konno · CC BY-SA 3.0 · Wikimedia Commons",
+        image_credit_url:
+          "https://commons.wikimedia.org/wiki/File:%E5%B0%8F%E6%A8%BD%E9%9B%AA%E3%81%82%E3%81%8B%E3%82%8A%E3%81%AE%E8%B7%AF2013%EF%BC%88Otaru_Snow_Light_Path_2013%EF%BC%89_-_panoramio_(4).jpg",
+        content: `삿포로에서 JR로 가까운 항구 도시 오타루는 당일치기로 다녀오기 좋아요. 눈 덮인 운하와 석조 창고, 유리 공예 거리와 오르골당이 유명해요.
+
+• 겨울엔 운하를 따라 작은 눈 등불을 밝히는 축제가 열리기도 해요 (사진은 2013년 '눈빛거리')
+• 해산물 덮밥(카이센동)으로 점심
+• 해가 일찍 지니 오후 늦게 운하 야경을 보고 돌아오세요`,
+        links: [{ label: "오타루 관광협회", url: "https://otaru.gr.jp/" }],
+      },
+      {
+        title: "참고 영상·자료",
+        image_url: "",
+        content: "눈축제 기간과 행사 내용은 해마다 바뀌어요. 출발 전 공식 사이트에서 최신 정보를 확인하세요.",
+        videos: [
+          { url: "https://www.youtube.com/watch?v=G-8QKLAqkaQ", title: "삿포로 여행, 근교까지 완벽 정리 (여행가는시간)" },
+          { url: "https://www.youtube.com/watch?v=tdKZpgSeO8E", title: "삿포로·오타루·비에이 겨울여행 브이로그 (Oh!군석)" },
+        ],
+        links: [
+          { label: "삿포로 관광 공식 (한국어)", url: "https://www.sapporo.travel/ko/" },
+          {
+            label: "표지 사진 출처 — t-konno · CC BY-SA 3.0 · Wikimedia Commons",
+            url: "https://commons.wikimedia.org/wiki/File:%E7%AC%AC67%E5%9B%9E%E3%81%95%E3%81%A3%E3%81%BD%E3%82%8D%E9%9B%AA%E3%81%BE%E3%81%A4%E3%82%8A%EF%BC%88The_67th_Sapporo_Snow_Festival%EF%BC%89_-_panoramio_(2).jpg",
+          },
+        ],
+      },
+    ],
+  },
 ];
