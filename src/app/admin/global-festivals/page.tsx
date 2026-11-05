@@ -4,7 +4,7 @@ import type { GlobalFestivalRow } from "@/lib/global-festivals-db";
 import GlobalFestivalManager from "./GlobalFestivalManager";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "해외 축제 큐레이션 - Pothos" };
+export const metadata = { title: "축제·박람회 큐레이션 - Pothos" };
 
 export default async function AdminGlobalFestivalsPage() {
   await requireAdmin();
@@ -21,5 +21,11 @@ export default async function AdminGlobalFestivalsPage() {
   } catch {
     tableMissing = true;
   }
-  return <GlobalFestivalManager initial={rows} tableMissing={tableMissing} />;
+  // 박람회용 항목(kind) 이 있는지
+  let expoReady = false;
+  if (!tableMissing) {
+    const { error } = await getSupabaseServiceClient().from("global_festivals").select("kind").limit(1);
+    expoReady = !error;
+  }
+  return <GlobalFestivalManager initial={rows} tableMissing={tableMissing} expoReady={expoReady} />;
 }

@@ -112,25 +112,39 @@ export default async function FestivalsPage({ searchParams }: { searchParams: Pr
   }
   // '앞으로 30일'이면 이번 달 + 다음 달
   const globalMonths = ym === months[0].ym ? [month, months[1].month] : [month];
-  // 세계 축제: 관리자가 게시한 AI 큐레이션(정확한 날짜) + 고정 목록(대표 시기)
-  let globals: GlobalFestival[] = [];
-  const expos: GlobalFestival[] =
-    tab === "expo" ? GLOBAL_EXPOS.filter((f) => f.months.some((m) => globalMonths.includes(m))) : [];
-  if (tab === "global") {
-    const isNext30G = ym === months[0].ym;
-    const gFrom = isNext30G ? today : `${ym}01`;
-    const gTo = isNext30G ? addDays(today, 30) : lastDayOf(ym);
-    const ymdOf = (d: string) => d.replace(/-/g, "");
-    const dbList = (await listPublishedGlobalFestivals()).filter((f) =>
-      f.startDate
-        ? ymdOf(f.startDate) <= gTo && ymdOf(f.endDate ?? f.startDate) >= gFrom
-        : f.months.some((m) => globalMonths.includes(m))
-    );
+  // 선택한 시기 (앞으로 30일 / 해당 월)
+  const isNext30G = ym === months[0].ym;
+  const gFrom = isNext30G ? today : `${ym}01`;
+  const gTo = isNext30G ? addDays(today, 30) : lastDayOf(ym);
+  const ymdOf = (d: string) => d.replace(/-/g, "");
+  const inWindow = (f: GlobalFestival) =>
+    f.startDate
+      ? ymdOf(f.startDate) <= gTo && ymdOf(f.endDate ?? f.startDate) >= gFrom
+      : f.months.some((m) => globalMonths.includes(m));
+  /** 관리자 큐레이션(정확한 날짜) 우선 + 고정 목록(대표 시기)은 같은 영문 이름이면 빼기 */
+  const mergeWithStatic = (dbList: GlobalFestival[], staticList: GlobalFestival[]) => {
     const dbNames = new Set(dbList.map((f) => f.nameEn.trim().toLowerCase()).filter(Boolean));
-    const staticList = GLOBAL_FESTIVALS.filter(
-      (f) => f.months.some((m) => globalMonths.includes(m)) && !dbNames.has(f.nameEn.trim().toLowerCase())
+    return [
+      ...dbList,
+      ...staticList.filter((f) => f.months.some((m) => globalMonths.includes(m)) && !dbNames.has(f.nameEn.trim().toLowerCase())),
+    ];
+  };
+
+  // 세계 축제
+  let globals: GlobalFestival[] = [];
+  if (tab === "global") {
+    globals = mergeWithStatic((await listPublishedGlobalFestivals("festival")).filter(inWindow), GLOBAL_FESTIVALS);
+  }
+  // 박람회: 큐레이션 국내(한국) / 해외 + 해외 대표 박람회 고정 목록
+  let expos: GlobalFestival[] = [];
+  let krExpos: GlobalFestival[] = [];
+  if (tab === "expo") {
+    const dbExpos = (await listPublishedGlobalFestivals("expo")).filter(inWindow);
+    krExpos = dbExpos.filter((f) => f.country === "한국");
+    expos = mergeWithStatic(
+      dbExpos.filter((f) => f.country !== "한국"),
+      GLOBAL_EXPOS
     );
-    globals = [...dbList, ...staticList];
   }
 
   const chip = (active: boolean) =>
@@ -230,13 +244,27 @@ export default async function FestivalsPage({ searchParams }: { searchParams: Pr
             </>
           )}
 
+          {tab === "expo" && krExpos.length > 0 && (
+            <section className="mt-12">
+              <h2 className="flex items-center gap-2 text-xl font-bold text-gray-900 mb-1">
+                🇰🇷 국내 주요 박람회 <span className="text-sm font-semibold text-indigo-600">Pothos 큐레이션</span>
+              </h2>
+              <p className="text-[15px] text-gray-500 mb-4">주최측 공식 정보로 개최일을 확인한 박람회예요</p>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {krExpos.map((f) => (
+                  <GlobalCard key={f.id} f={f} cta="이 박람회로 일정 만들기" />
+                ))}
+              </div>
+            </section>
+          )}
+
           {tab === "expo" && (
             <section className="mt-12">
               <h2 className="flex items-center gap-2 text-xl font-bold text-gray-900 mb-1">
                 🌍 해외 대표 박람회
               </h2>
               <p className="text-[15px] text-gray-500 mb-4">
-                {globalMonths.map((m) => `${m}월`).join("·")}에 주로 열리는 세계적인 박람회 · 개최일은 해마다 달라지니 공식 사이트를 꼭 확인하세요
+                {globalMonths.map((m) => `${m}월`).join("·")}에 열리는 세계적인 박람회 · 날짜가 표시된 건 공식 정보로 확인한 큐레이션, &lsquo;매년 ○월&rsquo;은 대표 시기예요
               </p>
               {expos.length === 0 ? (
                 <div className="bg-white rounded-3xl p-10 text-center text-gray-600 text-base">
@@ -339,6 +367,15 @@ function GlobalCard({ f, cta }: { f: GlobalFestival; cta: string }) {
       </p>
       <h2 className="text-lg font-bold text-gray-900 leading-snug">{f.name}</h2>
       <p className="text-sm text-gray-400 mb-2">{f.nameEn}</p>
+      {f.audience && (
+        <span
+          className={`self-start mb-2 px-2.5 py-0.5 rounded-full text-xs font-bold ${
+            f.audience === "trade" ? "bg-gray-100 text-gray-600" : f.audience === "mixed" ? "bg-violet-50 text-violet-700" : "bg-blue-50 text-blue-700"
+          }`}
+        >
+          {f.audience === "trade" ? "업계 관계자 전용" : f.audience === "mixed" ? "일부 일반 공개" : "일반 관람 가능"}
+        </span>
+      )}
       <p className="flex items-center gap-1.5 text-[15px] text-rose-600 font-semibold mb-2">
         <CalendarDays className="w-4 h-4" />{" "}
         {f.startDate

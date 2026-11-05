@@ -21,6 +21,15 @@ export interface GlobalFestivalRow {
   source_url: string | null;
   status: "pending" | "published" | "rejected";
   created_at: string;
+  /** migration_global_expos.sql 실행 전에는 없음 → 축제로 취급 */
+  kind?: "festival" | "expo";
+  audience?: "public" | "trade" | "mixed" | null;
+}
+
+export type CurationKind = "festival" | "expo";
+
+export function kindOf(r: Pick<GlobalFestivalRow, "kind">): CurationKind {
+  return r.kind === "expo" ? "expo" : "festival";
 }
 
 export function rowToFestival(r: GlobalFestivalRow): GlobalFestival {
@@ -39,11 +48,12 @@ export function rowToFestival(r: GlobalFestivalRow): GlobalFestival {
     startDate: r.start_date,
     endDate: r.end_date,
     sourceUrl: r.source_url,
+    audience: r.audience === "public" || r.audience === "trade" || r.audience === "mixed" ? r.audience : null,
   };
 }
 
-/** 게시된 해외 축제 (지난 축제 제외) */
-export async function listPublishedGlobalFestivals(): Promise<GlobalFestival[]> {
+/** 게시된 축제·박람회 (지난 것 제외) — kind 로 축제/박람회 구분 */
+export async function listPublishedGlobalFestivals(kind: CurationKind = "festival"): Promise<GlobalFestival[]> {
   try {
     const supabase = getSupabaseServiceClient();
     const today = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
@@ -55,7 +65,7 @@ export async function listPublishedGlobalFestivals(): Promise<GlobalFestival[]> 
       .order("start_date", { ascending: true, nullsFirst: false })
       .limit(500);
     if (error || !data) return [];
-    return (data as GlobalFestivalRow[]).map(rowToFestival);
+    return (data as GlobalFestivalRow[]).filter((r) => kindOf(r) === kind).map(rowToFestival);
   } catch {
     return [];
   }
