@@ -25,7 +25,7 @@ export async function PUT(req: Request) {
   try {
     // 마지막 실행일은 화면에서 바꾸지 않음 (기존 값 유지)
     const prev = await getAutoSettings();
-    return Response.json(await saveAutoSettings({ ...body, lastRunDate: prev.lastRunDate }));
+    return Response.json(await saveAutoSettings({ ...body, lastRunDate: prev.lastRunDate, lastThreadsDate: prev.lastThreadsDate }));
   } catch (e) {
     return Response.json({ error: e instanceof Error ? e.message : "저장 실패" }, { status: 500 });
   }

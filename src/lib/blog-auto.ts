@@ -25,6 +25,10 @@ export interface BlogAutoSettings {
   photos: boolean;
   /** 마지막 자동 작성일 (KST, YYYY-MM-DD) — 하루 한 번만 */
   lastRunDate: string | null;
+  /** 공개된 블로그 글을 스레드에 하루 1개씩 자동 게시 */
+  threadsAuto: boolean;
+  /** 마지막 스레드 자동 게시일 (KST) */
+  lastThreadsDate: string | null;
 }
 
 export const DEFAULT_CONCEPT =
@@ -39,6 +43,8 @@ export const DEFAULT_AUTO: BlogAutoSettings = {
   coverStyle: "midnight",
   photos: true,
   lastRunDate: null,
+  threadsAuto: false,
+  lastThreadsDate: null,
 };
 
 export function normalizeAuto(input: unknown): BlogAutoSettings {
@@ -59,6 +65,8 @@ export function normalizeAuto(input: unknown): BlogAutoSettings {
     coverStyle: isCoverStyle(v.coverStyle) ? v.coverStyle : "midnight",
     photos: typeof v.photos === "boolean" ? v.photos : true,
     lastRunDate: typeof v.lastRunDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v.lastRunDate) ? v.lastRunDate : null,
+    threadsAuto: v.threadsAuto === true,
+    lastThreadsDate: typeof v.lastThreadsDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v.lastThreadsDate) ? v.lastThreadsDate : null,
   };
 }
 

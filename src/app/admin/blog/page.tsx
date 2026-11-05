@@ -3,11 +3,13 @@ import { getSupabaseServiceClient } from "@/lib/supabase";
 import { getAutoSettings } from "@/lib/blog-auto";
 import type { BlogPost } from "@/lib/blog";
 import BlogDashboard from "./BlogDashboard";
+import { threadsStatus } from "@/lib/threads";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "블로그 관리 - Pothos" };
 
-export default async function AdminBlogPage() {
+export default async function AdminBlogPage({ searchParams }: { searchParams: Promise<{ threads?: string }> }) {
+  const { threads: threadsResult } = await searchParams;
   await requireAdmin();
   let posts: BlogPost[] = [];
   let missing = false;
@@ -30,6 +32,13 @@ export default async function AdminBlogPage() {
   }
   const settings = await getAutoSettings();
   const cronSecret = !!process.env.CRON_SECRET;
+  const threads = await threadsStatus();
+  // 스레드 게시 기록 항목(migration_threads.sql) 실행 여부
+  let threadsReady = false;
+  if (!missing) {
+    const { error } = await getSupabaseServiceClient().from("blog_posts").select("threads_posted_at").limit(1);
+    threadsReady = !error;
+  }
 
   return (
     <BlogDashboard
@@ -38,6 +47,8 @@ export default async function AdminBlogPage() {
       tableMissing={missing}
       autoReady={autoReady}
       cronSecret={cronSecret}
+      threads={{ ...threads, ready: threadsReady }}
+      threadsNotice={threadsResult ?? null}
     />
   );
 }
