@@ -1,6 +1,6 @@
 "use client";
 
-// 블로그 댓글 — 공개 / 🔒 비밀 댓글, 답글 1단계, 답글 알림 켜기
+// 댓글 (블로그 · 스토리 공용) — 공개 / 🔒 비밀 댓글, 답글 1단계, 답글 알림 켜기
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -18,6 +18,7 @@ function timeAgo(iso: string) {
 }
 
 function Composer({
+  api,
   postId,
   parentId,
   forcePrivate,
@@ -25,6 +26,7 @@ function Composer({
   onDone,
   autoFocus,
 }: {
+  api: string;
   postId: string;
   parentId?: string;
   forcePrivate?: boolean;
@@ -44,7 +46,7 @@ function Composer({
     setBusy(true);
     setErr(null);
     try {
-      const r = await fetch("/api/blog/comments", {
+      const r = await fetch(api, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ postId, parentId: parentId ?? null, content: text, isPrivate: forcePrivate || priv }),
@@ -99,14 +101,17 @@ function Composer({
 }
 
 function Item({
+  api,
   c,
   viewerId,
   isAdmin,
   isReply,
   onReply,
 }: {
+  api: string;
   c: BlogCommentView;
   viewerId: string | null;
+  /** 관리자 또는 이 글의 글쓴이 — 모든 댓글을 지울 수 있음 */
   isAdmin: boolean;
   isReply?: boolean;
   onReply?: () => void;
@@ -118,7 +123,7 @@ function Item({
     if (!confirm("이 댓글을 지울까요?")) return;
     setDeleting(true);
     try {
-      const r = await fetch(`/api/blog/comments/${c.id}`, { method: "DELETE" });
+      const r = await fetch(`${api}/${c.id}`, { method: "DELETE" });
       if (!r.ok) throw new Error();
       router.refresh();
     } catch {
@@ -148,7 +153,11 @@ function Item({
       <div className="flex-1 min-w-0">
         <p className="flex flex-wrap items-center gap-x-1.5 text-sm">
           <b className="text-slate-900">{c.author.name}</b>
-          {c.author.isAdmin && <span className="px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-600 text-[10px] font-bold">글쓴이</span>}
+          {c.author.isOwner ? (
+            <span className="px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-600 text-[10px] font-bold">글쓴이</span>
+          ) : (
+            c.author.isAdmin && <span className="px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-600 text-[10px] font-bold">운영팀</span>
+          )}
           {c.isPrivate && <Lock className="w-3.5 h-3.5 text-slate-400" aria-label="비밀 댓글" />}
           <span className="text-xs text-slate-400">{timeAgo(c.createdAt)}</span>
         </p>
@@ -179,20 +188,28 @@ function Item({
 }
 
 export default function BlogComments({
+  kind = "blog",
   postId,
-  slug,
+  path,
   comments,
   total,
   viewerId,
   isAdmin,
+  isOwner = false,
 }: {
+  kind?: "blog" | "story";
   postId: string;
-  slug: string;
+  /** 글 주소 (로그인 후 돌아올 곳), 예: /blog/xxx, /stories/uuid */
+  path: string;
   comments: BlogCommentView[] | null;
   total: number;
   viewerId: string | null;
   isAdmin: boolean;
+  /** 보는 사람이 이 글의 글쓴이인지 */
+  isOwner?: boolean;
 }) {
+  const api = kind === "story" ? "/api/story-comments" : "/api/blog/comments";
+  const manager = isAdmin || isOwner;
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [posted, setPosted] = useState(false);
 
@@ -200,7 +217,7 @@ export default function BlogComments({
     // 댓글 테이블이 아직 없음 — 관리자에게만 안내
     return isAdmin ? (
       <p className="mt-16 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
-        댓글 기능을 켜려면 Supabase에서 <b>supabase/migration_blog_comments.sql</b> 을 실행해 주세요. (관리자에게만 보이는 안내)
+        댓글 기능을 켜려면 Supabase에서 <b>supabase/{kind === "story" ? "migration_story_comments.sql" : "migration_blog_comments.sql"}</b> 을 실행해 주세요. (관리자에게만 보이는 안내)
       </p>
     ) : null;
   }
@@ -212,11 +229,17 @@ export default function BlogComments({
       </h2>
       <p className="mt-1 text-sm text-slate-500">궁금한 점이나 여행 팁을 남겨 주세요. 개인적인 질문은 🔒 비밀 댓글로 남기면 글쓴이만 볼 수 있어요.</p>
 
+      {isOwner && (
+        <div className="mt-3">
+          <PushToggle compact label="내 글 새 댓글 알림" />
+        </div>
+      )}
+
       <div className="mt-5">
         {viewerId ? (
           <>
-            <Composer postId={postId} placeholder="댓글을 남겨 주세요" onDone={() => setPosted(true)} />
-            {posted && !isAdmin && (
+            <Composer api={api} postId={postId} placeholder={kind === "story" ? "이 여행 이야기에 대한 댓글이나 궁금한 점을 남겨 주세요" : "댓글을 남겨 주세요"} onDone={() => setPosted(true)} />
+            {posted && !manager && (
               <div className="mt-3 rounded-2xl bg-blue-50 px-4 py-3">
                 <p className="text-sm text-slate-700 mb-2">답글이 달리면 알려 드릴까요? (알림이 꺼져 있으면 이메일로 알려 드려요)</p>
                 <PushToggle compact label="답글 알림" />
@@ -225,7 +248,7 @@ export default function BlogComments({
           </>
         ) : (
           <Link
-            href={`/login?callbackUrl=${encodeURIComponent(`/blog/${slug}#comments`)}`}
+            href={`/login?callbackUrl=${encodeURIComponent(`${path}#comments`)}`}
             className="block rounded-2xl border border-dashed border-slate-300 px-4 py-5 text-center text-sm font-semibold text-slate-500 hover:border-blue-400 hover:text-blue-600"
           >
             로그인하고 댓글 남기기
@@ -237,16 +260,17 @@ export default function BlogComments({
         <ul className="mt-8 space-y-6">
           {comments.map((c) => (
             <li key={c.id} id={`c-${c.id}`} className="scroll-mt-28">
-              <Item c={c} viewerId={viewerId} isAdmin={isAdmin} onReply={() => setReplyTo(replyTo === c.id ? null : c.id)} />
+              <Item api={api} c={c} viewerId={viewerId} isAdmin={manager} onReply={() => setReplyTo(replyTo === c.id ? null : c.id)} />
               {(c.replies.length > 0 || replyTo === c.id) && (
                 <div className="mt-4 ml-6 sm:ml-12 space-y-4 border-l-2 border-slate-100 pl-3 sm:pl-4">
                   {c.replies.map((r) => (
                     <div key={r.id} id={`c-${r.id}`} className="scroll-mt-28">
-                      <Item c={r} viewerId={viewerId} isAdmin={isAdmin} isReply />
+                      <Item api={api} c={r} viewerId={viewerId} isAdmin={manager} isReply />
                     </div>
                   ))}
                   {replyTo === c.id && viewerId && (
                     <Composer
+                      api={api}
                       postId={postId}
                       parentId={c.id}
                       forcePrivate={c.isPrivate}

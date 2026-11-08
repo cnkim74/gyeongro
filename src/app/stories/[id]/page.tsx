@@ -11,6 +11,8 @@ import { extractYouTube } from "@/lib/youtube";
 import { ArrowLeft, MapPin, Calendar, Eye, ExternalLink, Camera } from "lucide-react";
 import StoryActions from "./StoryActions";
 import LikeButton from "./LikeButton";
+import BlogComments from "@/components/blog/BlogComments";
+import { listComments, countVisible } from "@/lib/blog-comments";
 
 export const dynamic = "force-dynamic";
 
@@ -124,6 +126,9 @@ export default async function StoryDetailPage({
       .maybeSingle();
     liked = !!like;
   }
+
+  // 댓글 (공개 / 비밀) — 글쓴이는 스토리를 쓴 회원
+  const comments = await listComments("story", story.id, currentUserId, adminFlag, [story.user_id]);
 
   const authorRole = parseRole(author?.role);
   const authorName = author?.name ?? "익명";
@@ -334,6 +339,17 @@ export default async function StoryDetailPage({
               loggedIn={!!currentUserId}
             />
           </div>
+
+          <BlogComments
+            kind="story"
+            postId={story.id}
+            path={`/stories/${story.id}`}
+            comments={comments}
+            total={comments ? countVisible(comments) : 0}
+            viewerId={currentUserId}
+            isAdmin={adminFlag}
+            isOwner={currentUserId === story.user_id}
+          />
         </div>
       </main>
     </div>

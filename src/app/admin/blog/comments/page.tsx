@@ -6,7 +6,7 @@ import { getSupabaseServiceClient } from "@/lib/supabase";
 import PushToggle from "@/components/PushToggle";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "블로그 댓글 - Pothos" };
+export const metadata = { title: "블로그·스토리 댓글 - Pothos" };
 
 type Row = {
   id: string;
@@ -19,17 +19,23 @@ type Row = {
   created_at: string;
 };
 
+type KRow = Row & { kind: "blog" | "story" };
+
 export default async function AdminBlogCommentsPage({ searchParams }: { searchParams: Promise<{ all?: string }> }) {
   const { all } = await searchParams;
   await requireAdmin();
   const supabase = getSupabaseServiceClient();
-  const { data, error } = await supabase
-    .from("blog_comments")
-    .select("id, post_id, parent_id, user_id, content, is_private, is_deleted, created_at")
-    .eq("is_deleted", false)
-    .order("created_at", { ascending: false })
-    .limit(300);
-  const rows = (data ?? []) as Row[];
+  const cols = "id, post_id, parent_id, user_id, content, is_private, is_deleted, created_at";
+  const [blogRes, storyRes] = await Promise.all([
+    supabase.from("blog_comments").select(cols).eq("is_deleted", false).order("created_at", { ascending: false }).limit(300),
+    supabase.from("story_comments").select(cols).eq("is_deleted", false).order("created_at", { ascending: false }).limit(300),
+  ]);
+  const error = blogRes.error;
+  const storyMissing = !!storyRes.error;
+  const rows: KRow[] = [
+    ...((blogRes.data ?? []) as Row[]).map((r) => ({ ...r, kind: "blog" as const })),
+    ...((storyRes.data ?? []) as Row[]).map((r) => ({ ...r, kind: "story" as const })),
+  ].sort((a, b) => b.created_at.localeCompare(a.created_at));
 
   // 관리자 목록 (답했는지 판단용)
   const { data: adminUsers } = await supabase.schema("next_auth").from("users").select("id").eq("role", "admin");
@@ -39,33 +45,45 @@ export default async function AdminBlogCommentsPage({ searchParams }: { searchPa
     ...((adminRows ?? []) as { user_id: string }[]).map((a) => a.user_id),
   ]);
 
-  const postIds = [...new Set(rows.map((r) => r.post_id))];
+  const blogIds = [...new Set(rows.filter((r) => r.kind === "blog").map((r) => r.post_id))];
+  const storyIds = [...new Set(rows.filter((r) => r.kind === "story").map((r) => r.post_id))];
   const userIds = [...new Set(rows.map((r) => r.user_id))];
-  const [{ data: posts }, { data: users }] = await Promise.all([
-    postIds.length ? supabase.from("blog_posts").select("id, slug, title").in("id", postIds) : Promise.resolve({ data: [] }),
+  const [{ data: posts }, { data: stories }, { data: users }] = await Promise.all([
+    blogIds.length ? supabase.from("blog_posts").select("id, slug, title").in("id", blogIds) : Promise.resolve({ data: [] }),
+    storyIds.length ? supabase.from("stories").select("id, title, user_id").in("id", storyIds) : Promise.resolve({ data: [] }),
     userIds.length
       ? supabase.schema("next_auth").from("users").select("id, nickname, name, email").in("id", userIds)
       : Promise.resolve({ data: [] }),
   ]);
-  const postOf = new Map(((posts ?? []) as { id: string; slug: string; title: string }[]).map((p) => [p.id, p]));
+  // 글 정보: 주소·제목·글쓴이
+  const postOf = new Map<string, { path: string; title: string; owner: string | null }>();
+  for (const p of (posts ?? []) as { id: string; slug: string; title: string }[]) postOf.set(`blog:${p.id}`, { path: `/blog/${p.slug}`, title: p.title, owner: null });
+  for (const p of (stories ?? []) as { id: string; title: string; user_id: string }[])
+    postOf.set(`story:${p.id}`, { path: `/stories/${p.id}`, title: p.title, owner: p.user_id });
   const userOf = new Map(
     ((users ?? []) as { id: string; nickname?: string | null; name?: string | null; email?: string | null }[]).map((u) => [u.id, u])
   );
+  const keyOf = (r: KRow) => `${r.kind}:${r.post_id}`;
+  // 관리자 또는 그 글의 글쓴이가 쓴 것
+  const isStaff = (r: KRow) => admins.has(r.user_id) || postOf.get(keyOf(r))?.owner === r.user_id;
 
-  // 손님이 쓴 댓글(관리자 것 제외) + 관리자가 답했는지
-  const tops = rows.filter((r) => !r.parent_id && !admins.has(r.user_id));
-  const answered = (id: string) => rows.some((r) => r.parent_id === id && admins.has(r.user_id));
-  const list = all ? tops : tops.filter((t) => !answered(t.id));
-  const waiting = tops.filter((t) => !answered(t.id)).length;
+  // 손님이 쓴 댓글 + 관리자·글쓴이가 답했는지
+  const tops = rows.filter((r) => !r.parent_id && !isStaff(r));
+  const answered = (t: KRow) => rows.some((r) => r.kind === t.kind && r.parent_id === t.id && isStaff(r));
+  const list = all ? tops : tops.filter((t) => !answered(t));
+  const waiting = tops.filter((t) => !answered(t)).length;
   // 손님이 남긴 답글(대화가 이어진 것)
-  const guestReplies = rows.filter((r) => r.parent_id && !admins.has(r.user_id)).slice(0, 20);
+  const guestReplies = rows.filter((r) => r.parent_id && !isStaff(r)).slice(0, 20);
 
   return (
     <div className="p-5 sm:p-8 max-w-4xl">
       <Link href="/admin/blog" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800">
         <ArrowLeft className="w-4 h-4" /> 블로그 관리
       </Link>
-      <h1 className="mt-3 text-3xl font-extrabold text-gray-900">💬 블로그 댓글</h1>
+      <h1 className="mt-3 text-3xl font-extrabold text-gray-900">💬 블로그·스토리 댓글</h1>
+      {storyMissing && (
+        <p className="mt-2 text-xs text-amber-700">스토리 댓글을 켜려면 Supabase에서 <b>supabase/migration_story_comments.sql</b> 을 실행해 주세요.</p>
+      )}
 
       <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50/50 p-4">
         <p className="font-bold text-gray-900">새 댓글이 달리면 바로 알림 받기</p>
@@ -104,11 +122,14 @@ export default async function AdminBlogCommentsPage({ searchParams }: { searchPa
           ) : (
             <ul className="mt-4 space-y-3">
               {list.map((c) => {
-                const p = postOf.get(c.post_id);
+                const p = postOf.get(keyOf(c));
                 const u = userOf.get(c.user_id);
                 return (
                   <li key={c.id} className="rounded-2xl border border-gray-100 bg-white p-4">
                     <p className="flex flex-wrap items-center gap-x-2 text-xs text-gray-500">
+                      <span className={`px-1.5 py-0.5 rounded font-bold ${c.kind === "story" ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-blue-700"}`}>
+                        {c.kind === "story" ? "스토리" : "블로그"}
+                      </span>
                       <b className="text-gray-800">{u?.nickname || u?.name || "여행자"}</b>
                       {u?.email && <span>{u.email}</span>}
                       {c.is_private && (
@@ -117,11 +138,11 @@ export default async function AdminBlogCommentsPage({ searchParams }: { searchPa
                         </span>
                       )}
                       <span>{new Date(c.created_at).toLocaleString("ko-KR", { dateStyle: "short", timeStyle: "short" })}</span>
-                      {answered(c.id) && <span className="text-emerald-600 font-bold">답변함</span>}
+                      {answered(c) && <span className="text-emerald-600 font-bold">답변함</span>}
                     </p>
                     <p className="mt-2 text-sm text-gray-800 whitespace-pre-wrap break-words">{c.content}</p>
                     {p && (
-                      <Link href={`/blog/${p.slug}#c-${c.id}`} className="mt-2 inline-block text-xs font-bold text-blue-600">
+                      <Link href={`${p.path}#c-${c.id}`} className="mt-2 inline-block text-xs font-bold text-blue-600">
                         &lsquo;{p.title}&rsquo; 에서 답하기 →
                       </Link>
                     )}
@@ -136,7 +157,7 @@ export default async function AdminBlogCommentsPage({ searchParams }: { searchPa
               <h2 className="mt-10 text-lg font-extrabold text-gray-900">최근 이어진 대화 (손님 답글)</h2>
               <ul className="mt-3 space-y-2">
                 {guestReplies.map((c) => {
-                  const p = postOf.get(c.post_id);
+                  const p = postOf.get(keyOf(c));
                   const u = userOf.get(c.user_id);
                   return (
                     <li key={c.id} className="rounded-xl bg-gray-50 px-4 py-3 text-sm">
@@ -144,7 +165,7 @@ export default async function AdminBlogCommentsPage({ searchParams }: { searchPa
                       {c.is_private && <Lock className="inline w-3 h-3 ml-1 text-amber-700" />}
                       <span className="text-gray-600"> — {c.content.slice(0, 120)}</span>
                       {p && (
-                        <Link href={`/blog/${p.slug}#c-${c.parent_id}`} className="ml-2 text-xs font-bold text-blue-600">
+                        <Link href={`${p.path}#c-${c.parent_id}`} className="ml-2 text-xs font-bold text-blue-600">
                           보기 →
                         </Link>
                       )}
