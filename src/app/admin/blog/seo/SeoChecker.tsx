@@ -6,6 +6,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, XCircle, Loader2, ExternalLink, Send, Search } from "lucide-react";
 import RelatedKeywordChips from "@/components/blog/RelatedKeywordChips";
+import RankBadges, { useRanks } from "@/components/blog/RankBadges";
 import type { RelatedCheck } from "@/lib/blog-utils";
 
 type Basic = { ok: boolean; label: string; tip: string };
@@ -75,6 +76,7 @@ export default function SeoChecker({
   const [busy, setBusy] = useState<string | null>(null);
   const [open, setOpen] = useState<string | null>(null);
   const [pingMsg, setPingMsg] = useState<string | null>(null);
+  const { data: ranks, saveNaver } = useRanks();
 
   const check = async (p: Post) => {
     setBusy(p.id);
@@ -219,7 +221,8 @@ export default function SeoChecker({
                       </p>
                     </button>
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-[11px] text-gray-400">네이버</span>
+                      <RankBadges postId={p.id} slug={p.slug} keyword={p.focus_keyword || p.title} ranks={ranks} onSaveNaver={saveNaver} />
+                      <span className="text-[11px] text-gray-400 ml-1">네이버</span>
                       <NaverCell r={r?.naver} title={p.title} />
                       <span className="text-[11px] text-gray-400 ml-1">구글</span>
                       <GoogleCell r={r?.google} />

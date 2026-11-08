@@ -226,3 +226,55 @@ export async function pingIndexNow(urls: string[]): Promise<{ engine: string; ok
     })
   );
 }
+
+export type PageRank = { position: number; query: string; impressions: number; clicks: number; isFocus: boolean };
+
+/**
+ * 글마다 구글 대표 순위 (최근 28일, Search Console 실적)
+ * - 핵심 키워드로 노출된 기록이 있으면 그 순위
+ * - 없으면 노출이 가장 많은 검색어의 순위
+ * 반환: slug → 순위 (서치콘솔 미연결이면 null)
+ */
+export async function gscPageRanks(focusBySlug: Record<string, string>): Promise<Record<string, PageRank> | null> {
+  if (!process.env.GOOGLE_SC_CLIENT_EMAIL || !process.env.GOOGLE_SC_PRIVATE_KEY) return null;
+  try {
+    const token = await googleToken();
+    const siteUrl = process.env.GOOGLE_SC_SITE || `sc-domain:${new URL(SITE).host.replace(/^www\./, "")}`;
+    const day = (n: number) => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);
+    const r = await fetch(`https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        startDate: day(28),
+        endDate: day(0),
+        dimensions: ["page", "query"],
+        dimensionFilterGroups: [{ filters: [{ dimension: "page", operator: "contains", expression: "/blog/" }] }],
+        rowLimit: 5000,
+      }),
+      cache: "no-store",
+    });
+    if (!r.ok) return null;
+    const j = (await r.json()) as { rows?: { keys: string[]; clicks: number; impressions: number; position: number }[] };
+    const compact = (s: string) => s.toLowerCase().replace(/\s+/g, "");
+    const out: Record<string, PageRank> = {};
+    for (const row of j.rows ?? []) {
+      let slug = "";
+      try {
+        slug = decodeURIComponent(new URL(row.keys[0]).pathname).replace(/^\/blog\//, "").replace(/\/$/, "");
+      } catch {
+        continue;
+      }
+      if (!slug || slug.includes("/")) continue;
+      const query = row.keys[1];
+      const focus = focusBySlug[slug];
+      const isFocus = !!focus && compact(query) === compact(focus);
+      const cand: PageRank = { position: Math.round(row.position * 10) / 10, query, impressions: row.impressions, clicks: row.clicks, isFocus };
+      const cur = out[slug];
+      // 핵심 키워드 우선 → 그다음 노출 많은 검색어
+      if (!cur || (cand.isFocus && !cur.isFocus) || (cand.isFocus === cur.isFocus && cand.impressions > cur.impressions)) out[slug] = cand;
+    }
+    return out;
+  } catch {
+    return null;
+  }
+}
