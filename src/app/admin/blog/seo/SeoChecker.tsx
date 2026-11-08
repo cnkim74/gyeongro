@@ -5,6 +5,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, XCircle, Loader2, ExternalLink, Send, Search } from "lucide-react";
+import RelatedKeywordChips from "@/components/blog/RelatedKeywordChips";
+import type { RelatedCheck } from "@/lib/blog-utils";
 
 type Basic = { ok: boolean; label: string; tip: string };
 type Result = {
@@ -14,6 +16,7 @@ type Result = {
   basics: Basic[];
   focus?: string;
   keyword?: Basic[];
+  related?: RelatedCheck[];
   queries?: { query: string; clicks: number; impressions: number; position: number }[] | null;
 };
 type Post = { id: string; slug: string; title: string; published_at: string | null; focus_keyword?: string | null };
@@ -251,7 +254,7 @@ export default function SeoChecker({
                           <>
                             <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                               <p className="text-xs font-bold text-blue-700">🎯 핵심 키워드 &lsquo;{r.focus}&rsquo; 점검</p>
-                              {(r.keyword ?? []).some((b) => !b.ok) && (
+                              {((r.keyword ?? []).some((b) => !b.ok) || (r.related ?? []).some((c) => c.status !== "full")) && (
                                 <a href={`/admin/blog/${p.id}`} className="text-xs font-bold text-white bg-blue-600 rounded-lg px-2.5 py-1">
                                   수정에서 &lsquo;AI로 키워드 반영&rsquo; →
                                 </a>
@@ -266,6 +269,9 @@ export default function SeoChecker({
                                   </span>
                                 </p>
                               ))}
+                            </div>
+                            <div className="mt-3 pt-3 border-t border-blue-50">
+                              <RelatedKeywordChips checks={r.related ?? []} />
                             </div>
                           </>
                         ) : (

@@ -5,7 +5,7 @@
 import { requireAdmin } from "@/lib/admin";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import { checkNaver, checkGoogle, pingIndexNow, postUrl, gscTopQueries } from "@/lib/search-index";
-import { keywordChecks } from "@/lib/blog-utils";
+import { keywordChecks, relatedKeywordChecks } from "@/lib/blog-utils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,13 +37,15 @@ export async function GET(req: Request) {
   const focus = String((p as { focus_keyword?: string | null }).focus_keyword ?? "").trim();
   const keyword = focus ? keywordChecks(focus, { title: p.title, excerpt: p.excerpt ?? "", content: String(p.content) }) : [];
 
+  const related = relatedKeywordChecks(Array.isArray(p.tags) ? p.tags : [], focus, { content: String(p.content), excerpt: p.excerpt ?? "" });
+
   const [naver, google, queries] = await Promise.all([
     // 핵심 키워드가 있으면 그 검색어로 네이버 노출 확인 (없으면 제목으로)
     checkNaver(focus || p.title, p.slug),
     checkGoogle(p.slug),
     gscTopQueries(p.slug),
   ]);
-  return Response.json({ url: postUrl(p.slug), naver, google, basics, focus, keyword, queries });
+  return Response.json({ url: postUrl(p.slug), naver, google, basics, focus, keyword, related, queries });
 }
 
 export async function POST(req: Request) {

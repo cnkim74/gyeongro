@@ -7,7 +7,20 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import BlogMarkdown from "@/components/blog/BlogMarkdown";
 import BlogCover from "@/components/blog/BlogCover";
-import { normalizeSlug, readMinutes, tocOf, keywordChecks, COVER_STYLES, COVER_STYLE_KEYS, type BlogFaq } from "@/lib/blog-utils";
+import {
+  normalizeSlug,
+  readMinutes,
+  tocOf,
+  keywordChecks,
+  relatedKeywordChecks,
+  parseTags,
+  RELATED_MAX,
+  TAGS_MAX,
+  COVER_STYLES,
+  COVER_STYLE_KEYS,
+  type BlogFaq,
+} from "@/lib/blog-utils";
+import RelatedKeywordChips from "@/components/blog/RelatedKeywordChips";
 import type { BlogPost } from "@/lib/blog";
 import { ArrowLeft, ImagePlus, Loader2, Plus, Trash2, Eye, PenLine } from "lucide-react";
 
@@ -85,7 +98,7 @@ export default function BlogEditor({ initial }: { initial?: BlogPost }) {
   const [kwBusy, setKwBusy] = useState(false);
   const [kwSuggest, setKwSuggest] = useState<{ focus: string; related: string[]; title: string; excerpt: string } | null>(null);
   // 키워드 본문 반영 미리보기
-  const [kwApply, setKwApply] = useState<{ content: string; changes: { before: string; after: string }[] } | null>(null);
+  const [kwApply, setKwApply] = useState<{ content: string; changes: { before: string; after: string }[]; skipped?: string[] } | null>(null);
   const [kwApplyBusy, setKwApplyBusy] = useState(false);
   const [content, setContent] = useState(initial?.content ?? "");
   const [tags, setTags] = useState((initial?.tags ?? []).join(", "));
@@ -204,7 +217,10 @@ export default function BlogEditor({ initial }: { initial?: BlogPost }) {
                   const j = await r.json();
                   if (!r.ok) throw new Error(j.error ?? "추천 실패");
                   setKwSuggest(j);
+                  const focusNow = focusKeyword.trim() || j.focus || "";
                   if (!focusKeyword.trim() && j.focus) setFocusKeyword(j.focus);
+                  // 보조 키워드가 비어 있으면 추천으로 바로 채움
+                  if (parseTags(tags).length === 0) setTags(mergeRelated([], focusNow, j.related ?? []).join(", "));
                 } catch (e) {
                   alert(e instanceof Error ? e.message : "추천 실패");
                 } finally {
@@ -236,14 +252,10 @@ export default function BlogEditor({ initial }: { initial?: BlogPost }) {
                 ))}
                 <button
                   type="button"
-                  onClick={() => {
-                    const add = [kwSuggest.focus, ...kwSuggest.related].filter(Boolean);
-                    const cur = tags.split(",").map((t) => t.trim()).filter(Boolean);
-                    setTags([...new Set([...cur, ...add])].slice(0, 12).join(", "));
-                  }}
+                  onClick={() => setTags(mergeRelated(parseTags(tags), focusKeyword, [kwSuggest.focus, ...kwSuggest.related]).join(", "))}
                   className="px-2.5 py-1 rounded-full text-xs font-semibold text-blue-700 border border-blue-200"
                 >
-                  태그에 모두 추가
+                  보조 키워드로 넣기
                 </button>
               </div>
               {kwSuggest.title && (
@@ -267,8 +279,26 @@ export default function BlogEditor({ initial }: { initial?: BlogPost }) {
             </div>
           )}
 
-          {focusKeyword.trim() && (
+          {/* 보조 키워드 · 태그 */}
+          <div className="mt-4">
+            <label className={label}>🏷 보조 키워드 · 태그 — {RELATED_MAX}개 이하 (쉼표로 구분)</label>
+            <input className={input} value={tags} onChange={(e) => setTags(e.target.value)} placeholder="블라디보스토크 12월 날씨, 블라디보스토크 여행 경비, 블라디보스토크 2박3일" />
+            <p className="text-xs text-gray-500 mt-1">
+              핵심 키워드 말고, 이 글이 함께 답해 주는 검색어 3~{RELATED_MAX}개 (비용·날씨·일정·교통처럼 서로 다른 궁금증). 글 아래 태그로도 보여요. 많이 넣는다고 좋아지지 않아요 — 본문에 실제로 있는 내용만.
+            </p>
+            {parseTags(tags).length > TAGS_MAX && (
+              <p className="text-xs font-semibold text-amber-600 mt-1">태그가 {parseTags(tags).length}개예요. {TAGS_MAX}개 이하로 줄이는 걸 권해요.</p>
+            )}
+            {parseTags(tags).length > 0 && (
+              <div className="mt-2">
+                <RelatedKeywordChips checks={relatedKeywordChecks(parseTags(tags), focusKeyword, { content, excerpt })} />
+              </div>
+            )}
+          </div>
+
+          {(focusKeyword.trim() || parseTags(tags).length > 0) && (
             <>
+            {focusKeyword.trim() && (
             <ul className="mt-3 grid sm:grid-cols-2 gap-1.5">
               {keywordChecks(focusKeyword, { title, excerpt, content }).map((c) => (
                 <li key={c.label} className="flex items-start gap-1.5 text-xs">
@@ -279,7 +309,9 @@ export default function BlogEditor({ initial }: { initial?: BlogPost }) {
                 </li>
               ))}
             </ul>
-            {keywordChecks(focusKeyword, { title, excerpt, content }).some((c) => !c.ok && /첫 문단|소제목|본문/.test(c.label)) && (
+            )}
+            {(keywordChecks(focusKeyword, { title, excerpt, content }).some((c) => !c.ok && /첫 문단|소제목/.test(c.label)) ||
+              relatedKeywordChecks(parseTags(tags), focusKeyword, { content, excerpt }).some((c) => c.status !== "full")) && (
               <button
                 type="button"
                 disabled={kwApplyBusy || !content.trim()}
@@ -289,11 +321,22 @@ export default function BlogEditor({ initial }: { initial?: BlogPost }) {
                     const r = await fetch("/api/admin/blog/keyword-apply", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ keyword: focusKeyword, content }),
+                      body: JSON.stringify({
+                        keyword: focusKeyword,
+                        related: relatedKeywordChecks(parseTags(tags), focusKeyword, { content, excerpt })
+                          .filter((c) => c.status !== "full")
+                          .map((c) => c.keyword),
+                        content,
+                      }),
                     });
                     const j = await r.json();
                     if (!r.ok) throw new Error(j.error ?? "반영 실패");
-                    if (!j.changes?.length) alert("바꿀 곳을 찾지 못했어요. 직접 첫 문단·소제목에 넣어 주세요.");
+                    if (!j.changes?.length)
+                      alert(
+                        j.skipped?.length
+                          ? `본문에 그 내용을 다루는 곳이 없어 넣지 않았어요: ${j.skipped.join(", ")}\n관련 내용을 직접 쓰거나, 보조 키워드에서 빼 주세요.`
+                          : "바꿀 곳을 찾지 못했어요. 직접 첫 문단·소제목에 넣어 주세요."
+                      );
                     else setKwApply(j);
                   } catch (e) {
                     alert(e instanceof Error ? e.message : "반영 실패");
@@ -303,7 +346,7 @@ export default function BlogEditor({ initial }: { initial?: BlogPost }) {
                 }}
                 className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold disabled:opacity-50"
               >
-                {kwApplyBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : "✨"} AI로 키워드 반영 (첫 문단·소제목)
+                {kwApplyBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : "✨"} AI로 키워드 반영 (빠진 곳만 자연스럽게)
               </button>
             )}
             {kwApply && (
@@ -315,6 +358,11 @@ export default function BlogEditor({ initial }: { initial?: BlogPost }) {
                     <p className="rounded-lg bg-emerald-50 px-2.5 py-1.5 text-emerald-900 whitespace-pre-wrap">{c.after}</p>
                   </div>
                 ))}
+                {!!kwApply.skipped?.length && (
+                  <p className="text-xs text-amber-700">
+                    본문에 관련 내용이 없어 넣지 않은 키워드: <b>{kwApply.skipped.join(", ")}</b> — 직접 내용을 쓰거나 보조 키워드에서 빼 주세요.
+                  </p>
+                )}
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -453,12 +501,6 @@ export default function BlogEditor({ initial }: { initial?: BlogPost }) {
           )}
         </div>
 
-        {/* 태그 */}
-        <div>
-          <label className={label}>태그 (쉼표로 구분)</label>
-          <input className={input} value={tags} onChange={(e) => setTags(e.target.value)} placeholder="교토, 단풍, 일본여행" />
-        </div>
-
         {/* FAQ */}
         <div>
           <label className={label}>자주 묻는 질문 (검색 노출에 도움)</label>
@@ -505,4 +547,19 @@ export default function BlogEditor({ initial }: { initial?: BlogPost }) {
       </div>
     </div>
   );
+}
+
+/** 핵심 키워드를 맨 앞 태그로, 보조 키워드는 중복 없이 RELATED_MAX 개까지 */
+function mergeRelated(current: string[], focus: string, add: string[]): string[] {
+  const key = (t: string) => t.toLowerCase().replace(/\s+/g, "");
+  const f = focus.trim();
+  const seen = new Set<string>(f ? [key(f)] : []);
+  const rel: string[] = [];
+  for (const t of [...current, ...add]) {
+    const k = key(t);
+    if (!k || seen.has(k)) continue;
+    seen.add(k);
+    rel.push(t.trim());
+  }
+  return [...(f ? [f] : []), ...rel.slice(0, RELATED_MAX)];
 }
