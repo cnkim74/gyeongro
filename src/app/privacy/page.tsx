@@ -129,6 +129,20 @@ export default function PrivacyPage() {
                 사용합니다. 이용자는 브라우저 설정에서 쿠키를 거부할 수 있으나,
                 일부 기능(로그인 등)이 제한될 수 있습니다.
               </p>
+              <p className="mt-3">
+                방문 통계 분석을 위해 Google LLC의 Google Analytics를 사용합니다. 방문한 페이지, 유입 경로,
+                기기·브라우저 종류, 대략적인 지역(국가·도시) 같은 정보가 쿠키를 통해 수집되며, 개인을 직접
+                식별하는 정보는 수집하지 않습니다. 원하지 않으면 브라우저에서 쿠키를 거부하거나{" "}
+                <a
+                  href="https://tools.google.com/dlpage/gaoptout"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline"
+                >
+                  Google Analytics 차단 부가기능
+                </a>
+                을 설치할 수 있습니다.
+              </p>
             </Section>
 
             <Section title="7. 이용자의 권리">
