@@ -10,6 +10,7 @@ import RankBadges, { useRanks } from "@/components/blog/RankBadges";
 import { COVER_STYLES, COVER_STYLE_KEYS, formatBlogDate } from "@/lib/blog-utils";
 import type { BlogPost } from "@/lib/blog";
 import type { BlogAutoSettings, AutoMode } from "@/lib/blog-auto";
+import { THREADS_SLOTS } from "@/lib/threads-slots";
 import { AlertCircle, Copy, Check, Loader2, PenSquare, Sparkles, X, ExternalLink, Palette } from "lucide-react";
 
 const WEEK_DAYS: Record<number, string> = {
@@ -374,12 +375,49 @@ export default function BlogDashboard({
                     disabled={!threads.ready}
                     onChange={(e) => setSettings((s) => ({ ...s, threadsAuto: e.target.checked }))}
                   />
-                  공개된 블로그 글을 하루 1개씩 스레드에 자동 게시 (오전 8시대)
+                  스레드에 자동 게시
                 </label>
+                {settings.threadsAuto && (
+                  <div className="mt-2 ml-6 space-y-2">
+                    <div className="flex flex-wrap items-center gap-1.5 text-sm text-gray-700">
+                      <span>하루</span>
+                      {[1, 2, 3, 4].map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => setSettings((s) => ({ ...s, threadsPerDay: n }))}
+                          className={`px-3 py-1 rounded-full text-xs font-bold ${settings.threadsPerDay === n ? "bg-black text-white" : "bg-white border border-gray-200 text-gray-600"}`}
+                        >
+                          {n}개
+                        </button>
+                      ))}
+                      <span className="text-xs text-gray-400">
+                        ({(THREADS_SLOTS[settings.threadsPerDay] ?? [8]).map((h) => `${h}시`).join(" · ")}대)
+                      </span>
+                    </div>
+                    <label className="flex items-start gap-2 text-sm text-gray-700">
+                      <input
+                        type="checkbox"
+                        className="mt-1"
+                        checked={settings.threadsFill}
+                        onChange={(e) => setSettings((s) => ({ ...s, threadsFill: e.target.checked }))}
+                      />
+                      <span>
+                        올릴 새 블로그 글이 없으면 <b>스토리 소개</b>나 <b>지난 블로그 글 속 여행 팁</b>으로 채우기
+                        <span className="block text-xs text-gray-400">AI(가벼운 모델)가 글에 있는 내용만으로 크리에이터 말투의 짧은 글을 써요. 1개당 몇 원 수준.</span>
+                      </span>
+                    </label>
+                  </div>
+                )}
                 {!threads.ready && (
                   <p className="mt-1 text-xs text-amber-700">먼저 Supabase에서 <code>supabase/migration_threads.sql</code> 을 실행해 주세요.</p>
                 )}
-                {settings.lastThreadsDate && <p className="mt-1 text-xs text-gray-400">마지막 자동 게시 {settings.lastThreadsDate}</p>}
+                {settings.lastThreadsDate && (
+                  <p className="mt-1 text-xs text-gray-400">
+                    마지막 자동 게시 {settings.lastThreadsDate}
+                    {settings.threadsDoneSlots.length > 0 && ` (${settings.threadsDoneSlots.map((h) => `${h}시`).join(", ")})`}
+                  </p>
+                )}
               </>
             ) : (
               <a href="/api/admin/threads/connect" className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-black text-white text-sm font-bold">

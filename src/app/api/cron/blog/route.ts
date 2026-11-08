@@ -5,15 +5,13 @@
 //    - 주당 횟수에 맞는 요일에만, 하루 한 번만 작성 (lastRunDate)
 //    - 주제 목록 맨 위 주제를 쓰고 목록에서 뺌 (비어 있으면 AI가 주제 선택)
 //    - '검토 후 발행' = 초안 저장 / '완전 자동' = 바로 발행
-// 2) 스레드 (연결돼 있고 '자동 게시'를 켰을 때)
-//    - 토큰 만료 15일 전부터 자동 갱신
-//    - 아직 안 올린 공개 글 중 가장 최근 것 1개를 하루 한 번 게시 (lastThreadsDate)
+// 2) 스레드 8시 시간대 — src/lib/threads-auto.ts (하루 1~4개, 나머지 시간대는 /api/cron/threads/[slot])
 // 보안: Vercel 환경변수 CRON_SECRET 이 있으면 'Authorization: Bearer <CRON_SECRET>' 필요 (Vercel Cron 이 자동으로 붙임)
 
 import { revalidatePath } from "next/cache";
 import { getAutoSettings, saveAutoSettings, isWritingDay, todayKst, type BlogAutoSettings } from "@/lib/blog-auto";
 import { writeBlogPost, saveWrittenPost } from "@/lib/blog-writer";
-import { getThreadsConnection, refreshThreadsTokenIfNeeded, nextBlogForThreads, postBlogToThreads } from "@/lib/threads";
+import { runThreadsSlot } from "@/lib/threads-auto";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,20 +41,6 @@ async function runBlog(settings: BlogAutoSettings, today: string) {
   }
 }
 
-async function runThreads(today: string) {
-  if (!(await getThreadsConnection())) return { skipped: "not-connected" };
-  const token = await refreshThreadsTokenIfNeeded();
-  const settings = await getAutoSettings(); // 블로그 단계에서 바뀐 값을 다시 읽음
-  if (!settings.threadsAuto) return { skipped: "off", token };
-  if (settings.lastThreadsDate === today) return { skipped: "already-posted-today", token };
-  const postId = await nextBlogForThreads();
-  if (!postId) return { skipped: "nothing-to-post", token };
-  await saveAutoSettings({ ...settings, lastThreadsDate: today });
-  const r = await postBlogToThreads(postId);
-  console.log(`[threads-cron] ${today} ${r.ok ? `posted ${r.threadsId}` : `failed: ${r.error}`}`);
-  return { ...r, token };
-}
-
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
   if (secret && req.headers.get("authorization") !== `Bearer ${secret}`) {
@@ -64,6 +48,7 @@ export async function GET(req: Request) {
   }
   const today = todayKst();
   const blog = await runBlog(await getAutoSettings(), today);
-  const threads = await runThreads(today).catch((e) => ({ error: e instanceof Error ? e.message : String(e) }));
+  // 스레드 8시 시간대 (하루 여러 개면 12·18·21시는 /api/cron/threads/[slot])
+  const threads = await runThreadsSlot(8).catch((e) => ({ error: e instanceof Error ? e.message : String(e) }));
   return Response.json({ blog, threads });
 }

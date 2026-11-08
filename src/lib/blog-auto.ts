@@ -25,11 +25,23 @@ export interface BlogAutoSettings {
   photos: boolean;
   /** 마지막 자동 작성일 (KST, YYYY-MM-DD) — 하루 한 번만 */
   lastRunDate: string | null;
-  /** 공개된 블로그 글을 스레드에 하루 1개씩 자동 게시 */
+  /** 스레드 자동 게시 켜기 */
   threadsAuto: boolean;
+  /** 하루 게시 수 1~4 (시간대: 8시 · 12시 · 18시 · 21시 중) */
+  threadsPerDay: number;
+  /** 올릴 블로그 글이 없으면 스토리 공유·글 속 여행 팁으로 채우기 */
+  threadsFill: boolean;
   /** 마지막 스레드 자동 게시일 (KST) */
   lastThreadsDate: string | null;
+  /** 그날 이미 게시한 시간대 (lastThreadsDate 기준) */
+  threadsDoneSlots: number[];
+  /** 스레드에 공유한 스토리 id (최근 300개) */
+  threadsSharedStories: string[];
+  /** 팁으로 쓴 블로그 글 id → 날짜 (같은 글은 30일 뒤에 다시) */
+  threadsTipped: Record<string, string>;
 }
+
+export { THREADS_SLOTS } from "./threads-slots";
 
 export const DEFAULT_CONCEPT =
   "Pothos 여행 인사이트: 한국인 자유여행자가 실제로 검색하는 여행 정보(여행지 고르기, 시기·날씨, 일정·동선, 예산, 교통·교통카드, 축제, 준비물, 출입국)를 직접 다녀온 사람처럼 쉽고 구체적으로 정리. 과장 없이 실용적으로, 마지막엔 Pothos AI 플래너로 일정을 만들어 보도록 자연스럽게 안내.";
@@ -44,7 +56,12 @@ export const DEFAULT_AUTO: BlogAutoSettings = {
   photos: true,
   lastRunDate: null,
   threadsAuto: false,
+  threadsPerDay: 1,
+  threadsFill: true,
   lastThreadsDate: null,
+  threadsDoneSlots: [],
+  threadsSharedStories: [],
+  threadsTipped: {},
 };
 
 export function normalizeAuto(input: unknown): BlogAutoSettings {
@@ -66,7 +83,16 @@ export function normalizeAuto(input: unknown): BlogAutoSettings {
     photos: typeof v.photos === "boolean" ? v.photos : true,
     lastRunDate: typeof v.lastRunDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v.lastRunDate) ? v.lastRunDate : null,
     threadsAuto: v.threadsAuto === true,
+    threadsPerDay: Math.min(4, Math.max(1, Math.round(Number(v.threadsPerDay ?? 1)) || 1)),
+    threadsFill: typeof v.threadsFill === "boolean" ? v.threadsFill : true,
     lastThreadsDate: typeof v.lastThreadsDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v.lastThreadsDate) ? v.lastThreadsDate : null,
+    threadsDoneSlots: (Array.isArray(v.threadsDoneSlots) ? v.threadsDoneSlots : []).map(Number).filter((n) => [8, 12, 18, 21].includes(n)),
+    threadsSharedStories: (Array.isArray(v.threadsSharedStories) ? v.threadsSharedStories : []).map(String).slice(-300),
+    threadsTipped: Object.fromEntries(
+      Object.entries(v.threadsTipped && typeof v.threadsTipped === "object" ? (v.threadsTipped as Record<string, unknown>) : {})
+        .filter(([, d]) => typeof d === "string")
+        .slice(-500)
+    ) as Record<string, string>,
   };
 }
 

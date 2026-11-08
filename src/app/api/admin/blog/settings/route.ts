@@ -25,7 +25,17 @@ export async function PUT(req: Request) {
   try {
     // 마지막 실행일은 화면에서 바꾸지 않음 (기존 값 유지)
     const prev = await getAutoSettings();
-    return Response.json(await saveAutoSettings({ ...body, lastRunDate: prev.lastRunDate, lastThreadsDate: prev.lastThreadsDate }));
+    // 예약 작업이 기록하는 값(실행일·게시 기록)은 화면에서 바꾸지 않음
+    return Response.json(
+      await saveAutoSettings({
+        ...body,
+        lastRunDate: prev.lastRunDate,
+        lastThreadsDate: prev.lastThreadsDate,
+        threadsDoneSlots: prev.threadsDoneSlots,
+        threadsSharedStories: prev.threadsSharedStories,
+        threadsTipped: prev.threadsTipped,
+      })
+    );
   } catch (e) {
     return Response.json({ error: e instanceof Error ? e.message : "저장 실패" }, { status: 500 });
   }
