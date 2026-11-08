@@ -109,10 +109,10 @@ export default function SeoChecker({
   };
 
   // 필수: 검색엔진 등록 / 선택: 점검 화면에서 자동 확인용 API
-  const steps: { ok: boolean; label: string; desc: string; href: string; optional?: boolean }[] = [
-    { ok: true, label: "사이트맵 (/sitemap.xml)", desc: "공개 글이 자동으로 들어가요", href: `${site}/sitemap.xml` },
+  const steps: { ok: boolean; label: string; desc: string; href: string; optional?: boolean; copy?: boolean }[] = [
+    { ok: true, label: "사이트맵 (/sitemap.xml)", desc: "공개 글·스토리가 자동으로 들어가요 — 구글·네이버에 제출", href: `${site}/sitemap.xml`, copy: true },
     { ok: true, label: "robots.txt", desc: "검색엔진 수집 허용 + 사이트맵 안내", href: `${site}/robots.txt` },
-    { ok: true, label: "RSS (/rss.xml)", desc: "새 글 알림용 피드", href: `${site}/rss.xml` },
+    { ok: true, label: "RSS (/rss.xml)", desc: "새 글 알림용 피드 — 네이버 'RSS 제출'·구글 사이트맵에 제출", href: `${site}/rss.xml`, copy: true },
     {
       ok: setup.naverVerification,
       label: "네이버 서치어드바이저 등록",
@@ -171,6 +171,7 @@ export default function SeoChecker({
                   {s.label} <ExternalLink className="w-3 h-3" />
                 </a>
                 <p className="text-xs text-gray-500">{s.desc}</p>
+                {s.copy && <CopyUrl url={s.href} />}
               </div>
             </li>
           ))}
@@ -300,6 +301,31 @@ function RequestButton({ url, label, open, hint }: { url: string; label: string;
         </span>
       )}
     </span>
+  );
+}
+
+/** 주소 복사 버튼 (사이트맵·RSS 제출용) */
+function CopyUrl({ url }: { url: string }) {
+  const [done, setDone] = useState(false);
+  return (
+    <div className="mt-1.5 flex items-center gap-1.5">
+      <code className="min-w-0 truncate rounded-md bg-white border border-gray-200 px-2 py-1 text-[11px] text-gray-700 select-all">{url}</code>
+      <button
+        type="button"
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(url);
+          } catch {
+            // 복사가 막힌 브라우저 — 주소를 직접 선택해서 복사
+          }
+          setDone(true);
+          setTimeout(() => setDone(false), 1500);
+        }}
+        className="shrink-0 px-2.5 py-1 rounded-md bg-slate-900 text-white text-[11px] font-bold"
+      >
+        {done ? "복사됨 ✓" : "주소 복사"}
+      </button>
+    </div>
   );
 }
 
