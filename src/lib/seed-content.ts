@@ -1429,4 +1429,309 @@ Day 3 · 섭지코지 → 광치기해변 → (가을이면) 다랑쉬오름 억
       },
     ],
   },
+
+  // ── 안동 ──────────────────────────
+  {
+    title: "[Pothos 에디터] 안동 1박 2일, 하회마을과 서원 따라 걷는 선비의 길",
+    subtitle: "하회마을·병산서원·도산서원, 월영교 야경, 찜닭과 헛제삿밥",
+    destination: "안동",
+    cover_image_url: "/stories/andong-1.jpg",
+    intro:
+      "안동은 마을과 서원, 사찰이 세계유산으로 지정된 '한국 정신문화의 수도'예요. 강이 마을을 감싸 도는 하회마을에서 하룻밤을 보내고, 서원과 월영교 야경, 찜닭골목까지 둘러보는 1박 2일 코스를 정리했어요.",
+    duration_text: "1박 2일",
+    tags: ["안동", "국내여행", "세계유산", "역사여행"],
+    sections: [
+      {
+        title: "Day 1 · 하회마을",
+        image_url: "",
+        content: `낙동강이 마을을 'S'자로 감싸 흐르는 하회마을은 2010년 유네스코 세계유산에 등재됐어요(표지 사진). 기와집과 초가가 어우러진 골목을 천천히 걸어 보세요.
+
+하회마을 공식 안내 기준
+• 입장료: 어른(19~64세) 5,000원, 청소년 2,500원, 어린이 1,500원 (65세 이상 국내인·6세 이하 무료)
+• 주차와 마을 입구 셔틀버스는 무료, 하회세계탈박물관도 무료
+• 안동 시내에서 210번 버스로 약 50분
+
+• 강 건너 부용대에 오르면 마을이 한눈에 내려다보여요
+• 탈춤 공연이 열리는 날이면 꼭 챙겨 보세요`,
+        links: [{ label: "안동하회마을 공식 (입장료·교통)", url: "http://www.hahoe.or.kr/" }],
+      },
+      {
+        title: "Day 1 오후 · 병산서원",
+        image_url: "/stories/andong-2.jpg",
+        image_credit: "limhyungkyu · CC BY-SA 4.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:%EB%B3%91%EC%82%B0%EC%84%9C%EC%9B%90-1.jpg",
+        content: `하회마을에서 가까운 병산서원은 강과 절벽을 마주한 자리에 앉은 서원이에요. 누각(만대루)에 앉아 앞산과 강을 바라보는 풍경이 이 서원의 백미예요.
+
+• 2019년 도산서원 등과 함께 '한국의 서원'으로 세계유산에 등재됐어요
+• 하회마을에서 가는 길은 비포장 구간이 있어요 — 운전에 주의`,
+      },
+      {
+        title: "Day 1 밤 · 월영교",
+        image_url: "/stories/andong-4.jpg",
+        image_credit: "Bernard Gagnon · CC0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Weolyeonggyo_Bridge_02.jpg",
+        content: `저녁엔 시내 쪽 안동댐 아래 월영교로 가요. 호수를 가로지르는 나무다리와 가운데 정자에 조명이 들어오면 무척 낭만적이에요.
+
+• 저녁 식사는 시내 찜닭골목에서 안동찜닭을 (닭에 채소와 양념을 넣어 졸인, 안동에서 유래한 요리)
+• 다리 주변을 산책하며 야경 사진 찍기`,
+      },
+      {
+        title: "Day 2 · 도산서원과 헛제삿밥",
+        image_url: "/stories/andong-3.jpg",
+        image_credit: "Steve46814 · CC BY-SA 3.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Korea-Andong-Dosan_Seowon_2991%262-06.jpg",
+        content: `둘째 날은 퇴계 이황을 기리는 도산서원으로 가요. 1575년 한석봉이 쓴 현판을 받은 곳으로, 강가 언덕에 단정하게 앉은 건물들이 인상적이에요.
+
+• 점심은 헛제삿밥 — 제사 음식과 같은 재료로 만든 비빔밥을 평소에 먹을 수 있게 한 안동 향토 음식
+• 시간이 되면 우리나라에서 가장 오래된 목조 건물이 있는 봉정사(2018년 세계유산)도 함께 둘러보세요`,
+        links: [{ label: "안동관광 — 안동시 공식 관광", url: "https://www.tourandong.com/public/" }],
+      },
+      {
+        title: "가을이라면 · 안동국제탈춤페스티벌",
+        image_url: "",
+        content: `안동국제탈춤페스티벌은 보통 9월 말~10월 초에 열려요. 2026년에는 9월 24일~10월 4일 안동역(원도심)·탈춤공원·하회마을 등에서 열렸어요.
+
+• 국내 탈춤과 해외 가면극을 한자리에서 볼 수 있어요
+• 2027년 일정은 아직 발표 전이에요 — 공식 사이트에서 확인하세요`,
+        links: [{ label: "안동국제탈춤페스티벌 공식", url: "https://www.maskdance.com/" }],
+      },
+      {
+        title: "참고 영상·자료",
+        image_url: "",
+        content: "서원·사찰의 관람 시간은 계절에 따라 달라요. 출발 전 영상으로 동선을 잡고, 운영 시간은 공식 안내를 확인하세요.",
+        videos: [
+          { url: "https://www.youtube.com/watch?v=-fZOnaFQ_hU", title: "1박 2일 안동여행 코스 총정리 (여행크리에이터 모험가 mwomga)" },
+          { url: "https://www.youtube.com/watch?v=nofsZKJ7lVk", title: "꼭 가봐야 하는 안동 여행코스 Top11 ([빵이네]캠핑&여행TV)" },
+        ],
+        links: [
+          { label: "대한민국 구석구석 (한국관광공사)", url: "https://korean.visitkorea.or.kr/" },
+          {
+            label: "표지 사진 출처 — Bernard Gagnon · CC0 · Wikimedia Commons",
+            url: "https://commons.wikimedia.org/wiki/File:Hahoe_Folk_Village_02.jpg",
+          },
+        ],
+      },
+    ],
+  },
+
+  // ── CES ──────────────────────────
+  {
+    title: "[Pothos 에디터] CES 2027 라스베이거스 참관 가이드",
+    subtitle: "2027년 1월 6~9일, 등록 조건부터 전시장 이동까지",
+    destination: "라스베이거스",
+    cover_image_url: "/stories/ces-1.jpg",
+    intro:
+      "CES는 매년 1월 라스베이거스에서 열리는 세계 최대 규모의 IT·가전 전시회예요. 다만 일반 관광객이 표를 사서 들어가는 박람회가 아니라 업계 관계자 전용 행사라서, 미리 알아둘 게 많아요. 처음 가는 출장자·참관객을 위해 공식 안내 기준으로 정리했어요.",
+    duration_text: "4박 6일",
+    tags: ["CES", "라스베이거스", "박람회", "출장"],
+    sections: [
+      {
+        title: "언제, 어디서",
+        image_url: "",
+        content: `CES 2027은 2027년 1월 6일(수)~9일(토) 라스베이거스에서 열려요(표지 사진은 CES 2025 당시 LVCC 웨스트홀).
+
+공식 안내 기준 전시 시간
+• 1월 6일(수) 오전 10시~오후 6시
+• 1월 7일(목)·8일(금) 오전 9시~오후 6시
+• 1월 9일(토) 오전 9시~오후 4시
+• 미디어 데이: 1월 4~5일 (만달레이 베이)
+
+전시장은 13곳이며 크게 세 구역으로 나뉘어요 — LVCC 캠퍼스, 베네시안 캠퍼스, C Space 캠퍼스(ARIA).`,
+        links: [{ label: "CES 공식 — 일정·시간", url: "https://www.ces.tech/plan-your-visit/dates-and-hours/" }],
+      },
+      {
+        title: "누가 들어갈 수 있나 — 꼭 확인하세요",
+        image_url: "",
+        content: `CES는 '업계 관계자 전용(trade-only)' 행사예요. 공식 안내에 따르면 만 18세 이상이면서 소비자 기술 산업에 종사하는 사람만 참관할 수 있고, 일반인에게는 공개되지 않아요.
+
+• 등록할 때 업계 소속을 증명하는 서류를 올려야 해요 — 사업 관련 서류 1개 + 재직 증빙 1개 (예: 명함, 재직증명서, 링크드인 프로필 등)
+• 사진이 있는 신분증과 생년월일도 필요해요
+
+등록 요금 (공식 안내 기준, 2026년 11월 확인)
+• 스탠다드 패스: 11월 30일까지 149달러 → 12월 1일부터 349달러
+• 프리미엄 패스: 11월 30일까지 1,450달러 → 12월 1일부터 1,750달러
+• 환불: 2026년 12월 9일까지 서면 취소 시 50달러 수수료를 빼고 환불, 이후엔 환불 불가
+
+💡 11월 안에 등록하면 200달러를 아낄 수 있어요.`,
+        links: [{ label: "CES 공식 — 등록 안내", url: "https://www.ces.tech/attendee-guides/registration-information/" }],
+      },
+      {
+        title: "라스베이거스 도착과 숙소",
+        image_url: "/stories/ces-2.jpg",
+        image_credit: "Traveller-Reini · CC BY-SA 2.0 · Wikimedia Commons",
+        image_credit_url:
+          "https://commons.wikimedia.org/wiki/File:Nevada_-_Las_Vegas-_Dusk_over_Paradise_Road_with_WESTGATE_Casino,_the_Las_Vegas_Convention_Center_and_McCarran_International_Airport.jpg",
+        content: `한국에서는 보통 미국 서부 도시를 거쳐 해리 리드 국제공항으로 들어가요. 사진은 해 질 녘 컨벤션센터(LVCC)와 공항 쪽을 내려다본 모습이에요.
+
+• 공항에서 시내까지는 택시·차량 호출 앱이 일반적이에요 (1터미널 택시는 수하물 찾는 곳 밖, 차량 호출은 주차장 2층)
+• CES 기간에는 호텔값이 크게 오르고 빨리 마감돼요 — 등록과 함께 숙소부터 잡으세요
+• 공식 협력 호텔에 묵으면 CES 무료 셔틀을 탈 수 있어요`,
+        links: [{ label: "해리 리드 공항 — 택시·차량 호출", url: "https://www.harryreidairport.com/taxi-and-ride-share" }],
+      },
+      {
+        title: "전시장 사이 이동 — 모노레일·셔틀·루프",
+        image_url: "/stories/ces-4.jpg",
+        image_credit: "Han Zheng · CC BY-SA 2.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Las_Vegas_Monorail_heading_to_Westgate_Station_(51716442951).jpg",
+        content: `CES 공식 교통 안내 기준
+• 모노레일: LVCC와 스트립의 주요 호텔(MGM 그랜드, 패리스, 플라밍고, LINQ, 사하라 등)을 이어요. 단, 베네시안 엑스포는 가지 않아요. 등록할 때 모노레일 패스를 사면 CES 배지가 승차권이 돼요
+• 무료 셔틀: 1월 5~9일 공식 호텔 ↔ LVCC·베네시안 엑스포
+• 테크 익스프레스(9번 노선): LVCC ↔ 베네시안 엑스포
+• LVCC 루프(지하 터널 차량): 전시홀 사이 무료
+• LVCC와 베네시안 엑스포에는 일반 주차장이 없어요
+
+💡 하루에 한 구역(캠퍼스)씩 보는 게 이동 시간을 가장 아끼는 방법이에요.`,
+        links: [
+          { label: "CES 공식 — 교통 안내", url: "https://www.ces.tech/attendee-guides/transportation/" },
+          { label: "라스베이거스 모노레일", url: "https://www.lvmonorail.com/" },
+        ],
+      },
+      {
+        title: "알차게 보는 팁",
+        image_url: "/stories/ces-3.jpg",
+        image_credit: "293.xx.xxx.xx · CC BY-SA 4.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Las_Vegas_Monorail_-_Las_Vegas_Convention_Center_Station.jpg",
+        content: `• 공식 앱·지도로 꼭 볼 부스를 미리 표시해 두기
+• 편한 신발은 필수 — 하루 2만 보는 기본이에요
+• 1월 라스베이거스는 아침저녁이 쌀쌀해요. 실내는 냉방이 세서 얇은 겉옷 챙기기
+• 정부·지자체가 꾸리는 한국 공동관도 매년 열려요 — 한국 스타트업을 한곳에서 보기 좋아요
+(사진은 모노레일 LVCC 역과 전시장을 잇는 다리)`,
+      },
+      {
+        title: "참고 영상·자료",
+        image_url: "",
+        content: "현장 분위기는 출장 브이로그로 미리 보고, 등록·일정은 반드시 공식 사이트 기준으로 확인하세요.",
+        videos: [
+          { url: "https://www.youtube.com/watch?v=QKvSO8t6gWg", title: "라스베가스 CES 출장 vlog (허성범 Horang)" },
+          { url: "https://www.youtube.com/watch?v=t93UxehCXiE", title: "CES 2026 KAIST 서포터즈 브이로그 (KAIST)" },
+        ],
+        links: [
+          { label: "CES 공식 사이트", url: "https://www.ces.tech/" },
+          { label: "Visit Las Vegas (라스베이거스 관광청)", url: "https://www.visitlasvegas.com/" },
+          {
+            label: "표지 사진 출처 — Xuthoria · CC BY-SA 4.0 · Wikimedia Commons",
+            url: "https://commons.wikimedia.org/wiki/File:CES_2025_-_LVCC_01.jpg",
+          },
+        ],
+      },
+    ],
+  },
+
+  // ── 앙시 + 세계 4대 애니메이션 페스티벌 ──────────────────────────
+  {
+    title: "[Pothos 에디터] 앙시 국제 애니메이션 페스티벌, 그리고 세계 4대 애니메이션 페스티벌",
+    subtitle: "호숫가 마을의 애니메이션 축제 — 2027년 6월 13~19일",
+    destination: "앙시",
+    cover_image_url: "/stories/annecy-1.jpg",
+    intro:
+      "프랑스 알프스 자락의 호숫가 마을 앙시(안시)는 매년 6월 전 세계 애니메이션 작가와 팬이 모이는 '애니메이션의 칸'이 돼요. 일반 관객도 즐길 수 있는 방법과 가는 길, 그리고 앙시와 함께 손꼽히는 자그레브·오타와·히로시마 페스티벌까지 한 번에 정리했어요.",
+    duration_text: "4박 6일",
+    tags: ["앙시", "애니메이션", "프랑스", "영화제"],
+    sections: [
+      {
+        title: "앙시 페스티벌 2027 — 언제",
+        image_url: "",
+        content: `2027년 앙시 국제 애니메이션 페스티벌은 6월 13일~19일, 함께 열리는 애니메이션 마켓(MIFA)은 6월 15일~18일이에요(공식 사이트 기준).
+
+• 1960년 앙시에서 처음 열렸고, 1990년대 말부터 매년 열리고 있어요
+• 장편·단편·TV·학생 작품 경쟁 부문과 마켓이 함께 열려 업계 사람들도 많이 찾아요
+(표지 사진: 티우 운하 위의 팔레 드 릴, 앙시 구시가지)`,
+        links: [{ label: "앙시 페스티벌 공식", url: "https://www.annecyfestival.com/" }],
+      },
+      {
+        title: "일반 관객은 어떻게 즐기나",
+        image_url: "/stories/annecy-4.jpg",
+        image_credit: "Guilhem Vellut · CC BY 2.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Le_Paquier_@_Annecy_(34660192114).jpg",
+        content: `업계 관계자가 아니어도 즐길 수 있어요. 공식 안내 기준으로 정리하면,
+
+• 무료 야외 상영: 매일 밤 호숫가 잔디밭 '르 파키에'(사진)에서 누구나 무료로 볼 수 있어요
+• 개별 티켓: 시내 극장(Pathé Annecy 등)에서 온라인 또는 상영 30분 전 현장 구매
+• 페스티벌 일반 관객 등록(Festival Accreditation): 해외 거주자도 신청 가능. 2026년엔 시기별 85~110유로였고 수요가 많아 일찍 마감됐어요 — 2027년 가격은 아직 발표 전
+• 상영 예약은 6월 초에 열리고, 예약한 상영은 45분 전 도착 권장
+
+💡 등록이 마감돼도 야외 상영·전시·사인회 같은 무료 프로그램만으로 충분히 축제 분위기를 즐길 수 있어요.`,
+        links: [{ label: "앙시 페스티벌 — 일반 관객 참여 방법", url: "https://www.annecyfestival.com/en/take-part/accreditations/general-public" }],
+      },
+      {
+        title: "앙시 가는 길과 즐길 거리",
+        image_url: "/stories/annecy-3.jpg",
+        image_credit: "Guilhem Vellut · CC BY 2.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Lac_d%27Annecy_@_Panorama_du_Rocher_du_Roux_@_Talloires-Montmin_(51220488217).jpg",
+        content: `앙시는 스위스 제네바 공항에서 약 50km 떨어져 있어 제네바로 들어가는 게 가장 가까워요. 파리에서는 앙시까지 바로 가는 TGV가 있어요(앙시 관광청 안내). 페스티벌 기간엔 제네바 공항 ↔ 앙시 셔틀도 운영돼요.
+
+상영 사이사이엔
+• 운하가 흐르는 구시가지 산책 (다음 사진)
+• 맑기로 유명한 앙시 호수에서 유람선·수영·자전거
+• 호숫가 전망대에서 내려다보는 알프스 풍경 (사진)`,
+        links: [{ label: "앙시 호수 관광청", url: "https://www.lac-annecy.com/" }],
+      },
+      {
+        title: "저녁의 앙시 구시가지",
+        image_url: "/stories/annecy-2.jpg",
+        image_credit: "Florian Pépellin · CC BY-SA 4.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Canal_du_Thiou_dans_le_vieil_Annecy_en_soir%C3%A9e_(ao%C3%BBt_2019).JPG",
+        content: `'알프스의 베네치아'라고 불리는 구시가지는 저녁이 특히 예뻐요. 운하 옆 테라스에서 저녁을 먹고 야외 상영장으로 걸어가는 게 앙시 페스티벌의 하루예요.
+
+• 페스티벌 기간엔 숙소가 매우 빨리 차요 — 일정이 정해지면 바로 예약
+• 6월은 해가 길어 밤 9~10시까지 밝아요`,
+      },
+      {
+        title: "세계 4대 애니메이션 페스티벌 ① 자그레브",
+        image_url: "/stories/annecy-zagreb.jpg",
+        image_credit: "Nikolai Karaneschev · CC BY 3.0 · Wikimedia Commons",
+        image_credit_url:
+          "https://commons.wikimedia.org/wiki/File:Zagreb_2015_-_Zagreba%C4%8Dka_katedrala_-_pogled_s_Gornjeg_Grada_(Zagreb_Cathedral_-_view_from_Upper_Town)_-_panoramio.jpg",
+        content: `앙시, 자그레브, 오타와, 히로시마는 흔히 '세계 4대 애니메이션 페스티벌'로 불려요. 자그레브 애니마페스트도 공식 소개에서 앙시·오타와·히로시마와 함께 '꼭 거쳐야 할 페스티벌'로 자신을 소개해요.
+
+애니마페스트 자그레브 (크로아티아)
+• 1972년 시작, 2015년부터 매년 열려요
+• 2027년: 제37회, 6월 7~12일 — 앙시 바로 전 주라 두 축제를 이어서 보는 일정도 가능해요
+(사진: 자그레브 윗마을에서 본 대성당)`,
+        links: [{ label: "애니마페스트 자그레브 공식", url: "https://www.animafest.hr/en" }],
+      },
+      {
+        title: "② 오타와 국제 애니메이션 페스티벌",
+        image_url: "/stories/annecy-ottawa.jpg",
+        image_credit: "David Samuel · CC BY-SA 3.0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:Parliament_Hill,_Ottawa.jpg",
+        content: `캐나다 수도 오타와에서 1976년부터 열려 온 애니메이션 페스티벌로, 매년 9월 닷새 동안 열려요.
+
+• 2027년: 9월 22~26일 (공식 사이트 기준)
+• 가을 단풍이 시작될 무렵이라 캐나다 단풍 여행과 함께 계획하기 좋아요
+(사진: 오타와 국회의사당 언덕)`,
+        links: [{ label: "오타와 국제 애니메이션 페스티벌 공식", url: "https://www.animationfestival.ca/" }],
+      },
+      {
+        title: "③ 히로시마 — 지금은 '히로시마 애니메이션 시즌'",
+        image_url: "/stories/annecy-hiroshima.jpg",
+        image_credit: "Syced · CC0 · Wikimedia Commons",
+        image_credit_url: "https://commons.wikimedia.org/wiki/File:JMS_Aster_Plaza.jpg",
+        content: `1985년 시작된 히로시마 국제 애니메이션 페스티벌은 2020년 제18회를 끝으로 막을 내렸어요. 대신 2022년부터 '히로시마 애니메이션 시즌'이 2년마다 8월에 열리고 있어요(공식 사이트 기준, 2026년은 8월 19~23일).
+
+• 주 행사장은 JMS 아스테르 플라자 (사진)
+• 다음 행사 일정은 아직 발표 전이에요 — 공식 사이트에서 확인하세요
+• 옛 '4대 페스티벌'의 히로시마 자리는 이 행사가 잇고 있다고 보면 돼요`,
+        links: [
+          { label: "히로시마 애니메이션 시즌 공식", url: "https://animation.hiroshimafest.org/" },
+          { label: "히로시마 국제 애니메이션 페스티벌 아카이브", url: "https://hiroanim.org/" },
+        ],
+      },
+      {
+        title: "참고 영상·자료",
+        image_url: "",
+        content: "페스티벌 프로그램과 등록 일정은 해마다 바뀌어요. 출발 전 각 공식 사이트에서 최신 정보를 확인하세요.",
+        videos: [
+          { url: "https://www.youtube.com/watch?v=EksP5kisvQ0", title: "2026 프랑스 안시 애니메이션 페스티벌 초청 방문 후기 (문은주 애니메이션)" },
+          { url: "https://www.youtube.com/watch?v=NJ0yZ_YNZgk", title: "프랑스 사람들은 파리에서 안 놀아요 — 안시 (EBS 세계테마기행)" },
+        ],
+        links: [
+          {
+            label: "표지 사진 출처 — Tournasol7 · CC BY-SA 4.0 · Wikimedia Commons",
+            url: "https://commons.wikimedia.org/wiki/File:Palais_de_l%27Isle_in_Annecy_04.jpg",
+          },
+        ],
+      },
+    ],
+  },
 ];
