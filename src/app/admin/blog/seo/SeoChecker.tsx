@@ -307,7 +307,7 @@ export default function SeoChecker({
                         </div>
                       )}
 
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap items-start gap-2">
                         <a href={`https://search.naver.com/search.naver?query=${encodeURIComponent(r.focus || p.title)}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-bold">
                           네이버에서 &lsquo;{r.focus || "제목"}&rsquo; 검색
                         </a>
@@ -338,7 +338,7 @@ export default function SeoChecker({
           </div>
         )}
         <p className="mt-4 text-[11px] text-gray-400 leading-relaxed">
-          새 글은 보통 네이버 며칠~2주, 구글 며칠~몇 주 뒤에 검색에 잡혀요. 네이버 순위는 핵심 키워드(없으면 제목)로 네이버 &lsquo;웹문서&rsquo; 검색 상위 100개 안에서 찾은 위치예요 (네이버 검색 API 키가 있을 때).
+          새 글은 보통 네이버 며칠~2주, 구글 며칠~몇 주 뒤에 검색에 잡혀요. 네이버 순위는 &lsquo;네이버에서 검색&rsquo; 버튼으로 직접 확인하고, 노출·클릭 통계는 네이버 서치어드바이저 → 리포트에서 볼 수 있어요.
         </p>
       </section>
     </div>
