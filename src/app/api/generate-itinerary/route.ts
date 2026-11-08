@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { auth } from "@/lib/auth";
-import { consumeQuota, QuotaExceededError } from "@/lib/ai-quota";
+import { consumePlanner, PlannerQuotaError, type PlannerTier } from "@/lib/planner-quota";
 import { resolvePlaces, type PlaceQuery } from "@/lib/places";
 import { recordAiRun } from "@/lib/ai-runs";
 
@@ -19,11 +19,12 @@ export const maxDuration = 300;
 // 예전 화면 코드가 남아 있는 기기는 AI 호출(=크레딧 소모) 전에 차단하고 새로고침을 안내.
 const PLANNER_API_VERSION = "3";
 
-const SKELETON_MODEL = "claude-opus-5-5";
-const DAY_MODEL = "claude-sonnet-5-5";
+// 등급별 모델 — 고급(이용권·관리자): Opus 뼈대 + Sonnet 상세 / 기본(무료): Sonnet 뼈대 + Haiku 상세
 // 생각 강도 — 뼈대(동선·장소 선정)는 품질 유지, Day 상세는 뼈대를 채우는 작업이라 낮춰 속도 확보
-const SKELETON_EFFORT = "medium" as const;
-const DAY_EFFORT = "low" as const;
+const MODELS: Record<PlannerTier, { skeleton: string; day: string; skeletonEffort: "low" | "medium"; dayEffort: "low" }> = {
+  premium: { skeleton: "claude-opus-5-5", day: "claude-sonnet-5-5", skeletonEffort: "medium", dayEffort: "low" },
+  basic: { skeleton: "claude-sonnet-5-5", day: "claude-haiku-5-5", skeletonEffort: "low", dayEffort: "low" },
+};
 
 // 비용 로그용 단가 (USD / 100만 토큰) — Anthropic 공식 단가 기준
 const PRICE_PER_MTOK: Record<string, { input: number; output: number }> = {
@@ -117,28 +118,27 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "필수 입력값이 없습니다." }, { status: 400 });
   }
 
-  // 2. 사용 한도 체크 + 차감
+  // 2. 사용 한도 체크 + 차감 (무료=기본 AI 월 N회 / 이용권=고급 AI)
+  const requestedTier: PlannerTier | undefined =
+    body.tier === "premium" || body.tier === "basic" ? body.tier : undefined;
+  let quota: Awaited<ReturnType<typeof consumePlanner>>;
   try {
-    await consumeQuota(session.user.id, "planner");
+    quota = await consumePlanner(session.user.id, requestedTier);
   } catch (err) {
-    if (err instanceof QuotaExceededError) {
-      return Response.json(
-        {
-          error: `오늘의 무료 AI 플래너 한도를 다 사용했어요. (${err.used}/${err.limit})`,
-          quotaExceeded: true,
-          action: err.action,
-          used: err.used,
-          limit: err.limit,
-          hasCredits: err.hasCredits,
-        },
-        { status: 429 }
-      );
+    if (err instanceof PlannerQuotaError) {
+      return Response.json({ error: err.message, quotaExceeded: true, code: err.code }, { status: 429 });
     }
     throw err;
   }
+  const tier = quota.tier;
+  const SKELETON_MODEL = MODELS[tier].skeleton;
+  const DAY_MODEL = MODELS[tier].day;
+  const SKELETON_EFFORT = MODELS[tier].skeletonEffort;
+  const DAY_EFFORT = MODELS[tier].dayEffort;
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
+    await quota.refund().catch(() => null);
     return Response.json(
       { error: "ANTHROPIC_API_KEY 환경변수가 설정되지 않았습니다." },
       { status: 500 }
@@ -350,6 +350,7 @@ ${placeRules}`;
       let tSkeleton = 0;
       let ok = false;
       try {
+        send({ tier });
         send({ progress: "전체 여행 동선을 설계하고 있어요" });
 
         const skeleton = await callJson(SKELETON_MODEL, SKELETON_EFFORT, skeletonPrompt, 8000, (v) =>
@@ -446,8 +447,10 @@ ${placeRules}`;
           output: usageTotals.output,
           usd: usageTotals.usd,
           ok,
-          meta: { days: totalDays, destination: String(destination).slice(0, 60), ms: Date.now() - t0 },
+          meta: { days: totalDays, destination: String(destination).slice(0, 60), ms: Date.now() - t0, tier, source: quota.source },
         });
+        // 일정을 끝까지 못 만들었으면 차감한 횟수·이용권을 되돌림
+        if (!ok) await quota.refund().catch(() => null);
         clearInterval(ping);
         controller.close();
       }

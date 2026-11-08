@@ -22,7 +22,7 @@ export default function FirstPostEventBanner({
             <p className="text-sm font-semibold text-white/90">🎉 첫 글 이벤트 · {firstPostEventDeadline()}</p>
             <p className="text-lg sm:text-xl font-bold leading-snug">
               첫 여행 후기·꿀팁·유튜브를 올리면
-              <br className="sm:hidden" /> AI 플래너 {FIRST_POST_EVENT.reward}회 이용권을 드려요
+              <br className="sm:hidden" /> 고급 AI 플래너 {FIRST_POST_EVENT.reward}회 이용권을 드려요
             </p>
             <p className="text-sm text-white/85 mt-1">계정당 1회 · 30자 이상 글 · 이용권 {FIRST_POST_EVENT.validDays}일간 사용 가능</p>
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, Suspense } from "react";
+import { useState, useRef, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import ItineraryView, { type Itinerary } from "@/components/ItineraryView";
@@ -95,6 +95,26 @@ function PlannerContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [itinerary, setItinerary] = useState<Itinerary | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // AI 등급 — 기본(무료 월 N회) / 고급(이용권)
+  const [quota, setQuota] = useState<{
+    isAdmin: boolean;
+    freeLimit: number | null;
+    freeRemaining: number | null;
+    credits: number;
+    creditsExpireAt: string | null;
+  } | null>(null);
+  const [tier, setTier] = useState<"basic" | "premium" | null>(null);
+  const loadQuota = useCallback(() => {
+    fetch("/api/ai-quota/planner")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((q) => q && setQuota(q))
+      .catch(() => null);
+  }, []);
+  useEffect(() => {
+    if (status === "authenticated") loadQuota();
+  }, [status, loadQuota]);
+  // 사용자가 고르지 않았으면: 이용권이 있거나 관리자면 고급, 아니면 기본
+  const effectiveTier: "basic" | "premium" = tier ?? (quota && (quota.isAdmin || quota.credits > 0) ? "premium" : "basic");
   const [needsAuth, setNeedsAuth] = useState(false);
   const [progress, setProgress] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -264,6 +284,7 @@ function PlannerContent() {
           medical: medicalPayload,
           startDate: startDate || null,
           festival,
+          tier: status === "authenticated" ? effectiveTier : undefined,
         }),
       });
 
@@ -281,7 +302,8 @@ function PlannerContent() {
             window.location.reload();
             return;
           } else if (res.status === 429 && data.quotaExceeded) {
-            msg = `오늘의 무료 AI 플래너 한도(${data.limit}회)를 다 사용했어요. 내일 자정(KST)에 리셋됩니다.`;
+            msg = data.error ?? "이번 달 무료 횟수를 다 썼어요.";
+            loadQuota();
           } else if (data.error) {
             msg = data.error;
           }
@@ -344,6 +366,8 @@ function PlannerContent() {
       setStep(2); // 오류 화면 (개요가 먼저 떴더라도)
     } finally {
       setIsLoading(false);
+      // 남은 횟수·이용권 다시 불러오기 (실패하면 서버가 되돌려 줌)
+      if (status === "authenticated") loadQuota();
     }
   };
 
@@ -752,6 +776,46 @@ function PlannerContent() {
                   </div>
                 )}
               </div>
+
+              {status === "authenticated" && quota && (
+                <div className="grid grid-cols-2 gap-2">
+                  {(["basic", "premium"] as const).map((t) => {
+                    const premium = t === "premium";
+                    const available = premium ? quota.isAdmin || quota.credits > 0 : quota.isAdmin || (quota.freeRemaining ?? 0) > 0;
+                    const active = effectiveTier === t;
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => available && setTier(t)}
+                        className={`text-left rounded-2xl border-2 p-3 transition ${
+                          active ? (premium ? "border-amber-400 bg-amber-50" : "border-blue-500 bg-blue-50") : "border-gray-200 bg-white"
+                        } ${available ? "" : "opacity-60 cursor-not-allowed"}`}
+                      >
+                        <p className="font-bold text-gray-900 text-[15px]">{premium ? "✨ 고급 AI" : "⚡ 기본 AI"}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {premium ? "더 섬세한 장소·동선 추천" : "빠르고 가벼운 일정"}
+                        </p>
+                        <p className={`text-xs font-bold mt-1.5 ${premium ? "text-amber-700" : "text-blue-700"}`}>
+                          {quota.isAdmin
+                            ? "관리자 · 제한 없음"
+                            : premium
+                              ? `이용권 ${quota.credits}회`
+                              : `이번 달 무료 ${quota.freeRemaining}/${quota.freeLimit}회 남음`}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {status === "authenticated" && quota && !quota.isAdmin && quota.credits === 0 && (
+                <p className="text-center text-xs text-gray-500 -mt-1">
+                  고급 AI는 이용권으로 쓸 수 있어요.{" "}
+                  <a href="/pricing" className="font-semibold text-amber-700 hover:underline">
+                    이용권 보기
+                  </a>
+                </p>
+              )}
 
               <button
                 onClick={handleSubmit}

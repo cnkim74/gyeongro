@@ -3,6 +3,7 @@ import { getSupabaseServiceClient } from "@/lib/supabase";
 import { FIRST_POST_EVENT } from "@/lib/events";
 import { KRW_PER_USD, PLANNER_EST_USD } from "@/lib/ai-runs";
 import { Bot, Coins, Gift, AlertCircle } from "lucide-react";
+import GrantCredits from "./GrantCredits";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ const ACTION_LABEL: Record<string, string> = {
   planner: "AI 여행 플래너",
   optimizer: "동선 최적화",
   translation: "번역",
+  planner_free: "플래너 무료(기본 AI)",
   blog: "블로그 AI 작성",
 };
 
@@ -118,6 +120,8 @@ export default async function AiUsagePage() {
         </div>
       )}
 
+      <GrantCredits />
+
       {/* 실행 횟수 */}
       <section className="mb-8">
         <h2 className="flex items-center gap-2 font-bold text-gray-900 mb-3">
@@ -138,7 +142,7 @@ export default async function AiUsagePage() {
               .join(" · ")}
           </p>
         )}
-        <p className="text-xs text-gray-400 mt-1">관리자 테스트 실행도 포함돼요. 이용권으로 돌린 횟수도 포함돼요.</p>
+        <p className="text-xs text-gray-400 mt-1">관리자 테스트 실행도 포함돼요. 무료(기본 AI)·이용권(고급 AI) 실행을 모두 합친 수예요. 실패해서 되돌린 실행은 빠져요.</p>
       </section>
 
       {/* 비용 */}
