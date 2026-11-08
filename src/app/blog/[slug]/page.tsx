@@ -7,6 +7,8 @@ import BlogCover from "@/components/blog/BlogCover";
 import BlogMarkdown from "@/components/blog/BlogMarkdown";
 import BlogCard from "@/components/blog/BlogCard";
 import BlogCta from "@/components/blog/BlogCta";
+import BlogComments from "@/components/blog/BlogComments";
+import { listBlogComments, countVisible } from "@/lib/blog-comments";
 import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
 import { getPost, listRelatedPosts, increaseView, tocOf, readMinutes, formatBlogDate } from "@/lib/blog";
@@ -52,7 +54,10 @@ export default async function BlogPostPage({ params }: Params) {
 
   if (post.is_published) await increaseView(post.id, post.view_count);
   const toc = tocOf(post.content);
-  const related = await listRelatedPosts(post);
+  const [related, comments] = await Promise.all([
+    listRelatedPosts(post),
+    listBlogComments(post.id, session?.user?.id ?? null, admin),
+  ]);
   const date = post.published_at ?? post.created_at;
 
   // 검색엔진용 구조화 데이터 (글 + 자주 묻는 질문)
@@ -174,6 +179,15 @@ export default async function BlogPostPage({ params }: Params) {
           <div className="mt-12">
             <BlogCta />
           </div>
+
+          <BlogComments
+            postId={post.id}
+            slug={post.slug}
+            comments={comments}
+            total={comments ? countVisible(comments) : 0}
+            viewerId={session?.user?.id ?? null}
+            isAdmin={admin}
+          />
 
           {related.length > 0 && (
             <section className="mt-16">
