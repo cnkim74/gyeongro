@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 const SITE = process.env.NEXT_PUBLIC_BASE_URL ?? "https://pothostravel.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const pages = ["", "/planner", "/festivals", "/travel-guide", "/exchange", "/blog", "/stories", "/board", "/themes", "/sherpa", "/medical"];
+  const pages = ["", "/planner", "/festivals", "/travel-guide", "/exchange", "/pricing", "/blog", "/stories", "/board", "/themes", "/sherpa", "/medical"];
   const posts = await listPublishedPosts(500);
   return [
     ...pages.map((p) => ({ url: `${SITE}${p}`, changeFrequency: "daily" as const, priority: p === "" ? 1 : 0.7 })),

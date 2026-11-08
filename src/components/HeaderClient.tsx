@@ -152,6 +152,7 @@ export default function HeaderClient({ user, locale, labels }: HeaderClientProps
           <div className="px-4 py-4 space-y-3">
             {[
               { label: "💱 환율 계산기", href: "/exchange" },
+              { label: "💎 요금제·이용권", href: "/pricing" },
               { label: t("nav.planner"), href: "/planner" },
               { label: t("nav.festivals"), href: "/festivals" },
               { label: t("nav.guide"), href: "/travel-guide" },
