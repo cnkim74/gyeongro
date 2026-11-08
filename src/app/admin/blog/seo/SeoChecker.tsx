@@ -9,7 +9,7 @@ import { ArrowLeft, CheckCircle2, XCircle, Loader2, ExternalLink, Send, Search }
 type Basic = { ok: boolean; label: string; tip: string };
 type Result = {
   url: string;
-  naver: { status: string; rank?: number; message?: string };
+  naver: { status: string; rank?: number; message?: string; inIndexOnly?: boolean };
   google: { status: string; coverage?: string; lastCrawl?: string | null; message?: string };
   basics: Basic[];
   focus?: string;
@@ -38,7 +38,8 @@ function NaverCell({ r, title }: { r?: Result["naver"]; title: string }) {
     );
   }
   if (!r) return <Badge tone="gray">미점검</Badge>;
-  if (r.status === "indexed") return <Badge tone="ok">노출 · {r.rank}위</Badge>;
+  if (r.status === "indexed" && r.inIndexOnly) return <Badge tone="warn">색인됨 · 100위 밖</Badge>;
+  if (r.status === "indexed") return <Badge tone={r.rank && r.rank <= 10 ? "ok" : "warn"}>웹문서 {r.rank}위</Badge>;
   if (r.status === "not-found") return <Badge tone="no">아직 안 보임</Badge>;
   return <Badge tone="warn">오류</Badge>;
 }
@@ -335,7 +336,7 @@ export default function SeoChecker({
           </div>
         )}
         <p className="mt-4 text-[11px] text-gray-400 leading-relaxed">
-          새 글은 보통 네이버 며칠~2주, 구글 며칠~몇 주 뒤에 검색에 잡혀요. 네이버 노출 확인은 글 제목으로 네이버 웹문서 검색 상위 30개 안에 우리 글이 있는지 봐요.
+          새 글은 보통 네이버 며칠~2주, 구글 며칠~몇 주 뒤에 검색에 잡혀요. 네이버 순위는 핵심 키워드(없으면 제목)로 네이버 &lsquo;웹문서&rsquo; 검색 상위 100개 안에서 찾은 위치예요 (네이버 검색 API 키가 있을 때).
         </p>
       </section>
     </div>
