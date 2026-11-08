@@ -16,6 +16,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_URL = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://pothostravel.com").replace(/\/$/, "");
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL ?? "https://pothostravel.com"),
   // 검색엔진 소유 확인 — Vercel 환경변수에 값을 넣으면 <meta> 로 들어감
@@ -34,6 +36,14 @@ export const metadata: Metadata = {
     title: "Pothos · Wherever you long for",
     description: "AI 맞춤 일정 + 동료 매칭 + 영감 가득한 여행 스토리",
     type: "website",
+    siteName: "Pothos",
+    locale: "ko_KR",
+    // 공유·검색 미리보기 기본 이미지 (페이지에 따로 이미지가 없을 때)
+    images: [{ url: "/og-default.jpg", width: 1200, height: 630, alt: "Pothos — 여행은, 길에서 시작됩니다" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/og-default.jpg"],
   },
 };
 
@@ -48,6 +58,29 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        {/* 검색엔진용 사이트·운영자 정보 */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify([
+              {
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                name: "Pothos",
+                url: SITE_URL,
+                logo: `${SITE_URL}/icon.svg`,
+              },
+              {
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                name: "Pothos",
+                alternateName: "포토스",
+                url: SITE_URL,
+                inLanguage: "ko-KR",
+              },
+            ]),
+          }}
+        />
         <SessionProvider>{children}</SessionProvider>
         {/* 여행 중 어디서든 쓰는 환율 계산기 버튼 */}
         <FxQuickButton />

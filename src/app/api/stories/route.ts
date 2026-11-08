@@ -3,6 +3,7 @@ import { grantFirstPostReward } from "@/lib/events";
 import { auth } from "@/lib/auth";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import { cleanSections } from "@/lib/story-sections";
+import { pingIndexNow, SITE } from "@/lib/search-index";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,5 +58,7 @@ export async function POST(req: NextRequest) {
     content: `${title} ${intro ?? ""} ${sectionText}`,
   });
 
+  // 검색엔진(네이버·Bing)에 새 스토리 알림
+  await pingIndexNow([`${SITE}/stories/${data.id}`]).catch(() => null);
   return Response.json({ id: data.id, reward });
 }

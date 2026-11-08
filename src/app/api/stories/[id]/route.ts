@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import { cleanSections } from "@/lib/story-sections";
+import { pingIndexNow, SITE } from "@/lib/search-index";
 
 export const runtime = "nodejs";
 
@@ -59,6 +60,7 @@ export async function PATCH(
 
   const { error } = await supabase.from("stories").update(update).eq("id", id);
   if (error) return Response.json({ error: error.message }, { status: 500 });
+  await pingIndexNow([`${SITE}/stories/${id}`]).catch(() => null);
   return Response.json({ ok: true });
 }
 
