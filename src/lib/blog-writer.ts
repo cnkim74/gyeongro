@@ -30,6 +30,8 @@ export interface WrittenPost {
   naver_draft: string;
   threads_text: string;
   topic: string;
+  /** 검색 1페이지를 노리는 핵심 키워드 */
+  focus_keyword: string;
   costUsd: number;
 }
 
@@ -145,6 +147,19 @@ ${
 [최근에 쓴 글 — 비슷한 주제는 피하세요]
 ${recentTitles.length ? recentTitles.map((t) => `- ${t}`).join("\n") : "(없음)"}
 
+[검색 키워드 (가장 중요)]
+- 먼저 이 글로 검색 1페이지에 오르고 싶은 '핵심 키워드' 1개를 정하세요. 사람들이 네이버·구글 검색창에 실제로 치는 말 그대로 (2~4단어, 띄어쓰기 포함, 예: "블라디보스토크 겨울 여행", "삿포로 눈축제 일정", "CES 등록 방법").
+  · 너무 넓은 말(예: "일본 여행")은 경쟁이 심해 피하고, 너무 긴 문장형도 피하세요.
+- 함께 노릴 '연관 키워드' 4~6개 (예: "블라디보스토크 날씨 12월", "블라디보스토크 여행 경비").
+- 핵심 키워드를 반드시 넣을 곳:
+  · 제목 앞쪽 (가능하면 맨 앞)
+  · 요약(excerpt) 첫 문장
+  · 본문 첫 문단
+  · ## 소제목 중 1~2개
+  · 본문 전체에 자연스럽게 3~6번 (억지 반복 금지)
+- 연관 키워드는 소제목·표·자주 묻는 질문에 자연스럽게 녹이세요. 태그(tags)에는 핵심 키워드와 연관 키워드를 넣으세요.
+- slug 는 핵심 키워드의 영어 표현으로.
+
 [작성 규칙]
 - 웹 검색으로 날짜·요금·운영 시간·제도 같은 사실을 확인하고, 확인하지 못한 수치는 "대략", "시기에 따라 다름"처럼 표현하세요. 지어내지 마세요.
 - 한국어, 친근하지만 과장 없는 정보형 문체. 실제 여행자에게 도움이 되는 구체적인 내용 위주.
@@ -172,11 +187,12 @@ ${recentTitles.length ? recentTitles.map((t) => `- ${t}`).join("\n") : "(없음)
   · 해시태그는 맨 끝에 주제 태그 딱 1개 (스레드는 게시물당 주제 태그 1개만 연결돼요, 예: #일본여행)
 
 [출력 형식 — 아래 태그만, 다른 설명 없이]
-<title>제목 (40자 이내, 검색 키워드 포함)</title>
+<focus_keyword>핵심 키워드</focus_keyword>
+<title>제목 (40자 이내, 핵심 키워드로 시작)</title>
 <slug>영문-슬러그</slug>
 <category>대표 해시태그 1개 (띄어쓰기 없이, 예: 일본여행)</category>
 <excerpt>요약 1~2문장 (120자 이내)</excerpt>
-<tags>태그1, 태그2, 태그3, 태그4, 태그5</tags>
+<tags>핵심 키워드, 연관 키워드1, 연관 키워드2, 연관 키워드3, 연관 키워드4</tags>
 <cover_style>색</cover_style>
 <photo_query>영어 검색어</photo_query>
 <photo_query_2>영어 검색어</photo_query_2>
@@ -264,6 +280,7 @@ A: 답변3</faq>
       naver_draft: tag(text, "naver_draft").slice(0, 20_000),
       threads_text: tag(text, "threads_text").slice(0, 2000),
       topic: topic || title,
+      focus_keyword: tag(text, "focus_keyword").replace(/^["'#]|["']$/g, "").trim().slice(0, 60),
       costUsd: usd,
     };
   } finally {
@@ -294,29 +311,32 @@ export async function saveWrittenPost(
     slug = `${base}-${i}`;
   }
   const url = `${SITE}/blog/${slug}`;
-  const { data, error } = await supabase
-    .from("blog_posts")
-    .insert({
-      slug,
-      title: post.title,
-      excerpt: post.excerpt,
-      category: post.category,
-      cover_image_url: post.cover_image_url,
-      cover_style: post.cover_style,
-      content: post.content,
-      tags: post.tags,
-      faq: post.faq,
-      is_published: opts.publish,
-      published_at: opts.publish ? new Date().toISOString() : null,
-      author_id: opts.authorId ?? null,
-      source: "ai",
-      topic: post.topic,
-      naver_draft: post.naver_draft.replaceAll("{URL}", url),
-      threads_text: post.threads_text.replaceAll("{URL}", url),
-      naver_posted: false,
-    })
-    .select("id, slug")
-    .single();
+  const row: Record<string, unknown> = {
+    slug,
+    title: post.title,
+    excerpt: post.excerpt,
+    category: post.category,
+    cover_image_url: post.cover_image_url,
+    cover_style: post.cover_style,
+    content: post.content,
+    tags: post.tags,
+    faq: post.faq,
+    is_published: opts.publish,
+    published_at: opts.publish ? new Date().toISOString() : null,
+    author_id: opts.authorId ?? null,
+    source: "ai",
+    topic: post.topic,
+    naver_draft: post.naver_draft.replaceAll("{URL}", url),
+    threads_text: post.threads_text.replaceAll("{URL}", url),
+    naver_posted: false,
+    focus_keyword: post.focus_keyword || null,
+  };
+  let { data, error } = await supabase.from("blog_posts").insert(row).select("id, slug").single();
+  // 핵심 키워드 항목(migration_blog_keyword.sql) 실행 전이면 키워드만 빼고 저장
+  if (error && /focus_keyword/.test(error.message)) {
+    delete row.focus_keyword;
+    ({ data, error } = await supabase.from("blog_posts").insert(row).select("id, slug").single());
+  }
   if (error) {
     if (/column .* does not exist|cover_style|naver_draft|source/i.test(error.message)) {
       throw new Error("자동 작성용 DB 항목이 없어요. supabase/migration_blog_auto.sql 을 실행해 주세요.");

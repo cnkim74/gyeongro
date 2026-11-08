@@ -28,6 +28,8 @@ export interface BlogPost {
   naver_draft?: string | null;
   threads_text?: string | null;
   naver_posted?: boolean;
+  /** 검색 1페이지를 노리는 핵심 키워드 (migration_blog_keyword.sql) */
+  focus_keyword?: string | null;
 }
 
 export type BlogCard = Pick<

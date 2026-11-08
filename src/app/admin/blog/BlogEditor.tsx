@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import BlogMarkdown from "@/components/blog/BlogMarkdown";
 import BlogCover from "@/components/blog/BlogCover";
-import { normalizeSlug, readMinutes, tocOf, COVER_STYLES, COVER_STYLE_KEYS, type BlogFaq } from "@/lib/blog-utils";
+import { normalizeSlug, readMinutes, tocOf, keywordChecks, COVER_STYLES, COVER_STYLE_KEYS, type BlogFaq } from "@/lib/blog-utils";
 import type { BlogPost } from "@/lib/blog";
 import { ArrowLeft, ImagePlus, Loader2, Plus, Trash2, Eye, PenLine } from "lucide-react";
 
@@ -80,6 +80,10 @@ export default function BlogEditor({ initial }: { initial?: BlogPost }) {
   const [excerpt, setExcerpt] = useState(initial?.excerpt ?? "");
   const [cover, setCover] = useState(initial?.cover_image_url ?? "");
   const [coverStyle, setCoverStyle] = useState<string | null>(initial?.cover_style ?? null);
+  // 핵심 키워드 (검색 1페이지를 노리는 검색어)
+  const [focusKeyword, setFocusKeyword] = useState(initial?.focus_keyword ?? "");
+  const [kwBusy, setKwBusy] = useState(false);
+  const [kwSuggest, setKwSuggest] = useState<{ focus: string; related: string[]; title: string; excerpt: string } | null>(null);
   const [content, setContent] = useState(initial?.content ?? "");
   const [tags, setTags] = useState((initial?.tags ?? []).join(", "));
   const [faq, setFaq] = useState<BlogFaq[]>(initial?.faq ?? []);
@@ -126,6 +130,7 @@ export default function BlogEditor({ initial }: { initial?: BlogPost }) {
       const body: Record<string, unknown> = { title, slug, category, excerpt, cover_image_url: cover, content, tags, faq, is_published: publish };
       // 템플릿 색은 자동 작성 항목이 있는 DB에서만 저장 (예전 글·직접 쓴 글은 바꿨을 때만)
       if ((initial && "cover_style" in initial) || coverStyle) body.cover_style = coverStyle;
+      if ((initial && "focus_keyword" in initial) || focusKeyword.trim()) body.focus_keyword = focusKeyword;
       const r = await fetch(initial ? `/api/admin/blog/${initial.id}` : "/api/admin/blog", {
         method: initial ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -170,6 +175,107 @@ export default function BlogEditor({ initial }: { initial?: BlogPost }) {
         <div>
           <label className={label}>제목</label>
           <input className={input} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="예: 교토 단풍 여행, 언제 가야 제일 예쁠까?" />
+        </div>
+
+        {/* 핵심 키워드 */}
+        <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4">
+          <label className={label}>🎯 핵심 키워드 (이 글로 검색 1페이지를 노릴 검색어)</label>
+          <div className="flex gap-2">
+            <input
+              className={input}
+              value={focusKeyword}
+              onChange={(e) => setFocusKeyword(e.target.value)}
+              placeholder="예: 블라디보스토크 겨울 여행"
+            />
+            <button
+              type="button"
+              disabled={kwBusy || (!title.trim() && !content.trim())}
+              onClick={async () => {
+                setKwBusy(true);
+                try {
+                  const r = await fetch("/api/admin/blog/keyword", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ title, excerpt, content }),
+                  });
+                  const j = await r.json();
+                  if (!r.ok) throw new Error(j.error ?? "추천 실패");
+                  setKwSuggest(j);
+                  if (!focusKeyword.trim() && j.focus) setFocusKeyword(j.focus);
+                } catch (e) {
+                  alert(e instanceof Error ? e.message : "추천 실패");
+                } finally {
+                  setKwBusy(false);
+                }
+              }}
+              className="shrink-0 inline-flex items-center gap-1 px-3.5 rounded-xl bg-blue-600 text-white text-sm font-bold disabled:opacity-50"
+            >
+              {kwBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : "✨"} AI 추천
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            사람들이 검색창에 실제로 치는 말 그대로 2~4단어. 너무 넓은 말(예: &lsquo;일본 여행&rsquo;)보다 구체적인 말이 상위에 오르기 쉬워요.
+          </p>
+
+          {kwSuggest && (
+            <div className="mt-3 rounded-xl bg-white border border-blue-100 p-3 space-y-2 text-sm">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-xs font-bold text-gray-500">추천 키워드</span>
+                {[kwSuggest.focus, ...kwSuggest.related].filter(Boolean).map((k, i) => (
+                  <button
+                    key={k + i}
+                    type="button"
+                    onClick={() => setFocusKeyword(k)}
+                    className={`px-2.5 py-1 rounded-full text-xs font-semibold ${i === 0 ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+                  >
+                    {k}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const add = [kwSuggest.focus, ...kwSuggest.related].filter(Boolean);
+                    const cur = tags.split(",").map((t) => t.trim()).filter(Boolean);
+                    setTags([...new Set([...cur, ...add])].slice(0, 12).join(", "));
+                  }}
+                  className="px-2.5 py-1 rounded-full text-xs font-semibold text-blue-700 border border-blue-200"
+                >
+                  태그에 모두 추가
+                </button>
+              </div>
+              {kwSuggest.title && (
+                <p className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-bold text-gray-500">제목 제안</span>
+                  <span className="text-gray-800">{kwSuggest.title}</span>
+                  <button type="button" onClick={() => setTitle(kwSuggest.title)} className="text-xs font-bold text-blue-600">
+                    적용
+                  </button>
+                </p>
+              )}
+              {kwSuggest.excerpt && (
+                <p className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-bold text-gray-500">요약 제안</span>
+                  <span className="text-gray-800">{kwSuggest.excerpt}</span>
+                  <button type="button" onClick={() => setExcerpt(kwSuggest.excerpt)} className="text-xs font-bold text-blue-600">
+                    적용
+                  </button>
+                </p>
+              )}
+            </div>
+          )}
+
+          {focusKeyword.trim() && (
+            <ul className="mt-3 grid sm:grid-cols-2 gap-1.5">
+              {keywordChecks(focusKeyword, { title, excerpt, content }).map((c) => (
+                <li key={c.label} className="flex items-start gap-1.5 text-xs">
+                  <span className={c.ok ? "text-emerald-600" : "text-rose-500"}>{c.ok ? "✓" : "✗"}</span>
+                  <span>
+                    <b className="text-gray-800">{c.label}</b> <span className="text-gray-500">— {c.tip}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <div className="grid sm:grid-cols-2 gap-4">
           <div>

@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   const input = sanitizeBlogInput(body);
   if (!input.title) return Response.json({ error: "제목을 입력해 주세요." }, { status: 400 });
 
-  const { data, error } = await getSupabaseServiceClient()
+  let { data, error } = await getSupabaseServiceClient()
     .from("blog_posts")
     .insert({
       ...input,
@@ -31,6 +31,16 @@ export async function POST(req: Request) {
     })
     .select("*")
     .single();
+  // 핵심 키워드 항목이 아직 없으면(SQL 실행 전) 키워드만 빼고 저장
+  if (error && /focus_keyword/.test(error.message)) {
+    const { focus_keyword: _omit, ...rest } = input as typeof input & { focus_keyword?: unknown };
+    void _omit;
+    ({ data, error } = await getSupabaseServiceClient()
+      .from("blog_posts")
+      .insert({ ...rest, author_id: session.user.id, published_at: input.is_published ? new Date().toISOString() : null })
+      .select("*")
+      .single());
+  }
   if (error) {
     const msg = error.code === "23505" ? "같은 주소(slug)의 글이 이미 있어요. 주소를 바꿔 주세요." : error.message;
     return Response.json({ error: msg }, { status: 400 });

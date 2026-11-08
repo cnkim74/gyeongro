@@ -130,3 +130,30 @@ export function parseFaqText(text: string): BlogFaq[] {
   if (cur) out.push(cur);
   return normalizeFaq(out);
 }
+
+/** 핵심 키워드 점검 — 검색 상위 노출에 중요한 위치에 키워드가 들어갔는지 */
+export function keywordChecks(
+  keyword: string,
+  post: { title: string; excerpt: string; content: string }
+): { ok: boolean; label: string; tip: string }[] {
+  const kw = keyword.trim().toLowerCase();
+  if (!kw) return [];
+  const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ");
+  const compact = (s: string) => s.toLowerCase().replace(/\s+/g, "");
+  // 띄어쓰기가 달라도 같은 키워드로 인정 ("블라디보스토크 여행" = "블라디보스토크여행")
+  const has = (s: string) => norm(s).includes(kw) || compact(s).includes(compact(kw));
+  const title = post.title ?? "";
+  const body = post.content ?? "";
+  const firstPara = body.split(/\n\s*\n/).find((p) => p.trim() && !p.trim().startsWith("#")) ?? "";
+  const h2s = body.split("\n").filter((l) => /^##\s/.test(l));
+  const count = (compact(body).match(new RegExp(compact(kw).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g")) ?? []).length;
+  const titlePos = compact(title).indexOf(compact(kw));
+  return [
+    { ok: has(title), label: "제목에 키워드", tip: "검색 결과에서 가장 크게 보이는 곳이에요" },
+    { ok: titlePos >= 0 && titlePos <= 6, label: "제목 앞쪽에 키워드", tip: "제목 맨 앞에 둘수록 유리해요" },
+    { ok: has(post.excerpt ?? ""), label: "요약에 키워드", tip: "검색 결과 설명에 굵게 표시돼요" },
+    { ok: has(firstPara), label: "첫 문단에 키워드", tip: "검색엔진이 글 주제를 판단하는 곳이에요" },
+    { ok: h2s.some(has), label: `소제목에 키워드 (${h2s.filter(has).length}개)`, tip: "## 소제목 1~2개에 넣어 주세요" },
+    { ok: count >= 3 && count <= 12, label: `본문 키워드 ${count}번`, tip: "3~12번이 적당해요 (너무 많으면 오히려 감점)" },
+  ];
+}
