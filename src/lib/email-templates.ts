@@ -489,3 +489,34 @@ export function messageReceivedEmail(opts: {
     `),
   };
 }
+
+// ========== Blog comments ==========
+
+export function blogCommentEmail(opts: {
+  recipientName: string | null;
+  authorName: string;
+  postTitle: string;
+  content: string;
+  url: string;
+  isReply: boolean;
+  isPrivate: boolean;
+}): { subject: string; html: string } {
+  const what = opts.isReply ? "답글" : "댓글";
+  const lock = opts.isPrivate ? "🔒 비밀 " : "";
+  return {
+    subject: `[Pothos] '${opts.postTitle.slice(0, 40)}'에 ${lock}${what}이 달렸어요`,
+    html: layout(`
+      <span style="display:inline-block;padding:4px 10px;border-radius:9999px;background:#eff6ff;color:#2563eb;font-size:11px;font-weight:700;letter-spacing:.05em;">BLOG ${opts.isReply ? "REPLY" : "COMMENT"}</span>
+      <h1 style="margin:16px 0 12px;font-size:22px;font-weight:700;color:#0f172a;letter-spacing:-.02em;">
+        ${opts.recipientName ? `${escapeHtml(opts.recipientName)} 님, ` : ""}새 ${lock}${what}이 있어요
+      </h1>
+      <p style="margin:0 0 8px;font-size:15px;line-height:1.7;color:#334155;">
+        <strong>${escapeHtml(opts.authorName)}</strong> 님이 &lsquo;${escapeHtml(opts.postTitle)}&rsquo;에 ${what}을 남겼어요.
+      </p>
+      <div style="margin:12px 0;padding:12px 14px;background:#f8fafc;border-left:3px solid #2563eb;border-radius:8px;">
+        <p style="margin:0;font-size:13px;line-height:1.6;color:#334155;white-space:pre-line;">${escapeHtml(opts.content.slice(0, 600))}</p>
+      </div>
+      ${buttonHtml(`${what} 보고 답하기`, opts.url)}
+    `),
+  };
+}
