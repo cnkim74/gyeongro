@@ -7,6 +7,7 @@
 // 운영자가 검수 시 실제 활동 가능한 사람과 매칭하거나, 프로필 자체를 거절합니다.
 
 import { requireAdmin } from "@/lib/admin";
+import { aiMeter } from "@/lib/ai-runs";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import Anthropic from "@anthropic-ai/sdk";
 import { SHERPA_SPECIALTIES, LANGUAGES } from "@/lib/sherpa";
@@ -149,6 +150,7 @@ JSON 출력 (이 구조 정확히):
 }`;
 
   let candidates: CandidateSherpa[] = [];
+  const meter = aiMeter(CURATE_MODEL);
   try {
     const completion = await anthropic.messages.create({
       model: CURATE_MODEL,
@@ -157,18 +159,21 @@ JSON 출력 (이 구조 정확히):
         "당신은 셰르파 큐레이터. JSON object만 반환. 모든 한글은 정확한 한국어, 영문은 정확한 영어. 자연스럽고 차별화된 프로필 작성. 마크다운/설명·코드블록 절대 금지. 반드시 '{' 로 시작해 '}' 로 끝나야 함.",
       messages: [{ role: "user", content: prompt }],
     });
+    meter.add(completion.usage);
     const raw = extractJson(completion);
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed?.sherpas)) {
       candidates = parsed.sherpas as CandidateSherpa[];
     }
   } catch (err) {
+    await meter.record("sherpa_curate", session.user.id, false);
     return Response.json(
       { error: "AI 생성 실패", detail: err instanceof Error ? err.message : "unknown" },
       { status: 502 }
     );
   }
 
+  await meter.record("sherpa_curate", session.user.id, candidates.length > 0);
   if (candidates.length === 0) {
     return Response.json({ error: "AI가 후보를 생성하지 못했어요." }, { status: 502 });
   }

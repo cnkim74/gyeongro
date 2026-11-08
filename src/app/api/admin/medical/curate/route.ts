@@ -14,6 +14,7 @@
 //   - count는 1~10으로 제한
 
 import { requireAdmin } from "@/lib/admin";
+import { aiMeter } from "@/lib/ai-runs";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import Anthropic from "@anthropic-ai/sdk";
 
@@ -172,6 +173,7 @@ JSON 출력 형식 (이 구조 정확히 준수):
 }`;
 
   let candidates: CandidateClinic[] = [];
+  const meter = aiMeter(CURATE_MODEL);
   try {
     const completion = await anthropic.messages.create({
       model: CURATE_MODEL,
@@ -180,12 +182,14 @@ JSON 출력 형식 (이 구조 정확히 준수):
         "당신은 의료관광 클리닉 큐레이터. JSON object만 반환하세요. 모든 한글은 정확한 한국어, 영문은 정확한 영어로. 환각 금지: 모르면 일반적 명칭이나 null 사용. 마크다운/설명·코드블록 절대 금지. 반드시 '{' 로 시작해 '}' 로 끝나야 함.",
       messages: [{ role: "user", content: prompt }],
     });
+    meter.add(completion.usage);
     const raw = extractJson(completion);
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed?.clinics)) {
       candidates = parsed.clinics as CandidateClinic[];
     }
   } catch (err) {
+    await meter.record("medical_curate", session.user.id, false);
     return Response.json(
       {
         error: "AI 생성 실패",
@@ -195,6 +199,7 @@ JSON 출력 형식 (이 구조 정확히 준수):
     );
   }
 
+  await meter.record("medical_curate", session.user.id, candidates.length > 0);
   if (candidates.length === 0) {
     return Response.json({ error: "AI가 후보를 생성하지 못했어요." }, { status: 502 });
   }
