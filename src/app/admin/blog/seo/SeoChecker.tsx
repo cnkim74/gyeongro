@@ -133,8 +133,10 @@ export default function SeoChecker({
       ok: setup.naverApi,
       optional: true,
       label: "네이버 노출 자동 확인 (선택)",
-      desc: setup.naverApi ? "연결됨" : "검색 API 키가 있을 때만 (없으면 글마다 '직접 확인' 버튼으로)",
-      href: "https://developers.naver.com/apps/#/register",
+      desc: setup.naverApi
+        ? "연결됨"
+        : "네이버가 검색 API 신규 발급을 중단해 자동 순위 확인은 어려워요 — 글마다 '직접 확인' 버튼, 노출·클릭 통계는 서치어드바이저에서",
+      href: "https://searchadvisor.naver.com/console/board",
     },
     {
       ok: setup.googleConsole,
