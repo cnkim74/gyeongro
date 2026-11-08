@@ -6,6 +6,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import BlogCover from "@/components/blog/BlogCover";
+import RankBadges, { useRanks } from "@/components/blog/RankBadges";
 import { COVER_STYLES, COVER_STYLE_KEYS, formatBlogDate } from "@/lib/blog-utils";
 import type { BlogPost } from "@/lib/blog";
 import type { BlogAutoSettings, AutoMode } from "@/lib/blog-auto";
@@ -70,6 +71,7 @@ export default function BlogDashboard({
   const [naverPost, setNaverPost] = useState<BlogPost | null>(null);
   const [coverPost, setCoverPost] = useState<BlogPost | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const { data: ranks, saveNaver } = useRanks();
 
   const published = posts.filter((p) => p.is_published).length;
   const naverPending = posts.filter((p) => p.naver_draft && !p.naver_posted).length;
@@ -410,7 +412,7 @@ export default function BlogDashboard({
         <div className="grid md:grid-cols-2 gap-5">
           {posts.map((p) => (
             <article key={p.id} className="bg-white rounded-3xl border border-gray-100 p-5 flex flex-col">
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex flex-wrap items-center gap-2 mb-3">
                 <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${p.is_published ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>
                   {p.is_published ? "발행됨" : "초안"}
                 </span>
@@ -422,6 +424,9 @@ export default function BlogDashboard({
                 {p.source === "ai" && <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600">AI</span>}
                 {(p as BlogPost & { threads_posted_at?: string | null }).threads_posted_at && (
                   <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-black text-white">스레드 ✓</span>
+                )}
+                {p.is_published && (
+                  <RankBadges postId={p.id} slug={p.slug} keyword={p.focus_keyword || p.title} ranks={ranks} onSaveNaver={saveNaver} />
                 )}
                 <span className="ml-auto text-xs text-gray-400">
                   {p.is_published ? `발행 ${formatBlogDate(p.published_at)}` : `작성 ${formatBlogDate(p.created_at)}`}
