@@ -500,13 +500,15 @@ export function blogCommentEmail(opts: {
   url: string;
   isReply: boolean;
   isPrivate: boolean;
+  kind?: "blog" | "story";
 }): { subject: string; html: string } {
   const what = opts.isReply ? "답글" : "댓글";
+  const badge = `${opts.kind === "story" ? "STORY" : "BLOG"} ${opts.isReply ? "REPLY" : "COMMENT"}`;
   const lock = opts.isPrivate ? "🔒 비밀 " : "";
   return {
     subject: `[Pothos] '${opts.postTitle.slice(0, 40)}'에 ${lock}${what}이 달렸어요`,
     html: layout(`
-      <span style="display:inline-block;padding:4px 10px;border-radius:9999px;background:#eff6ff;color:#2563eb;font-size:11px;font-weight:700;letter-spacing:.05em;">BLOG ${opts.isReply ? "REPLY" : "COMMENT"}</span>
+      <span style="display:inline-block;padding:4px 10px;border-radius:9999px;background:#eff6ff;color:#2563eb;font-size:11px;font-weight:700;letter-spacing:.05em;">${badge}</span>
       <h1 style="margin:16px 0 12px;font-size:22px;font-weight:700;color:#0f172a;letter-spacing:-.02em;">
         ${opts.recipientName ? `${escapeHtml(opts.recipientName)} 님, ` : ""}새 ${lock}${what}이 있어요
       </h1>

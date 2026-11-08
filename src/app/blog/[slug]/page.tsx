@@ -182,7 +182,7 @@ export default async function BlogPostPage({ params }: Params) {
 
           <BlogComments
             postId={post.id}
-            slug={post.slug}
+            path={`/blog/${post.slug}`}
             comments={comments}
             total={comments ? countVisible(comments) : 0}
             viewerId={session?.user?.id ?? null}
