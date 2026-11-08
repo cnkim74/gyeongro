@@ -4,6 +4,7 @@ import { extractYouTube, channelLabel } from "@/lib/youtube";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getSupabaseServiceClient } from "@/lib/supabase";
+import { readGuestToken } from "@/lib/guest-comment";
 import { isAdmin } from "@/lib/admin";
 import Header from "@/components/Header";
 import RoleBadge from "@/components/RoleBadge";
@@ -61,12 +62,13 @@ export default async function PostDetailPage({
 
   const { data: comments } = await supabase
     .from("comments")
-    .select("id, content, created_at, user_id, is_deleted")
+    .select("*")
     .eq("post_id", postId)
     .eq("is_deleted", false)
     .order("created_at", { ascending: true });
 
-  const commentUserIds = [...new Set((comments ?? []).map((c) => c.user_id))];
+  const commentUserIds = [...new Set((comments ?? []).map((c) => c.user_id).filter(Boolean))];
+  const guestToken = await readGuestToken();
   const commentAuthors: Record<
     string,
     { name: string | null; image: string | null; role: UserRole }
@@ -204,9 +206,12 @@ export default async function PostDetailPage({
               id: c.id,
               content: c.content,
               created_at: c.created_at,
-              user_id: c.user_id,
-              author:
-                commentAuthors[c.user_id] ?? { name: null, image: null, role: "user" as UserRole },
+              user_id: c.user_id ?? null,
+              guest: !c.user_id,
+              mine: c.user_id ? c.user_id === currentUserId : !!guestToken && c.guest_token === guestToken,
+              author: c.user_id
+                ? (commentAuthors[c.user_id] ?? { name: null, image: null, role: "user" as UserRole })
+                : { name: c.guest_name || "손님", image: null, role: "user" as UserRole },
             }))}
             currentUserId={currentUserId}
             isAdmin={isCurrentUserAdmin}
