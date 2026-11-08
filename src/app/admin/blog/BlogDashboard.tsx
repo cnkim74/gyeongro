@@ -47,6 +47,7 @@ export default function BlogDashboard({
   cronSecret,
   threads,
   threadsNotice,
+  initialTopic = "",
 }: {
   initialPosts: BlogPost[];
   initialSettings: BlogAutoSettings;
@@ -56,13 +57,15 @@ export default function BlogDashboard({
   threads: { appConfigured: boolean; connected: boolean; username: string | null; expiresAt: string | null; ready: boolean };
   /** 스레드 연결 후 돌아왔을 때 결과 (connected / denied / failed / invalid) */
   threadsNotice: string | null;
+  /** 회원 관심사 화면의 '글감 추천'에서 넘어온 주제 */
+  initialTopic?: string;
 }) {
   const router = useRouter();
   const [threadsBusy, setThreadsBusy] = useState<string | null>(null);
   const [posts, setPosts] = useState(initialPosts);
   const [settings, setSettings] = useState(initialSettings);
   const [topicsText, setTopicsText] = useState(initialSettings.topics.join("\n"));
-  const [topic, setTopic] = useState("");
+  const [topic, setTopic] = useState(initialTopic);
   const [publishNow, setPublishNow] = useState(true);
   const [writing, setWriting] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
