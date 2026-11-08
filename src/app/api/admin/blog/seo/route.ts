@@ -4,7 +4,8 @@
 
 import { requireAdmin } from "@/lib/admin";
 import { getSupabaseServiceClient } from "@/lib/supabase";
-import { checkNaver, checkGoogle, pingIndexNow, postUrl } from "@/lib/search-index";
+import { checkNaver, checkGoogle, pingIndexNow, postUrl, gscTopQueries } from "@/lib/search-index";
+import { keywordChecks } from "@/lib/blog-utils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,7 +17,7 @@ export async function GET(req: Request) {
   const id = new URL(req.url).searchParams.get("id") ?? "";
   const { data: p } = await getSupabaseServiceClient()
     .from("blog_posts")
-    .select("slug, title, excerpt, cover_image_url, content, faq, is_published")
+    .select("*")
     .eq("id", id)
     .maybeSingle();
   if (!p) return Response.json({ error: "글을 찾을 수 없어요." }, { status: 404 });
@@ -33,8 +34,16 @@ export async function GET(req: Request) {
     { ok: !!p.cover_image_url, label: "대표 사진", tip: "공유·검색 미리보기 이미지" },
   ];
 
-  const [naver, google] = await Promise.all([checkNaver(p.title, p.slug), checkGoogle(p.slug)]);
-  return Response.json({ url: postUrl(p.slug), naver, google, basics });
+  const focus = String((p as { focus_keyword?: string | null }).focus_keyword ?? "").trim();
+  const keyword = focus ? keywordChecks(focus, { title: p.title, excerpt: p.excerpt ?? "", content: String(p.content) }) : [];
+
+  const [naver, google, queries] = await Promise.all([
+    // 핵심 키워드가 있으면 그 검색어로 네이버 노출 확인 (없으면 제목으로)
+    checkNaver(focus || p.title, p.slug),
+    checkGoogle(p.slug),
+    gscTopQueries(p.slug),
+  ]);
+  return Response.json({ url: postUrl(p.slug), naver, google, basics, focus, keyword, queries });
 }
 
 export async function POST(req: Request) {

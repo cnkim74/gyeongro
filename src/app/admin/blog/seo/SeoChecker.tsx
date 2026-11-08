@@ -12,8 +12,11 @@ type Result = {
   naver: { status: string; rank?: number; message?: string };
   google: { status: string; coverage?: string; lastCrawl?: string | null; message?: string };
   basics: Basic[];
+  focus?: string;
+  keyword?: Basic[];
+  queries?: { query: string; clicks: number; impressions: number; position: number }[] | null;
 };
-type Post = { id: string; slug: string; title: string; published_at: string | null };
+type Post = { id: string; slug: string; title: string; published_at: string | null; focus_keyword?: string | null };
 
 function Badge({ tone, children }: { tone: "ok" | "no" | "warn" | "gray"; children: React.ReactNode }) {
   const cls = {
@@ -205,7 +208,9 @@ export default function SeoChecker({
                   <div className="flex flex-wrap items-center gap-2">
                     <button type="button" onClick={() => setOpen(open === p.id ? null : p.id)} className="min-w-0 flex-1 text-left">
                       <p className="font-semibold text-gray-900 truncate">{p.title}</p>
-                      <p className="text-xs text-gray-400 truncate">/blog/{p.slug}</p>
+                      <p className="text-xs text-gray-400 truncate">
+                        {p.focus_keyword ? <span className="font-semibold text-blue-600">🎯 {p.focus_keyword}</span> : <span className="text-amber-600">🎯 핵심 키워드 없음</span>} · /blog/{p.slug}
+                      </p>
                     </button>
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className="text-[11px] text-gray-400">네이버</span>
@@ -237,12 +242,70 @@ export default function SeoChecker({
                           {r.google.message && `구글: ${r.google.message}`}
                         </p>
                       )}
+                      {/* 핵심 키워드 점검 */}
+                      <div className="rounded-xl bg-white border border-blue-100 p-3">
+                        {r.focus ? (
+                          <>
+                            <p className="text-xs font-bold text-blue-700 mb-2">🎯 핵심 키워드 &lsquo;{r.focus}&rsquo; 점검</p>
+                            <div className="grid sm:grid-cols-2 gap-1.5">
+                              {(r.keyword ?? []).map((b) => (
+                                <p key={b.label} className="flex items-start gap-1.5 text-xs">
+                                  <span className={b.ok ? "text-emerald-600" : "text-rose-500"}>{b.ok ? "✓" : "✗"}</span>
+                                  <span>
+                                    <b className="text-gray-800">{b.label}</b> <span className="text-gray-500">— {b.tip}</span>
+                                  </span>
+                                </p>
+                              ))}
+                            </div>
+                          </>
+                        ) : (
+                          <p className="text-xs text-amber-700">
+                            핵심 키워드가 없어요. <a href={`/admin/blog/${p.id}`} className="font-bold underline">수정</a>에서 &lsquo;AI 추천&rsquo;으로 정해 주세요.
+                          </p>
+                        )}
+                      </div>
+
+                      {/* 구글 실제 검색어 */}
+                      {r.queries === null || r.queries === undefined ? (
+                        <p className="text-xs text-gray-400">구글 서치콘솔 API를 연결하면 이 글이 실제로 노출된 검색어와 순위가 여기 나와요.</p>
+                      ) : r.queries.length === 0 ? (
+                        <p className="text-xs text-gray-500">아직 구글 검색 노출 기록이 없어요 (색인 후 며칠~몇 주 걸려요).</p>
+                      ) : (
+                        <div className="rounded-xl bg-white border border-gray-100 p-3">
+                          <p className="text-xs font-bold text-gray-700 mb-2">구글에서 실제로 노출된 검색어 (최근 90일)</p>
+                          <table className="w-full text-xs">
+                            <thead className="text-gray-400">
+                              <tr>
+                                <th className="text-left font-semibold pb-1">검색어</th>
+                                <th className="text-right font-semibold pb-1">노출</th>
+                                <th className="text-right font-semibold pb-1">클릭</th>
+                                <th className="text-right font-semibold pb-1">평균 순위</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {r.queries.map((q) => (
+                                <tr key={q.query} className="border-t border-gray-50">
+                                  <td className="py-1 text-gray-800">{q.query}</td>
+                                  <td className="py-1 text-right tabular-nums">{q.impressions}</td>
+                                  <td className="py-1 text-right tabular-nums">{q.clicks}</td>
+                                  <td className={`py-1 text-right tabular-nums font-bold ${q.position <= 10 ? "text-emerald-600" : "text-gray-600"}`}>{q.position}위</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                          <p className="mt-1 text-[11px] text-gray-400">평균 순위 10위 안이면 검색 1페이지예요.</p>
+                        </div>
+                      )}
+
                       <div className="flex flex-wrap gap-2">
-                        <a href={`https://search.naver.com/search.naver?query=${encodeURIComponent(p.title)}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-bold">
-                          네이버에서 직접 검색
+                        <a href={`https://search.naver.com/search.naver?query=${encodeURIComponent(r.focus || p.title)}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-bold">
+                          네이버에서 &lsquo;{r.focus || "제목"}&rsquo; 검색
                         </a>
-                        <a href={`https://www.google.com/search?q=${encodeURIComponent(`site:${r.url}`)}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-bold">
-                          구글 site: 검색
+                        <a href={`https://www.google.com/search?q=${encodeURIComponent(r.focus || p.title)}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-bold">
+                          구글에서 &lsquo;{r.focus || "제목"}&rsquo; 검색
+                        </a>
+                        <a href={`https://www.google.com/search?q=${encodeURIComponent(`site:${r.url}`)}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-700">
+                          색인 확인 (site:)
                         </a>
                         <RequestButton
                           url={r.url}

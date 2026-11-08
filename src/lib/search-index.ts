@@ -156,6 +156,40 @@ export async function checkGoogle(slug: string): Promise<GoogleResult> {
   }
 }
 
+/** 구글에서 이 글이 실제로 어떤 검색어로 노출·클릭됐는지 (최근 90일, Search Console 실적) */
+export async function gscTopQueries(
+  slug: string
+): Promise<{ query: string; clicks: number; impressions: number; position: number }[] | null> {
+  if (!process.env.GOOGLE_SC_CLIENT_EMAIL || !process.env.GOOGLE_SC_PRIVATE_KEY) return null;
+  try {
+    const token = await googleToken();
+    const siteUrl = process.env.GOOGLE_SC_SITE || `sc-domain:${new URL(SITE).host.replace(/^www\./, "")}`;
+    const day = (n: number) => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);
+    const r = await fetch(`https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        startDate: day(90),
+        endDate: day(0),
+        dimensions: ["query"],
+        dimensionFilterGroups: [{ filters: [{ dimension: "page", operator: "equals", expression: postUrl(slug) }] }],
+        rowLimit: 10,
+      }),
+      cache: "no-store",
+    });
+    if (!r.ok) return null;
+    const j = (await r.json()) as { rows?: { keys: string[]; clicks: number; impressions: number; position: number }[] };
+    return (j.rows ?? []).map((row) => ({
+      query: row.keys[0],
+      clicks: row.clicks,
+      impressions: row.impressions,
+      position: Math.round(row.position * 10) / 10,
+    }));
+  } catch {
+    return null;
+  }
+}
+
 // ── IndexNow (네이버·Bing 등에 '새 글 있어요' 알림) ─────────
 export function indexNowKey(): string {
   const fromEnv = process.env.INDEXNOW_KEY;

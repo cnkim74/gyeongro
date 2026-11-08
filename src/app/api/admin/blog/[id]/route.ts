@@ -29,7 +29,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
   const { data: prev } = await supabase.from("blog_posts").select("published_at").eq("id", id).maybeSingle();
   if (!prev) return Response.json({ error: "글을 찾을 수 없어요." }, { status: 404 });
 
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("blog_posts")
     .update({
       ...input,
@@ -39,6 +39,17 @@ export async function PATCH(req: Request, { params }: Ctx) {
     .eq("id", id)
     .select("*")
     .single();
+  // 핵심 키워드 항목이 아직 없으면(SQL 실행 전) 키워드만 빼고 저장
+  if (error && /focus_keyword/.test(error.message)) {
+    const { focus_keyword: _omit, ...rest } = input as typeof input & { focus_keyword?: unknown };
+    void _omit;
+    ({ data, error } = await supabase
+      .from("blog_posts")
+      .update({ ...rest, published_at: input.is_published ? (prev.published_at ?? new Date().toISOString()) : prev.published_at })
+      .eq("id", id)
+      .select("*")
+      .single());
+  }
   if (error) {
     const msg = error.code === "23505" ? "같은 주소(slug)의 글이 이미 있어요. 주소를 바꿔 주세요." : error.message;
     return Response.json({ error: msg }, { status: 400 });

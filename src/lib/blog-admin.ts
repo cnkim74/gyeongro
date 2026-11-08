@@ -30,5 +30,7 @@ export function sanitizeBlogInput(body: Record<string, unknown>) {
     is_published,
     // 대표 이미지 색 — 화면에서 보낸 경우에만 (자동 작성 컬럼이 없을 때도 저장되도록)
     ...("cover_style" in body ? { cover_style: isCoverStyle(body.cover_style) ? body.cover_style : null } : {}),
+    // 핵심 키워드 — 화면에서 보낸 경우에만
+    ...("focus_keyword" in body ? { focus_keyword: String(body.focus_keyword ?? "").trim().slice(0, 60) || null } : {}),
   };
 }
