@@ -32,7 +32,13 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       description: post.excerpt || undefined,
       url: `${SITE}/blog/${post.slug}`,
       publishedTime: post.published_at ?? undefined,
-      ...(post.cover_image_url ? { images: [post.cover_image_url] } : {}),
+      images: [post.cover_image_url || "/og-default.jpg"],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.excerpt || undefined,
+      images: [post.cover_image_url || "/og-default.jpg"],
     },
   };
 }
@@ -59,9 +65,20 @@ export default async function BlogPostPage({ params }: Params) {
       datePublished: post.published_at ?? post.created_at,
       dateModified: post.updated_at,
       mainEntityOfPage: `${SITE}/blog/${post.slug}`,
-      ...(post.cover_image_url ? { image: post.cover_image_url } : {}),
-      author: { "@type": "Organization", name: "Pothos" },
-      publisher: { "@type": "Organization", name: "Pothos" },
+      image: post.cover_image_url || `${SITE}/og-default.jpg`,
+      inLanguage: "ko-KR",
+      keywords: post.tags.join(", "),
+      author: { "@type": "Organization", name: "Pothos 에디터", url: SITE },
+      publisher: { "@type": "Organization", name: "Pothos", url: SITE, logo: { "@type": "ImageObject", url: `${SITE}/icon.svg` } },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Pothos", item: SITE },
+        { "@type": "ListItem", position: 2, name: "블로그", item: `${SITE}/blog` },
+        { "@type": "ListItem", position: 3, name: post.title, item: `${SITE}/blog/${post.slug}` },
+      ],
     },
     ...(post.faq.length > 0
       ? [

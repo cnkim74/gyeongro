@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
@@ -12,6 +13,27 @@ import StoryActions from "./StoryActions";
 import LikeButton from "./LikeButton";
 
 export const dynamic = "force-dynamic";
+
+/** 스토리마다 검색·공유용 제목·설명·이미지 (없으면 모든 스토리가 같은 제목으로 보임) */
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const { data: s } = await getSupabaseServiceClient()
+    .from("stories")
+    .select("title, subtitle, intro, destination, cover_image_url, is_published, is_deleted")
+    .eq("id", id)
+    .maybeSingle();
+  if (!s || s.is_deleted || !s.is_published) return { title: "여행 스토리 - Pothos" };
+  const title = String(s.title).replace(/^\[Pothos 에디터\]\s*/, "");
+  const description = String(s.subtitle || s.intro || `${s.destination ?? ""} 여행 이야기`).replace(/\s+/g, " ").slice(0, 150);
+  const images = s.cover_image_url ? [s.cover_image_url] : ["/og-default.jpg"];
+  return {
+    title: `${title} | Pothos 여행 스토리`,
+    description,
+    alternates: { canonical: `/stories/${id}` },
+    openGraph: { type: "article", title, description, url: `/stories/${id}`, images },
+    twitter: { card: "summary_large_image", title, description, images },
+  };
+}
 
 interface Section {
   title: string;
