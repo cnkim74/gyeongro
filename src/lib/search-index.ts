@@ -108,10 +108,12 @@ export type GoogleResult = {
   message?: string;
 };
 
-let tokenCache: { token: string; exp: number } | null = null;
+const tokenCache = new Map<string, { token: string; exp: number }>();
 
-async function googleToken(): Promise<string> {
-  if (tokenCache && tokenCache.exp > Date.now() + 60_000) return tokenCache.token;
+/** 서비스 계정 접근 토큰 (권한 범위별로 1시간 캐시) — 서치콘솔·애널리틱스 공용 */
+export async function googleToken(scope = "https://www.googleapis.com/auth/webmasters.readonly"): Promise<string> {
+  const cached = tokenCache.get(scope);
+  if (cached && cached.exp > Date.now() + 60_000) return cached.token;
   const email = process.env.GOOGLE_SC_CLIENT_EMAIL!;
   // Vercel 에 붙여 넣은 키의 \n 을 실제 줄바꿈으로
   const key = process.env.GOOGLE_SC_PRIVATE_KEY!.replace(/\\n/g, "\n");
@@ -119,7 +121,7 @@ async function googleToken(): Promise<string> {
   const assertion = jwt.sign(
     {
       iss: email,
-      scope: "https://www.googleapis.com/auth/webmasters.readonly",
+      scope,
       aud: "https://oauth2.googleapis.com/token",
       iat: now,
       exp: now + 3600,
@@ -134,7 +136,7 @@ async function googleToken(): Promise<string> {
   });
   const j = (await r.json()) as { access_token?: string; expires_in?: number; error_description?: string };
   if (!j.access_token) throw new Error(j.error_description ?? "구글 인증 실패");
-  tokenCache = { token: j.access_token, exp: Date.now() + (j.expires_in ?? 3600) * 1000 };
+  tokenCache.set(scope, { token: j.access_token, exp: Date.now() + (j.expires_in ?? 3600) * 1000 });
   return j.access_token;
 }
 

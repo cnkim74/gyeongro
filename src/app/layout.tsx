@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import SessionProvider from "@/components/SessionProvider";
 import FxQuickButton from "@/components/FxQuickButton";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 // 한글 친화 폰트 (Pretendard, OFL 라이선스) — 필요한 글자만 내려받는 dynamic subset
 import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./globals.css";
@@ -15,6 +16,9 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+// 구글 애널리틱스 측정 ID (공개 값, 예: G-ABC123XYZ)
+const GA_ID = /^G-[A-Z0-9]+$/.test(process.env.NEXT_PUBLIC_GA_ID ?? "") ? process.env.NEXT_PUBLIC_GA_ID! : "";
 
 const SITE_URL = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://pothostravel.com").replace(/\/$/, "");
 
@@ -58,6 +62,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        {GA_ID && <GoogleAnalytics gaId={GA_ID} />}
         {/* 검색엔진용 사이트·운영자 정보 */}
         <script
           type="application/ld+json"
