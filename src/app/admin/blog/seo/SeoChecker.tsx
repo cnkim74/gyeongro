@@ -246,7 +246,14 @@ export default function SeoChecker({
                       <div className="rounded-xl bg-white border border-blue-100 p-3">
                         {r.focus ? (
                           <>
-                            <p className="text-xs font-bold text-blue-700 mb-2">🎯 핵심 키워드 &lsquo;{r.focus}&rsquo; 점검</p>
+                            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                              <p className="text-xs font-bold text-blue-700">🎯 핵심 키워드 &lsquo;{r.focus}&rsquo; 점검</p>
+                              {(r.keyword ?? []).some((b) => !b.ok) && (
+                                <a href={`/admin/blog/${p.id}`} className="text-xs font-bold text-white bg-blue-600 rounded-lg px-2.5 py-1">
+                                  수정에서 &lsquo;AI로 키워드 반영&rsquo; →
+                                </a>
+                              )}
+                            </div>
                             <div className="grid sm:grid-cols-2 gap-1.5">
                               {(r.keyword ?? []).map((b) => (
                                 <p key={b.label} className="flex items-start gap-1.5 text-xs">
