@@ -84,6 +84,9 @@ export default function BlogEditor({ initial }: { initial?: BlogPost }) {
   const [focusKeyword, setFocusKeyword] = useState(initial?.focus_keyword ?? "");
   const [kwBusy, setKwBusy] = useState(false);
   const [kwSuggest, setKwSuggest] = useState<{ focus: string; related: string[]; title: string; excerpt: string } | null>(null);
+  // 키워드 본문 반영 미리보기
+  const [kwApply, setKwApply] = useState<{ content: string; changes: { before: string; after: string }[] } | null>(null);
+  const [kwApplyBusy, setKwApplyBusy] = useState(false);
   const [content, setContent] = useState(initial?.content ?? "");
   const [tags, setTags] = useState((initial?.tags ?? []).join(", "));
   const [faq, setFaq] = useState<BlogFaq[]>(initial?.faq ?? []);
@@ -179,7 +182,7 @@ export default function BlogEditor({ initial }: { initial?: BlogPost }) {
 
         {/* 핵심 키워드 */}
         <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4">
-          <label className={label}>🎯 핵심 키워드 (이 글로 검색 1페이지를 노릴 검색어)</label>
+          <label className={label}>🎯 핵심 키워드 — 글 하나에 1개 (이 글로 검색 1페이지를 노릴 검색어)</label>
           <div className="flex gap-2">
             <input
               className={input}
@@ -220,7 +223,7 @@ export default function BlogEditor({ initial }: { initial?: BlogPost }) {
           {kwSuggest && (
             <div className="mt-3 rounded-xl bg-white border border-blue-100 p-3 space-y-2 text-sm">
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-xs font-bold text-gray-500">추천 키워드</span>
+                <span className="text-xs font-bold text-gray-500">추천 (눌러서 핵심 키워드로 선택 · 파란색이 1순위)</span>
                 {[kwSuggest.focus, ...kwSuggest.related].filter(Boolean).map((k, i) => (
                   <button
                     key={k + i}
@@ -265,6 +268,7 @@ export default function BlogEditor({ initial }: { initial?: BlogPost }) {
           )}
 
           {focusKeyword.trim() && (
+            <>
             <ul className="mt-3 grid sm:grid-cols-2 gap-1.5">
               {keywordChecks(focusKeyword, { title, excerpt, content }).map((c) => (
                 <li key={c.label} className="flex items-start gap-1.5 text-xs">
@@ -275,6 +279,60 @@ export default function BlogEditor({ initial }: { initial?: BlogPost }) {
                 </li>
               ))}
             </ul>
+            {keywordChecks(focusKeyword, { title, excerpt, content }).some((c) => !c.ok && /첫 문단|소제목|본문/.test(c.label)) && (
+              <button
+                type="button"
+                disabled={kwApplyBusy || !content.trim()}
+                onClick={async () => {
+                  setKwApplyBusy(true);
+                  try {
+                    const r = await fetch("/api/admin/blog/keyword-apply", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ keyword: focusKeyword, content }),
+                    });
+                    const j = await r.json();
+                    if (!r.ok) throw new Error(j.error ?? "반영 실패");
+                    if (!j.changes?.length) alert("바꿀 곳을 찾지 못했어요. 직접 첫 문단·소제목에 넣어 주세요.");
+                    else setKwApply(j);
+                  } catch (e) {
+                    alert(e instanceof Error ? e.message : "반영 실패");
+                  } finally {
+                    setKwApplyBusy(false);
+                  }
+                }}
+                className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold disabled:opacity-50"
+              >
+                {kwApplyBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : "✨"} AI로 키워드 반영 (첫 문단·소제목)
+              </button>
+            )}
+            {kwApply && (
+              <div className="mt-3 rounded-xl bg-white border border-blue-200 p-3 space-y-3">
+                <p className="text-xs font-bold text-gray-700">바뀌는 부분 미리보기 — 확인 후 &lsquo;적용&rsquo;을 누르면 본문에 들어가요 (저장은 아래 버튼으로)</p>
+                {kwApply.changes.map((c, i) => (
+                  <div key={i} className="text-xs space-y-1">
+                    <p className="rounded-lg bg-rose-50 px-2.5 py-1.5 text-rose-800 line-through decoration-rose-300 whitespace-pre-wrap">{c.before}</p>
+                    <p className="rounded-lg bg-emerald-50 px-2.5 py-1.5 text-emerald-900 whitespace-pre-wrap">{c.after}</p>
+                  </div>
+                ))}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setContent(kwApply.content);
+                      setKwApply(null);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold"
+                  >
+                    적용
+                  </button>
+                  <button type="button" onClick={() => setKwApply(null)} className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-600">
+                    취소
+                  </button>
+                </div>
+              </div>
+            )}
+            </>
           )}
         </div>
         <div className="grid sm:grid-cols-2 gap-4">
