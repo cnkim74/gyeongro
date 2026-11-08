@@ -17,6 +17,11 @@ const ACTION_LABEL: Record<string, string> = {
   translation: "번역",
   planner_free: "플래너 무료(기본 AI)",
   blog: "블로그 AI 작성",
+  blog_keyword: "블로그 키워드 추천·반영",
+  festival_curate: "해외 축제 AI 큐레이션",
+  expo_curate: "박람회 AI 큐레이션",
+  sherpa_curate: "셰르파 AI 큐레이션",
+  medical_curate: "의료관광 AI 큐레이션",
 };
 
 function won(usd: number) {
@@ -85,6 +90,29 @@ export default async function AiUsagePage() {
     byDays.set(days, c);
   }
 
+  // ── 2-1) 기능별 실제 비용 (플래너·블로그·큐레이션·번역 등 모든 AI) ──
+  const allRuns = runsRes.data ?? [];
+  const monthKst = kstDate(now).slice(0, 7);
+  const byFeature = new Map<string, { n: number; usd: number; monthN: number; monthUsd: number; last: string }>();
+  const allCostByDay = new Map<string, number>();
+  for (const r of allRuns) {
+    const f = byFeature.get(r.action) ?? { n: 0, usd: 0, monthN: 0, monthUsd: 0, last: r.created_at };
+    const usd = Number(r.cost_usd);
+    const d = kstDate(new Date(r.created_at));
+    f.n++;
+    f.usd += usd;
+    if (d.startsWith(monthKst)) {
+      f.monthN++;
+      f.monthUsd += usd;
+    }
+    if (r.created_at > f.last) f.last = r.created_at;
+    byFeature.set(r.action, f);
+    allCostByDay.set(d, (allCostByDay.get(d) ?? 0) + usd);
+  }
+  const features = [...byFeature.entries()].sort((a, b) => b[1].usd - a[1].usd);
+  const allUsd = features.reduce((sum, [, f]) => sum + f.usd, 0);
+  const allMonthUsd = features.reduce((sum, [, f]) => sum + f.monthUsd, 0);
+
   // ── 3) 첫 글 이벤트 ──
   const ev = eventRes.data ?? [];
   const evPeople = ev.length;
@@ -101,7 +129,7 @@ export default async function AiUsagePage() {
     <div className="p-6 sm:p-8 max-w-5xl">
       <h1 className="text-2xl font-bold text-gray-900 mb-1">AI 사용량·비용</h1>
       <p className="text-sm text-gray-500 mb-8">
-        AI 플래너를 실제로 몇 번 돌렸는지, 비용이 얼마나 들었는지 확인해요. (환율 1달러 ≈ ₩{KRW_PER_USD.toLocaleString()} 기준)
+        AI 플래너·블로그 작성·큐레이션·번역 등 AI를 몇 번 돌렸는지, 비용이 얼마나 들었는지 확인해요. (환율 1달러 ≈ ₩{KRW_PER_USD.toLocaleString()} 기준)
       </p>
 
       {(usageRes.error || runsMissing) && (
@@ -148,7 +176,7 @@ export default async function AiUsagePage() {
       {/* 비용 */}
       <section className="mb-8">
         <h2 className="flex items-center gap-2 font-bold text-gray-900 mb-3">
-          <Coins className="w-5 h-5 text-amber-500" /> 비용
+          <Coins className="w-5 h-5 text-amber-500" /> AI 플래너 비용
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Stat
@@ -180,6 +208,61 @@ export default async function AiUsagePage() {
         )}
       </section>
 
+      {/* 기능별 비용 */}
+      {!runsMissing && (
+        <section className="mb-8">
+          <h2 className="flex items-center gap-2 font-bold text-gray-900 mb-3">
+            <Coins className="w-5 h-5 text-amber-500" /> 기능별 실제 비용 (모든 AI)
+          </h2>
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <Stat label="이번 달 AI 전체 비용" value={won(allMonthUsd)} sub={`$${allMonthUsd.toFixed(2)}`} />
+            <Stat label="기록된 전체 비용" value={won(allUsd)} sub={`$${allUsd.toFixed(2)} · ${allRuns.length}회`} />
+          </div>
+          <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-gray-500">
+                <tr>
+                  <th className="text-left px-4 py-2 font-medium">기능</th>
+                  <th className="text-right px-4 py-2 font-medium">이번 달</th>
+                  <th className="text-right px-4 py-2 font-medium">누적</th>
+                  <th className="text-right px-4 py-2 font-medium">1회 평균</th>
+                  <th className="text-right px-4 py-2 font-medium">비중</th>
+                </tr>
+              </thead>
+              <tbody>
+                {features.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-6 text-center text-gray-400">
+                      아직 기록이 없어요.
+                    </td>
+                  </tr>
+                ) : (
+                  features.map(([k, f]) => (
+                    <tr key={k} className="border-t border-gray-100">
+                      <td className="px-4 py-2 text-gray-800">
+                        {ACTION_LABEL[k] ?? k}
+                        <span className="block text-[11px] text-gray-400">마지막 {kstDate(new Date(f.last))}</span>
+                      </td>
+                      <td className="px-4 py-2 text-right tabular-nums">
+                        {won(f.monthUsd)} <span className="text-xs text-gray-400">({f.monthN}회)</span>
+                      </td>
+                      <td className="px-4 py-2 text-right tabular-nums">
+                        {won(f.usd)} <span className="text-xs text-gray-400">({f.n}회)</span>
+                      </td>
+                      <td className="px-4 py-2 text-right tabular-nums">{won(f.usd / Math.max(1, f.n))}</td>
+                      <td className="px-4 py-2 text-right tabular-nums text-gray-500">{allUsd ? Math.round((f.usd / allUsd) * 100) : 0}%</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-gray-400 mt-1">
+            실제 사용 토큰과 웹 검색 횟수로 계산한 값이에요. 축제·셰르파·의료 큐레이션과 번역은 이번 업데이트부터 기록돼요. 관리자 테스트도 포함돼요.
+          </p>
+        </section>
+      )}
+
       {/* 첫 글 이벤트 */}
       <section className="mb-8">
         <h2 className="flex items-center gap-2 font-bold text-gray-900 mb-3">
@@ -210,7 +293,8 @@ export default async function AiUsagePage() {
               <tr>
                 <th className="text-left px-4 py-2 font-medium">날짜</th>
                 <th className="text-right px-4 py-2 font-medium">플래너 실행</th>
-                <th className="text-right px-4 py-2 font-medium">실측 비용</th>
+                <th className="text-right px-4 py-2 font-medium">플래너 비용</th>
+                <th className="text-right px-4 py-2 font-medium">AI 전체 비용</th>
               </tr>
             </thead>
             <tbody>
@@ -222,6 +306,7 @@ export default async function AiUsagePage() {
                     <td className="px-4 py-2 text-gray-700">{d}</td>
                     <td className="px-4 py-2 text-right tabular-nums">{n ? `${n}회` : "-"}</td>
                     <td className="px-4 py-2 text-right tabular-nums">{c ? `${won(c.usd)} (${c.n}회)` : "-"}</td>
+                    <td className="px-4 py-2 text-right tabular-nums font-semibold">{allCostByDay.get(d) ? won(allCostByDay.get(d)!) : "-"}</td>
                   </tr>
                 );
               })}

@@ -14,6 +14,7 @@
 import crypto from "node:crypto";
 import Anthropic from "@anthropic-ai/sdk";
 import { getSupabaseServiceClient } from "./supabase";
+import { aiMeter } from "./ai-runs";
 
 export type TargetLang = "en" | "ja" | "zh";
 export type SourceLang = "ko" | TargetLang;
@@ -101,6 +102,11 @@ Rules:
     system: systemInstruction,
     messages: [{ role: "user", content: text }],
   });
+
+  // 비용 기록 (관리자 'AI 사용량·비용')
+  const meter = aiMeter(MODEL);
+  meter.add(msg.usage);
+  await meter.record("translation", null, true, { from: sourceLang, to: targetLang, chars: text.length });
 
   const out = msg.content
     .map((b) => (b.type === "text" ? b.text : ""))

@@ -7,6 +7,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { requireAdmin } from "@/lib/admin";
+import { aiMeter } from "@/lib/ai-runs";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 
 export const runtime = "nodejs";
@@ -112,6 +113,7 @@ export async function POST(req: Request) {
   // 웹 검색은 서버에서 여러 번 돌다 pause_turn 으로 멈출 수 있음 → 이어서 요청 (최대 3번)
   const messages: Anthropic.MessageParam[] = [{ role: "user", content: kind === "expo" ? expoPrompt : prompt }];
   let finalText = "";
+  const meter = aiMeter(MODEL);
   try {
     for (let i = 0; i < 4; i++) {
       const msg = await anthropic.messages.create({
@@ -120,6 +122,7 @@ export async function POST(req: Request) {
         tools: [{ type: "web_search_20260209", name: "web_search", max_uses: 6 }],
         messages,
       });
+      meter.add(msg.usage);
       const text = msg.content.map((b) => (b.type === "text" ? b.text : "")).join("");
       if (msg.stop_reason === "pause_turn") {
         messages.push({ role: "assistant", content: msg.content });
@@ -129,8 +132,10 @@ export async function POST(req: Request) {
       break;
     }
   } catch (e) {
+    await meter.record(kind === "expo" ? "expo_curate" : "festival_curate", session.user.id, false, { country, month });
     return Response.json({ error: `AI 검색 실패: ${e instanceof Error ? e.message : e}` }, { status: 502 });
   }
+  await meter.record(kind === "expo" ? "expo_curate" : "festival_curate", session.user.id, !!finalText, { country, month });
 
   const candidates = extractJsonArray(finalText)
     .filter((c) => c && typeof c.name === "string" && c.name.trim() && typeof c.city === "string" && c.city.trim())
