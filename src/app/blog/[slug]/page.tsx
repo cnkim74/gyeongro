@@ -9,6 +9,7 @@ import BlogCard from "@/components/blog/BlogCard";
 import BlogCta from "@/components/blog/BlogCta";
 import BlogComments from "@/components/blog/BlogComments";
 import { listBlogComments, countVisible } from "@/lib/blog-comments";
+import { readGuestToken } from "@/lib/guest-comment";
 import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
 import { getPost, listRelatedPosts, increaseView, tocOf, readMinutes, formatBlogDate } from "@/lib/blog";
@@ -56,7 +57,7 @@ export default async function BlogPostPage({ params }: Params) {
   const toc = tocOf(post.content);
   const [related, comments] = await Promise.all([
     listRelatedPosts(post),
-    listBlogComments(post.id, session?.user?.id ?? null, admin),
+    listBlogComments(post.id, { id: session?.user?.id ?? null, isAdmin: admin, guestToken: await readGuestToken() }),
   ]);
   const date = post.published_at ?? post.created_at;
 

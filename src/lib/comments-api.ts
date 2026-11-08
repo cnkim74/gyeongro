@@ -4,18 +4,23 @@ import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 import { COMMENT_TABLE, commentTarget, notifyComment, type CommentKind } from "@/lib/blog-comments";
+import { checkGuest, guestCanDelete, isMissingGuestColumns, type GuestInput } from "@/lib/guest-comment";
 
 const MIGRATION: Record<CommentKind, string> = {
   blog: "migration_blog_comments.sql",
   story: "migration_story_comments.sql",
 };
 
-/** POST { postId, content, isPrivate?, parentId? } -> { id } */
+/** POST { postId, content, isPrivate?, parentId?, (비회원) guestName, guestPassword, guestEmail?, website, openedAt } -> { id } */
 export async function handleCommentPost(kind: CommentKind, req: Request): Promise<Response> {
   const session = await auth();
-  const userId = session?.user?.id;
-  if (!userId) return Response.json({ error: "로그인이 필요해요." }, { status: 401 });
-  const body = (await req.json().catch(() => ({}))) as { postId?: string; content?: string; isPrivate?: boolean; parentId?: string | null };
+  const userId = session?.user?.id ?? null;
+  const body = (await req.json().catch(() => ({}))) as GuestInput & {
+    postId?: string;
+    content?: string;
+    isPrivate?: boolean;
+    parentId?: string | null;
+  };
   const postId = String(body.postId ?? "");
   const content = String(body.content ?? "").trim();
   if (!postId || !content) return Response.json({ error: "내용을 입력해 주세요." }, { status: 400 });
@@ -23,13 +28,23 @@ export async function handleCommentPost(kind: CommentKind, req: Request): Promis
 
   const supabase = getSupabaseServiceClient();
   const table = COMMENT_TABLE[kind];
-  const admin = await isAdmin(userId);
+  const admin = userId ? await isAdmin(userId) : false;
   const target = await commentTarget(kind, postId);
-  const owner = !!target && target.ownerIds.includes(userId);
+  const owner = !!userId && !!target && target.ownerIds.includes(userId);
   if (!target || (!target.visible && !admin && !owner)) return Response.json({ error: "글을 찾을 수 없어요." }, { status: 404 });
 
-  // 도배 방지: 1분에 5개까지
-  if (!admin) {
+  // 비회원: 이름·비밀번호·스팸 검사
+  let guest: Record<string, unknown> = {};
+  let guestToken: string | null = null;
+  if (!userId) {
+    const g = await checkGuest(req, table, body, content);
+    if (!g.ok) return g.res;
+    guest = g.fields;
+    guestToken = g.fields.guest_token;
+  }
+
+  // 도배 방지 (회원): 1분에 5개까지
+  if (userId && !admin) {
     const since = new Date(Date.now() - 60_000).toISOString();
     const { count } = await supabase.from(table).select("id", { count: "exact", head: true }).eq("user_id", userId).gte("created_at", since);
     if ((count ?? 0) >= 5) return Response.json({ error: "잠시 후 다시 써 주세요." }, { status: 429 });
@@ -55,20 +70,32 @@ export async function handleCommentPost(kind: CommentKind, req: Request): Promis
     }
     if (parent.is_private) {
       // 비밀 댓글에는 쓴 사람·글쓴이·관리자만 답글을 달 수 있고, 답글도 비밀
-      if (!admin && !owner && parent.user_id !== userId) return Response.json({ error: "비밀 댓글에는 답글을 달 수 없어요." }, { status: 403 });
+      let parentMine = !!userId && parent.user_id === userId;
+      if (!userId && !parent.user_id) {
+        const { data: p2 } = await supabase.from(table).select("*").eq("id", parentId).maybeSingle();
+        parentMine = !!guestToken && p2?.guest_token === guestToken;
+      }
+      if (!admin && !owner && !parentMine) return Response.json({ error: "비밀 댓글에는 답글을 달 수 없어요." }, { status: 403 });
       isPrivate = true;
     }
   }
 
   const { data, error } = await supabase
     .from(table)
-    .insert({ post_id: postId, parent_id: parentId, user_id: userId, content, is_private: isPrivate })
+    .insert({ post_id: postId, parent_id: parentId, user_id: userId, content, is_private: isPrivate, ...guest })
     .select("id")
     .single();
   if (error) {
     const missing = error.message.includes(table);
+    const guestMissing = !userId && isMissingGuestColumns(error.message);
     return Response.json(
-      { error: missing ? `댓글 기능 준비 중이에요. (관리자: ${MIGRATION[kind]} 실행 필요)` : error.message },
+      {
+        error: guestMissing
+          ? "비회원 댓글은 준비 중이에요. 로그인하고 남겨 주세요. (관리자: migration_guest_comments.sql 실행 필요)"
+          : missing
+            ? `댓글 기능 준비 중이에요. (관리자: ${MIGRATION[kind]} 실행 필요)`
+            : error.message,
+      },
       { status: 500 }
     );
   }
@@ -77,15 +104,23 @@ export async function handleCommentPost(kind: CommentKind, req: Request): Promis
   return Response.json({ id: data.id });
 }
 
-/** 지우기 (쓴 사람 · 글쓴이 · 관리자) — 기록은 남기고 내용만 숨김 */
-export async function handleCommentDelete(kind: CommentKind, id: string): Promise<Response> {
+/** 지우기 (쓴 사람 · 글쓴이 · 관리자 / 비회원은 같은 브라우저 또는 비밀번호) — 기록은 남기고 내용만 숨김 */
+export async function handleCommentDelete(kind: CommentKind, id: string, req?: Request): Promise<Response> {
   const session = await auth();
-  const userId = session?.user?.id;
-  if (!userId) return Response.json({ error: "로그인이 필요해요." }, { status: 401 });
+  const userId = session?.user?.id ?? null;
+  const body = req ? ((await req.json().catch(() => ({}))) as { password?: string }) : {};
   const supabase = getSupabaseServiceClient();
   const table = COMMENT_TABLE[kind];
-  const { data: c } = await supabase.from(table).select("user_id, post_id").eq("id", id).maybeSingle();
+  const { data: c } = await supabase.from(table).select("*").eq("id", id).maybeSingle();
   if (!c) return Response.json({ error: "댓글이 없어요." }, { status: 404 });
+  // 비회원 댓글: 같은 브라우저이거나 비밀번호가 맞으면
+  if (!c.user_id && (await guestCanDelete(c, body.password))) {
+    await supabase.from(table).update({ is_deleted: true }).eq("id", id);
+    return Response.json({ ok: true });
+  }
+  if (!userId) {
+    return Response.json({ error: c.user_id ? "로그인이 필요해요." : "비밀번호가 맞지 않아요." }, { status: c.user_id ? 401 : 403 });
+  }
   let allowed = c.user_id === userId || (await isAdmin(userId));
   if (!allowed) {
     const target = await commentTarget(kind, c.post_id);

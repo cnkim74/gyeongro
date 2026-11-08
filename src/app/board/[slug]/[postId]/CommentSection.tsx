@@ -1,17 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Send, Loader2, MessageCircle, Trash2 } from "lucide-react";
 import RoleBadge from "@/components/RoleBadge";
 import type { UserRole } from "@/lib/admin";
+import { useGuestFields } from "@/components/GuestFields";
 
 interface CommentItem {
   id: string;
   content: string;
   created_at: string;
-  user_id: string;
+  /** 비회원 댓글이면 null */
+  user_id: string | null;
+  guest?: boolean;
+  /** 내가 쓴 댓글 (회원 id 또는 이 브라우저) */
+  mine?: boolean;
   author: { name: string | null; image: string | null; role?: UserRole };
 }
 
@@ -32,6 +36,8 @@ export default function CommentSection({
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const pathname = usePathname();
+  const g = useGuestFields(!currentUserId, `/login?callbackUrl=${encodeURIComponent(pathname)}`);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,27 +47,38 @@ export default function CommentSection({
       const res = await fetch(`/api/posts/${postId}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content, ...g.payload() }),
       });
-      if (!res.ok) throw new Error();
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error ?? "댓글 등록 실패");
       setContent("");
+      g.remember();
       router.refresh();
-    } catch {
-      alert("댓글 등록 실패");
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "댓글 등록 실패");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleDelete = async (commentId: string) => {
-    if (!confirm("이 댓글을 삭제하시겠어요?")) return;
-    setDeletingId(commentId);
+  const handleDelete = async (c: CommentItem) => {
+    let password: string | undefined;
+    if (c.guest && !c.mine && !isAdmin) {
+      password = prompt("댓글을 쓸 때 정한 비밀번호를 입력해 주세요") ?? undefined;
+      if (!password) return;
+    } else if (!confirm("이 댓글을 삭제하시겠어요?")) return;
+    setDeletingId(c.id);
     try {
-      const res = await fetch(`/api/comments/${commentId}`, { method: "DELETE" });
-      if (!res.ok) throw new Error();
+      const res = await fetch(`/api/comments/${c.id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error ?? "삭제 실패");
       router.refresh();
-    } catch {
-      alert("삭제 실패");
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "삭제 실패");
     } finally {
       setDeletingId(null);
     }
@@ -74,11 +91,15 @@ export default function CommentSection({
         댓글 {comments.length}
       </h2>
 
-      {currentUserId ? (
-        <form onSubmit={handleSubmit} className="mb-6">
+      <form onSubmit={handleSubmit} className="mb-6 relative">
+          {g.fields}
           <textarea
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onFocus={g.touch}
+            onChange={(e) => {
+              g.touch();
+              setContent(e.target.value);
+            }}
             placeholder="댓글을 입력하세요"
             rows={3}
             className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none text-gray-900 placeholder-gray-400 resize-none"
@@ -86,7 +107,7 @@ export default function CommentSection({
           <div className="flex justify-end mt-2">
             <button
               type="submit"
-              disabled={submitting || !content.trim()}
+              disabled={submitting || !content.trim() || !g.ready}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 disabled:opacity-50"
             >
               {submitting ? (
@@ -98,18 +119,6 @@ export default function CommentSection({
             </button>
           </div>
         </form>
-      ) : (
-        <div className="bg-blue-50 rounded-2xl p-4 mb-6 text-center text-sm text-gray-700">
-          댓글을 작성하려면{" "}
-          <Link
-            href={`/login?callbackUrl=/board/${postId}`}
-            className="font-semibold text-blue-600 hover:underline"
-          >
-            로그인
-          </Link>
-          이 필요해요
-        </div>
-      )}
 
       {comments.length === 0 ? (
         <p className="text-center text-sm text-gray-400 py-8">
@@ -118,7 +127,7 @@ export default function CommentSection({
       ) : (
         <div className="space-y-4">
           {comments.map((c) => {
-            const canDelete = currentUserId === c.user_id || isAdmin;
+            const canDelete = c.mine || isAdmin || !!c.guest || (!!currentUserId && currentUserId === c.user_id);
             return (
               <div key={c.id} className="flex gap-3 group">
                 {c.author.image ? (
@@ -139,14 +148,18 @@ export default function CommentSection({
                       <span className="text-sm font-semibold text-gray-900">
                         {c.author.name ?? "익명"}
                       </span>
-                      <RoleBadge role={c.author.role} size="xs" />
+                      {c.guest ? (
+                        <span className="px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-500 text-[10px] font-semibold">비회원</span>
+                      ) : (
+                        <RoleBadge role={c.author.role} size="xs" />
+                      )}
                       <span className="text-xs text-gray-400">
                         {new Date(c.created_at).toLocaleString("ko-KR")}
                       </span>
                     </div>
                     {canDelete && (
                       <button
-                        onClick={() => handleDelete(c.id)}
+                        onClick={() => handleDelete(c)}
                         disabled={deletingId === c.id}
                         className="p-1 rounded text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
                         aria-label="삭제"

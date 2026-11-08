@@ -2,10 +2,10 @@
 
 // 댓글 (블로그 · 스토리 공용) — 공개 / 🔒 비밀 댓글, 답글 1단계, 답글 알림 켜기
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2, Lock, MessageCircle, CornerDownRight, Trash2 } from "lucide-react";
 import PushToggle from "@/components/PushToggle";
+import { useGuestFields } from "@/components/GuestFields";
 import type { BlogCommentView } from "@/lib/blog-comments";
 
 function timeAgo(iso: string) {
@@ -19,6 +19,8 @@ function timeAgo(iso: string) {
 
 function Composer({
   api,
+  guest,
+  loginHref,
   postId,
   parentId,
   forcePrivate,
@@ -27,6 +29,9 @@ function Composer({
   autoFocus,
 }: {
   api: string;
+  /** 비회원으로 쓰는지 */
+  guest: boolean;
+  loginHref: string;
   postId: string;
   parentId?: string;
   forcePrivate?: boolean;
@@ -39,6 +44,7 @@ function Composer({
   const [priv, setPriv] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const g = useGuestFields(guest, loginHref);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,12 +55,13 @@ function Composer({
       const r = await fetch(api, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postId, parentId: parentId ?? null, content: text, isPrivate: forcePrivate || priv }),
+        body: JSON.stringify({ postId, parentId: parentId ?? null, content: text, isPrivate: forcePrivate || priv, ...g.payload() }),
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error ?? "등록 실패");
       setText("");
       setPriv(false);
+      g.remember();
       onDone();
       router.refresh();
     } catch (e) {
@@ -65,10 +72,15 @@ function Composer({
   };
 
   return (
-    <form onSubmit={submit}>
+    <form onSubmit={submit} className="relative">
+      {g.fields}
       <textarea
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onFocus={g.touch}
+        onChange={(e) => {
+          g.touch();
+          setText(e.target.value);
+        }}
         placeholder={placeholder}
         rows={parentId ? 2 : 3}
         maxLength={2000}
@@ -88,7 +100,7 @@ function Composer({
         )}
         <button
           type="submit"
-          disabled={busy || !text.trim()}
+          disabled={busy || !text.trim() || !g.ready}
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-slate-900 text-white text-sm font-bold disabled:opacity-40"
         >
           {busy && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -103,14 +115,12 @@ function Composer({
 function Item({
   api,
   c,
-  viewerId,
   isAdmin,
   isReply,
   onReply,
 }: {
   api: string;
   c: BlogCommentView;
-  viewerId: string | null;
   /** 관리자 또는 이 글의 글쓴이 — 모든 댓글을 지울 수 있음 */
   isAdmin: boolean;
   isReply?: boolean;
@@ -118,16 +128,26 @@ function Item({
 }) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
-  const canDelete = !c.isDeleted && (c.mine || isAdmin);
+  // 비회원 댓글은 누구나 '삭제'를 누를 수 있고, 비밀번호가 맞아야 지워짐
+  const canDelete = !c.isDeleted && (c.mine || isAdmin || c.author.isGuest);
   const remove = async () => {
-    if (!confirm("이 댓글을 지울까요?")) return;
+    let password: string | undefined;
+    if (c.author.isGuest && !c.mine && !isAdmin) {
+      password = prompt("댓글을 쓸 때 정한 비밀번호를 입력해 주세요") ?? undefined;
+      if (!password) return;
+    } else if (!confirm("이 댓글을 지울까요?")) return;
     setDeleting(true);
     try {
-      const r = await fetch(`${api}/${c.id}`, { method: "DELETE" });
-      if (!r.ok) throw new Error();
+      const r = await fetch(`${api}/${c.id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error ?? "삭제 실패");
       router.refresh();
-    } catch {
-      alert("삭제 실패");
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "삭제 실패");
     } finally {
       setDeleting(false);
     }
@@ -158,6 +178,7 @@ function Item({
           ) : (
             c.author.isAdmin && <span className="px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-600 text-[10px] font-bold">운영팀</span>
           )}
+          {c.author.isGuest && <span className="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[10px] font-semibold">비회원</span>}
           {c.isPrivate && <Lock className="w-3.5 h-3.5 text-slate-400" aria-label="비밀 댓글" />}
           <span className="text-xs text-slate-400">{timeAgo(c.createdAt)}</span>
         </p>
@@ -171,7 +192,7 @@ function Item({
           <p className="mt-1 text-[15px] text-slate-700 leading-relaxed whitespace-pre-wrap break-words">{c.content}</p>
         )}
         <div className="mt-1.5 flex items-center gap-3 text-xs font-semibold text-slate-400">
-          {onReply && viewerId && !c.isDeleted && c.content !== null && (
+          {onReply && !c.isDeleted && c.content !== null && (
             <button type="button" onClick={onReply} className="hover:text-blue-600">
               답글
             </button>
@@ -210,6 +231,7 @@ export default function BlogComments({
 }) {
   const api = kind === "story" ? "/api/story-comments" : "/api/blog/comments";
   const manager = isAdmin || isOwner;
+  const loginHref = `/login?callbackUrl=${encodeURIComponent(`${path}#comments`)}`;
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [posted, setPosted] = useState(false);
 
@@ -236,23 +258,19 @@ export default function BlogComments({
       )}
 
       <div className="mt-5">
-        {viewerId ? (
-          <>
-            <Composer api={api} postId={postId} placeholder={kind === "story" ? "이 여행 이야기에 대한 댓글이나 궁금한 점을 남겨 주세요" : "댓글을 남겨 주세요"} onDone={() => setPosted(true)} />
-            {posted && !manager && (
-              <div className="mt-3 rounded-2xl bg-blue-50 px-4 py-3">
-                <p className="text-sm text-slate-700 mb-2">답글이 달리면 알려 드릴까요? (알림이 꺼져 있으면 이메일로 알려 드려요)</p>
-                <PushToggle compact label="답글 알림" />
-              </div>
-            )}
-          </>
-        ) : (
-          <Link
-            href={`/login?callbackUrl=${encodeURIComponent(`${path}#comments`)}`}
-            className="block rounded-2xl border border-dashed border-slate-300 px-4 py-5 text-center text-sm font-semibold text-slate-500 hover:border-blue-400 hover:text-blue-600"
-          >
-            로그인하고 댓글 남기기
-          </Link>
+        <Composer
+          api={api}
+          guest={!viewerId}
+          loginHref={loginHref}
+          postId={postId}
+          placeholder={kind === "story" ? "이 여행 이야기에 대한 댓글이나 궁금한 점을 남겨 주세요" : "댓글을 남겨 주세요"}
+          onDone={() => setPosted(true)}
+        />
+        {posted && viewerId && !manager && (
+          <div className="mt-3 rounded-2xl bg-blue-50 px-4 py-3">
+            <p className="text-sm text-slate-700 mb-2">답글이 달리면 알려 드릴까요? (알림이 꺼져 있으면 이메일로 알려 드려요)</p>
+            <PushToggle compact label="답글 알림" />
+          </div>
         )}
       </div>
 
@@ -260,17 +278,19 @@ export default function BlogComments({
         <ul className="mt-8 space-y-6">
           {comments.map((c) => (
             <li key={c.id} id={`c-${c.id}`} className="scroll-mt-28">
-              <Item api={api} c={c} viewerId={viewerId} isAdmin={manager} onReply={() => setReplyTo(replyTo === c.id ? null : c.id)} />
+              <Item api={api} c={c} isAdmin={manager} onReply={() => setReplyTo(replyTo === c.id ? null : c.id)} />
               {(c.replies.length > 0 || replyTo === c.id) && (
                 <div className="mt-4 ml-6 sm:ml-12 space-y-4 border-l-2 border-slate-100 pl-3 sm:pl-4">
                   {c.replies.map((r) => (
                     <div key={r.id} id={`c-${r.id}`} className="scroll-mt-28">
-                      <Item api={api} c={r} viewerId={viewerId} isAdmin={manager} isReply />
+                      <Item api={api} c={r} isAdmin={manager} isReply />
                     </div>
                   ))}
-                  {replyTo === c.id && viewerId && (
+                  {replyTo === c.id && (
                     <Composer
                       api={api}
+                      guest={!viewerId}
+                      loginHref={loginHref}
                       postId={postId}
                       parentId={c.id}
                       forcePrivate={c.isPrivate}

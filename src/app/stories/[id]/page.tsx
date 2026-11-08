@@ -13,6 +13,7 @@ import StoryActions from "./StoryActions";
 import LikeButton from "./LikeButton";
 import BlogComments from "@/components/blog/BlogComments";
 import { listComments, countVisible } from "@/lib/blog-comments";
+import { readGuestToken } from "@/lib/guest-comment";
 
 export const dynamic = "force-dynamic";
 
@@ -128,7 +129,12 @@ export default async function StoryDetailPage({
   }
 
   // 댓글 (공개 / 비밀) — 글쓴이는 스토리를 쓴 회원
-  const comments = await listComments("story", story.id, currentUserId, adminFlag, [story.user_id]);
+  const comments = await listComments(
+    "story",
+    story.id,
+    { id: currentUserId, isAdmin: adminFlag, guestToken: await readGuestToken() },
+    [story.user_id]
+  );
 
   const authorRole = parseRole(author?.role);
   const authorName = author?.name ?? "익명";

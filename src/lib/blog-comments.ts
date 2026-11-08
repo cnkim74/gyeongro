@@ -27,14 +27,21 @@ type Row = {
   id: string;
   post_id: string;
   parent_id: string | null;
-  user_id: string;
+  /** 비회원 댓글이면 null */
+  user_id: string | null;
   content: string;
   is_private: boolean;
   is_deleted: boolean;
   created_at: string;
+  guest_name?: string | null;
+  guest_email?: string | null;
+  guest_token?: string | null;
 };
 
-export type CommentAuthor = { name: string; image: string | null; isAdmin: boolean; isOwner: boolean };
+export type CommentAuthor = { name: string; image: string | null; isAdmin: boolean; isOwner: boolean; isGuest: boolean };
+
+/** 보는 사람 */
+export type CommentViewer = { id: string | null; isAdmin: boolean; guestToken: string | null };
 
 export type BlogCommentView = {
   id: string;
@@ -107,39 +114,45 @@ function displayName(u: UserRow | undefined): string {
 export async function listComments(
   kind: CommentKind,
   postId: string,
-  viewerId: string | null,
-  viewerIsAdmin: boolean,
+  viewer: CommentViewer,
   ownerIds: string[]
 ): Promise<BlogCommentView[] | null> {
+  const viewerId = viewer.id;
+  const viewerIsAdmin = viewer.isAdmin;
   const { data, error } = await getSupabaseServiceClient()
     .from(COMMENT_TABLE[kind])
-    .select("id, post_id, parent_id, user_id, content, is_private, is_deleted, created_at")
+    .select("*")
     .eq("post_id", postId)
     .order("created_at", { ascending: true })
     .limit(500);
   if (error) return null;
   const rows = (data ?? []) as Row[];
-  const users = await usersById([...new Set(rows.map((r) => r.user_id))]);
+  const users = await usersById([...new Set(rows.map((r) => r.user_id).filter((x): x is string => !!x))]);
+  // 내가 쓴 댓글: 로그인 회원이면 회원 id, 비회원이면 이 브라우저 쿠키
+  const isMine = (r: Row) =>
+    (!!viewerId && viewerId === r.user_id) || (!r.user_id && !!viewer.guestToken && viewer.guestToken === r.guest_token);
   const viewerIsOwner = !!viewerId && ownerIds.includes(viewerId);
   const privileged = viewerIsAdmin || viewerIsOwner;
 
   const view = (r: Row, visible: boolean): BlogCommentView => {
-    const u = users.get(r.user_id);
+    const u = r.user_id ? users.get(r.user_id) : undefined;
     const isAdmin = u?.role === "admin";
+    const isGuest = !r.user_id;
     return {
       id: r.id,
-      userId: r.user_id,
+      userId: r.user_id ?? "",
       author: {
-        name: isAdmin ? "Pothos 에디터" : displayName(u),
-        image: u?.custom_image ?? u?.image ?? null,
+        name: isGuest ? (r.guest_name || "손님") : isAdmin ? "Pothos 에디터" : displayName(u),
+        image: isGuest ? null : (u?.custom_image ?? u?.image ?? null),
         isAdmin,
-        isOwner: ownerIds.includes(r.user_id),
+        isOwner: !!r.user_id && ownerIds.includes(r.user_id),
+        isGuest,
       },
       content: r.is_deleted ? null : visible ? r.content : null,
       isPrivate: r.is_private,
       isDeleted: r.is_deleted,
       createdAt: r.created_at,
-      mine: !!viewerId && viewerId === r.user_id,
+      mine: isMine(r),
       replies: [],
     };
   };
@@ -147,13 +160,13 @@ export async function listComments(
   const tops = rows.filter((r) => !r.parent_id);
   const out: BlogCommentView[] = [];
   for (const t of tops) {
-    const topVisible = !t.is_private || privileged || viewerId === t.user_id;
+    const topVisible = !t.is_private || privileged || isMine(t);
     const v = view(t, topVisible);
     v.replies = rows
       .filter((r) => r.parent_id === t.id && !r.is_deleted)
       .map((r) => {
         const priv = r.is_private || t.is_private;
-        const visible = !priv || privileged || viewerId === r.user_id || viewerId === t.user_id;
+        const visible = !priv || privileged || isMine(r) || isMine(t);
         return { ...view(r, visible), isPrivate: priv };
       });
     // 지운 댓글은 답글이 없으면 아예 숨김
@@ -164,9 +177,9 @@ export async function listComments(
 }
 
 /** 블로그 댓글 목록 (예전 이름 유지) */
-export async function listBlogComments(postId: string, viewerId: string | null, viewerIsAdmin: boolean) {
+export async function listBlogComments(postId: string, viewer: CommentViewer) {
   const target = await commentTarget("blog", postId);
-  return listComments("blog", postId, viewerId, viewerIsAdmin, target?.ownerIds ?? []);
+  return listComments("blog", postId, viewer, target?.ownerIds ?? []);
 }
 
 export function countVisible(list: BlogCommentView[]): number {
@@ -183,37 +196,38 @@ export async function notifyComment(kind: CommentKind, commentId: string): Promi
   try {
     const supabase = getSupabaseServiceClient();
     const table = COMMENT_TABLE[kind];
-    const { data: c } = await supabase
-      .from(table)
-      .select("id, post_id, parent_id, user_id, content, is_private")
-      .eq("id", commentId)
-      .maybeSingle();
+    const { data: c } = await supabase.from(table).select("*").eq("id", commentId).maybeSingle();
     if (!c) return;
     const target = await commentTarget(kind, c.post_id);
     if (!target) return;
-    let parent: { user_id: string; is_private: boolean } | null = null;
+    let parent: Row | null = null;
     if (c.parent_id) {
-      const { data } = await supabase.from(table).select("user_id, is_private").eq("id", c.parent_id).maybeSingle();
-      parent = data;
+      const { data } = await supabase.from(table).select("*").eq("id", c.parent_id).maybeSingle();
+      parent = data as Row | null;
     }
     const owners = target.ownerIds;
-    const writerIsOwner = owners.includes(c.user_id);
+    const writerIsOwner = !!c.user_id && owners.includes(c.user_id);
 
     const recipients = new Set<string>();
     if (!c.parent_id || !writerIsOwner) owners.forEach((id) => recipients.add(id));
-    if (parent) recipients.add(parent.user_id);
-    recipients.delete(c.user_id);
-    if (recipients.size === 0) return;
+    if (parent?.user_id) recipients.add(parent.user_id);
+    if (c.user_id) recipients.delete(c.user_id);
+    // 비회원 원댓글에 답글이 달리면, 이메일을 남긴 경우에만 이메일로 (본인이 단 답글이면 제외)
+    const guestParentEmail =
+      parent && !parent.user_id && parent.guest_email && !(c.guest_token && c.guest_token === parent.guest_token) ? parent.guest_email : null;
+    if (recipients.size === 0 && !guestParentEmail) return;
 
-    const users = await usersById([...recipients, c.user_id]);
-    const writer = users.get(c.user_id);
-    const authorName = writer?.role === "admin" ? "Pothos 에디터" : displayName(writer);
+    const users = await usersById([...recipients, ...(c.user_id ? [c.user_id] : [])]);
+    const writer = c.user_id ? users.get(c.user_id) : undefined;
+    const authorName = !c.user_id ? `${c.guest_name || "손님"} (비회원)` : writer?.role === "admin" ? "Pothos 에디터" : displayName(writer);
     const isReply = !!c.parent_id;
     const isPrivate = !!c.is_private || !!parent?.is_private;
     const anchor = `#c-${c.parent_id ?? c.id}`;
     const preview = String(c.content).replace(/\s+/g, " ").slice(0, 90);
 
-    const { data: emails } = await supabase.schema("next_auth").from("users").select("id, email").in("id", [...recipients]);
+    const { data: emails } = recipients.size
+      ? await supabase.schema("next_auth").from("users").select("id, email").in("id", [...recipients])
+      : { data: [] };
     const emailOf = new Map(((emails ?? []) as { id: string; email: string | null }[]).map((u) => [u.id, u.email]));
 
     await Promise.all(
@@ -241,6 +255,19 @@ export async function notifyComment(kind: CommentKind, commentId: string): Promi
         }
       })
     );
+    if (guestParentEmail) {
+      const tpl = blogCommentEmail({
+        recipientName: parent?.guest_name || null,
+        authorName,
+        postTitle: target.title,
+        content: String(c.content),
+        url: `${SITE}${target.path}${anchor}`,
+        isReply: true,
+        isPrivate,
+        kind,
+      });
+      await sendEmail({ to: guestParentEmail, subject: tpl.subject, html: tpl.html });
+    }
   } catch (e) {
     console.error("[notifyComment] 실패:", e);
   }
