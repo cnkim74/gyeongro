@@ -33,7 +33,7 @@ const MENU = [
   { href: "/admin/medical/inquiries", label: "의료 상담 요청", icon: MessagesSquare },
   { href: "/admin/boards", label: "게시판 관리", icon: Layers },
   { href: "/admin/posts", label: "게시글 관리", icon: MessageSquare },
-  { href: "/admin/trips", label: "여행 계획", icon: Map },
+  { href: "/admin/trips", label: "회원 여행·관심사", icon: Map },
   { href: "/admin/affiliates", label: "쿠팡 파트너스", icon: ShoppingBag },
 ];
 

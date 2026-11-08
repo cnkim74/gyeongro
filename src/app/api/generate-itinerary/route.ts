@@ -447,7 +447,19 @@ ${placeRules}`;
           output: usageTotals.output,
           usd: usageTotals.usd,
           ok,
-          meta: { days: totalDays, destination: String(destination).slice(0, 60), ms: Date.now() - t0, tier, source: quota.source },
+          meta: {
+            days: totalDays,
+            destination: String(destination).slice(0, 60),
+            ms: Date.now() - t0,
+            tier,
+            source: quota.source,
+            // 관리자 '관심사 분석'용 (저장하지 않은 일정도 관심사로 집계)
+            people: Number(people) || null,
+            budget: Number(budget) || null,
+            style: typeof travelStyle === "string" ? travelStyle.slice(0, 20) : null,
+            themes: Array.isArray(themes) ? themes.map((t: unknown) => String(t).slice(0, 30)).slice(0, 10) : [],
+            startDate,
+          },
         });
         // 일정을 끝까지 못 만들었으면 차감한 횟수·이용권을 되돌림
         if (!ok) await quota.refund().catch(() => null);

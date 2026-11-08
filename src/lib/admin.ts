@@ -99,3 +99,14 @@ export async function requireAdmin() {
   if (!admin) return null;
   return session;
 }
+
+/** 관리자 회원 id 전체 (role 컬럼 + admins 테이블) */
+export async function listAdminIds(): Promise<string[]> {
+  const supabase = getSupabaseServiceClient();
+  const ids = new Set<string>();
+  const { data } = await supabase.schema("next_auth").from("users").select("id").eq("role", "admin");
+  for (const u of (data ?? []) as { id: string }[]) ids.add(u.id);
+  const { data: admins } = await supabase.from("admins").select("user_id");
+  for (const a of (admins ?? []) as { user_id: string }[]) ids.add(a.user_id);
+  return [...ids];
+}

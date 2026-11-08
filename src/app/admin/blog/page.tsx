@@ -8,8 +8,8 @@ import { threadsStatus } from "@/lib/threads";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "블로그 관리 - Pothos" };
 
-export default async function AdminBlogPage({ searchParams }: { searchParams: Promise<{ threads?: string }> }) {
-  const { threads: threadsResult } = await searchParams;
+export default async function AdminBlogPage({ searchParams }: { searchParams: Promise<{ threads?: string; topic?: string }> }) {
+  const { threads: threadsResult, topic } = await searchParams;
   await requireAdmin();
   let posts: BlogPost[] = [];
   let missing = false;
@@ -49,6 +49,7 @@ export default async function AdminBlogPage({ searchParams }: { searchParams: Pr
       cronSecret={cronSecret}
       threads={{ ...threads, ready: threadsReady }}
       threadsNotice={threadsResult ?? null}
+      initialTopic={topic ? String(topic).slice(0, 100) : ""}
     />
   );
 }
