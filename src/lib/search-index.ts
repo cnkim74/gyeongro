@@ -60,31 +60,40 @@ function strip(s: string) {
   return s.replace(/<[^>]+>/g, "").replace(/&[a-z#0-9]+;/gi, " ").trim();
 }
 
-export async function checkNaver(title: string, slug: string): Promise<NaverResult> {
+/**
+ * 네이버 '웹문서' 검색 순위 — 키워드(또는 제목)로 검색해 상위 100개 안에서 우리 글 위치를 찾음.
+ * 100위 밖이면 "제목 + pothos" 로 한 번 더 검색해 색인 여부만 확인.
+ */
+export async function checkNaver(query: string, slug: string): Promise<NaverResult & { inIndexOnly?: boolean }> {
   const id = process.env.NAVER_SEARCH_CLIENT_ID;
   const secret = process.env.NAVER_SEARCH_CLIENT_SECRET;
   if (!id || !secret) return { status: "no-key" };
   const target = `/blog/${slug}`;
   const host = new URL(SITE).host.replace(/^www\./, "");
+  const find = async (q: string, display: number) => {
+    const r = await fetch(
+      `https://openapi.naver.com/v1/search/webkr.json?query=${encodeURIComponent(q)}&display=${display}&start=1`,
+      { headers: { "X-Naver-Client-Id": id, "X-Naver-Client-Secret": secret }, cache: "no-store" }
+    );
+    if (!r.ok) throw new Error(`네이버 API ${r.status}`);
+    const j = (await r.json()) as { items?: { link: string; title: string }[] };
+    const items = j.items ?? [];
+    const idx = items.findIndex((it) => {
+      try {
+        const u = new URL(it.link);
+        return u.host.replace(/^www\./, "") === host && decodeURIComponent(u.pathname).replace(/\/$/, "") === target;
+      } catch {
+        return false;
+      }
+    });
+    return idx >= 0 ? { rank: idx + 1, title: strip(items[idx].title) } : null;
+  };
   try {
-    for (const query of [title, `${title} pothos`]) {
-      const r = await fetch(
-        `https://openapi.naver.com/v1/search/webkr.json?query=${encodeURIComponent(query)}&display=30&start=1`,
-        { headers: { "X-Naver-Client-Id": id, "X-Naver-Client-Secret": secret }, cache: "no-store" }
-      );
-      if (!r.ok) return { status: "error", message: `네이버 API ${r.status}` };
-      const j = (await r.json()) as { items?: { link: string; title: string }[] };
-      const items = j.items ?? [];
-      const idx = items.findIndex((it) => {
-        try {
-          const u = new URL(it.link);
-          return u.host.replace(/^www\./, "") === host && decodeURIComponent(u.pathname).replace(/\/$/, "") === target;
-        } catch {
-          return false;
-        }
-      });
-      if (idx >= 0) return { status: "indexed", rank: idx + 1, message: strip(items[idx].title) };
-    }
+    const hit = await find(query, 100);
+    if (hit) return { status: "indexed", rank: hit.rank, message: hit.title };
+    // 순위 밖 — 색인은 됐는지만 확인
+    const indexed = await find(`${query} pothos`, 30);
+    if (indexed) return { status: "indexed", inIndexOnly: true, message: "네이버 색인은 됐지만 이 키워드로는 100위 밖이에요" };
     return { status: "not-found" };
   } catch (e) {
     return { status: "error", message: e instanceof Error ? e.message : "오류" };
