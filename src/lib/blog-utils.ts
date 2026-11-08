@@ -157,3 +157,53 @@ export function keywordChecks(
     { ok: count >= 3 && count <= 12, label: `본문 키워드 ${count}번`, tip: "3~12번이 적당해요 (너무 많으면 오히려 감점)" },
   ];
 }
+
+/** 보조 키워드 권장 개수 (핵심 키워드 제외) */
+export const RELATED_MIN = 3;
+export const RELATED_MAX = 8;
+/** 태그(= 핵심 + 보조 키워드) 최대 개수 */
+export const TAGS_MAX = 10;
+
+export type RelatedCheck = {
+  keyword: string;
+  /** full: 문구 그대로 있음 · partial: 단어는 다 있지만 떨어져 있음 · none: 없음 */
+  status: "full" | "partial" | "none";
+  count: number;
+  inHeading: boolean;
+};
+
+/**
+ * 보조 키워드(태그)가 본문에 자연스럽게 들어갔는지 — 핵심 키워드와 같은 태그는 제외
+ * 띄어쓰기가 달라도 같은 말로 인정, 단어가 흩어져 있으면 'partial'
+ */
+export function relatedKeywordChecks(tags: string[], focus: string, post: { content: string; excerpt?: string }): RelatedCheck[] {
+  const compact = (s: string) => s.toLowerCase().replace(/[\s#]+/g, "");
+  const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const text = `${post.excerpt ?? ""}\n${post.content ?? ""}`;
+  const body = compact(text);
+  const headings = (post.content ?? "").split("\n").filter((l) => /^#{2,3}\s/.test(l)).map(compact);
+  const f = compact(focus);
+  const seen = new Set<string>();
+  const out: RelatedCheck[] = [];
+  for (const raw of tags) {
+    const keyword = raw.replace(/^#/, "").trim();
+    const c = compact(keyword);
+    if (!c || c === f || seen.has(c)) continue;
+    seen.add(c);
+    const count = (body.match(new RegExp(esc(c), "g")) ?? []).length;
+    const words = keyword.toLowerCase().split(/\s+/).filter(Boolean);
+    const allWords = words.length > 1 && words.every((w) => body.includes(compact(w)));
+    out.push({
+      keyword,
+      status: count > 0 ? "full" : allWords ? "partial" : "none",
+      count,
+      inHeading: headings.some((h) => h.includes(c)),
+    });
+  }
+  return out;
+}
+
+/** "a, b, #c" → ["a","b","c"] (중복 제거) */
+export function parseTags(s: string): string[] {
+  return [...new Set(s.split(/[,，\n]/).map((t) => t.replace(/^#/, "").trim()).filter(Boolean))];
+}

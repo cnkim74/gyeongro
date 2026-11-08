@@ -30,7 +30,9 @@ ${content}
 
 규칙:
 - focus: 사람들이 검색창에 실제로 치는 말 그대로의 핵심 키워드 1개 (2~4단어, 예: "블라디보스토크 겨울 여행"). 너무 넓은 말("일본 여행")은 피하기.
-- related: 함께 노릴 연관 검색어 5개 (예: "블라디보스토크 12월 날씨", "블라디보스토크 여행 경비").
+- related: 함께 노릴 보조 키워드 5~7개. 핵심 키워드와 같은 말은 빼고, 이 글이 실제로 다루는(또는 자연스럽게 다룰 수 있는) 내용만.
+  사람들이 실제로 검색하는 짧은 말 (2~4단어, 예: "블라디보스토크 12월 날씨", "블라디보스토크 여행 경비", "블라디보스토크 2박3일").
+  비용·날씨·일정·준비물·교통·추천처럼 서로 다른 궁금증을 고루 담고, 비슷한 말을 반복하지 말 것.
 - title: 핵심 키워드로 시작하는 40자 이내 새 제목 제안 (클릭하고 싶게, 과장 없이).
 - excerpt: 핵심 키워드가 첫 문장에 들어간 요약 120자 이내.
 
@@ -54,7 +56,7 @@ JSON 한 개만 출력: {"focus":"","related":["",""],"title":"","excerpt":""}`;
     ok = true;
     return Response.json({
       focus: String(j.focus ?? "").trim().slice(0, 60),
-      related: (Array.isArray(j.related) ? j.related : []).map((x) => String(x).trim()).filter(Boolean).slice(0, 6),
+      related: (Array.isArray(j.related) ? j.related : []).map((x) => String(x).trim()).filter(Boolean).filter((x) => x.replace(/\s/g, "") !== String(j.focus ?? "").replace(/\s/g, "")).slice(0, 8),
       title: String(j.title ?? "").trim().slice(0, 80),
       excerpt: String(j.excerpt ?? "").trim().slice(0, 200),
     });
