@@ -166,7 +166,7 @@ export async function publishToThreads(text: string, link?: string): Promise<str
 }
 
 /** 블로그 글 하나를 스레드에 올리고 기록 (threads_posted_at) */
-export async function postBlogToThreads(postId: string): Promise<{ ok: true; threadsId: string } | { ok: false; error: string }> {
+export async function postBlogToThreads(postId: string, textOverride?: string): Promise<{ ok: true; threadsId: string } | { ok: false; error: string }> {
   const supabase = getSupabaseServiceClient();
   const { data: p, error } = await supabase
     .from("blog_posts")
@@ -179,7 +179,7 @@ export async function postBlogToThreads(postId: string): Promise<{ ok: true; thr
   if (!p) return { ok: false, error: "글을 찾을 수 없어요." };
   if (!p.is_published) return { ok: false, error: "공개된 글만 올릴 수 있어요." };
   const url = `${SITE}/blog/${p.slug}`;
-  const text = (p.threads_text as string | null)?.trim() || `${p.title}\n\n${p.excerpt ?? ""}\n\n${url}`;
+  const text = textOverride?.trim() || (p.threads_text as string | null)?.trim() || `${p.title}\n\n${p.excerpt ?? ""}\n\n${url}`;
   try {
     const threadsId = await publishToThreads(text, url);
     await supabase.from("blog_posts").update({ threads_posted_at: new Date().toISOString(), threads_post_id: threadsId }).eq("id", postId);

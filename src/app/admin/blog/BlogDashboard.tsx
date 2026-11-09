@@ -11,6 +11,7 @@ import { COVER_STYLES, COVER_STYLE_KEYS, formatBlogDate } from "@/lib/blog-utils
 import type { BlogPost } from "@/lib/blog";
 import type { BlogAutoSettings, AutoMode } from "@/lib/blog-auto";
 import { THREADS_SLOTS } from "@/lib/threads-slots";
+import { THREADS_VOICES } from "@/lib/threads-voice";
 import { AlertCircle, Copy, Check, Loader2, PenSquare, Sparkles, X, ExternalLink, Palette } from "lucide-react";
 
 const WEEK_DAYS: Record<number, string> = {
@@ -63,6 +64,9 @@ export default function BlogDashboard({
 }) {
   const router = useRouter();
   const [threadsBusy, setThreadsBusy] = useState<string | null>(null);
+  // 스레드 말투 미리보기
+  const [voicePreview, setVoicePreview] = useState<{ text: string; title: string } | null>(null);
+  const [voiceBusy, setVoiceBusy] = useState(false);
   const [posts, setPosts] = useState(initialPosts);
   const [settings, setSettings] = useState(initialSettings);
   const [topicsText, setTopicsText] = useState(initialSettings.topics.join("\n"));
@@ -412,6 +416,68 @@ export default function BlogDashboard({
                 {!threads.ready && (
                   <p className="mt-1 text-xs text-amber-700">먼저 Supabase에서 <code>supabase/migration_threads.sql</code> 을 실행해 주세요.</p>
                 )}
+
+                {/* 말투 */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <p className="text-sm font-bold text-gray-800">🗣️ 스레드 말투</p>
+                  <p className="text-xs text-gray-500 mt-0.5">자동 게시·&lsquo;스레드에 올리기&rsquo;·새로 쓰는 블로그의 스레드 글에 모두 적용돼요.</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {THREADS_VOICES.map((v) => (
+                      <button
+                        key={v.key}
+                        type="button"
+                        title={v.desc}
+                        onClick={() => setSettings((s) => ({ ...s, threadsVoice: v.key }))}
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold ${settings.threadsVoice === v.key ? "bg-black text-white" : "bg-white border border-gray-200 text-gray-600"}`}
+                      >
+                        {v.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-1 text-[11px] text-gray-400">{THREADS_VOICES.find((v) => v.key === settings.threadsVoice)?.desc}</p>
+                  <textarea
+                    className="mt-2 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                    rows={2}
+                    maxLength={300}
+                    value={settings.threadsVoiceCustom}
+                    onChange={(e) => setSettings((s) => ({ ...s, threadsVoiceCustom: e.target.value }))}
+                    placeholder="추가로 원하는 점 (선택) — 예: 이모지는 쓰지 마 / 끝은 항상 '저장해 두고 써먹어요 ✈️'로 / ~했당 같은 귀여운 말투"
+                  />
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={voiceBusy}
+                      onClick={async () => {
+                        setVoiceBusy(true);
+                        setVoicePreview(null);
+                        try {
+                          const r = await fetch("/api/admin/threads", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ action: "preview", voice: settings.threadsVoice, custom: settings.threadsVoiceCustom }),
+                          });
+                          const j = await r.json();
+                          if (!r.ok) throw new Error(j.error ?? "미리보기 실패");
+                          setVoicePreview(j);
+                        } catch (e) {
+                          alert(e instanceof Error ? e.message : "미리보기 실패");
+                        } finally {
+                          setVoiceBusy(false);
+                        }
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-gray-200 text-xs font-bold text-gray-700 disabled:opacity-50"
+                    >
+                      {voiceBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "👀"} 이 말투로 미리보기
+                    </button>
+                    <span className="text-[11px] text-gray-400">최근 블로그 글로 시험 작성 (게시하지 않아요) · 마음에 들면 아래 &lsquo;설정 저장&rsquo;</span>
+                  </div>
+                  {voicePreview && (
+                    <div className="mt-3 rounded-2xl bg-white border border-gray-200 p-4">
+                      <p className="text-[11px] text-gray-400 mb-2">미리보기 · {voicePreview.title}</p>
+                      <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">{voicePreview.text}</p>
+                    </div>
+                  )}
+                </div>
                 {settings.lastThreadsDate && (
                   <p className="mt-1 text-xs text-gray-400">
                     마지막 자동 게시 {settings.lastThreadsDate}

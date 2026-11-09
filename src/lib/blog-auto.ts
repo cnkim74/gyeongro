@@ -3,6 +3,7 @@
 
 import { getSupabaseServiceClient } from "./supabase";
 import { isCoverStyle } from "./blog-utils";
+import { isThreadsVoice, type ThreadsVoiceKey } from "./threads-voice";
 
 const BUCKET = "site-media";
 const PATH = "config/blog-auto.json";
@@ -31,6 +32,10 @@ export interface BlogAutoSettings {
   threadsPerDay: number;
   /** 올릴 블로그 글이 없으면 스토리 공유·글 속 여행 팁으로 채우기 */
   threadsFill: boolean;
+  /** 스레드 말투 (threads-voice.ts) */
+  threadsVoice: ThreadsVoiceKey;
+  /** 말투 추가 지시 (자유 입력, 300자) */
+  threadsVoiceCustom: string;
   /** 마지막 스레드 자동 게시일 (KST) */
   lastThreadsDate: string | null;
   /** 그날 이미 게시한 시간대 (lastThreadsDate 기준) */
@@ -58,6 +63,8 @@ export const DEFAULT_AUTO: BlogAutoSettings = {
   threadsAuto: false,
   threadsPerDay: 1,
   threadsFill: true,
+  threadsVoice: "friend",
+  threadsVoiceCustom: "",
   lastThreadsDate: null,
   threadsDoneSlots: [],
   threadsSharedStories: [],
@@ -85,6 +92,8 @@ export function normalizeAuto(input: unknown): BlogAutoSettings {
     threadsAuto: v.threadsAuto === true,
     threadsPerDay: Math.min(4, Math.max(1, Math.round(Number(v.threadsPerDay ?? 1)) || 1)),
     threadsFill: typeof v.threadsFill === "boolean" ? v.threadsFill : true,
+    threadsVoice: isThreadsVoice(v.threadsVoice) ? v.threadsVoice : "friend",
+    threadsVoiceCustom: typeof v.threadsVoiceCustom === "string" ? v.threadsVoiceCustom.trim().slice(0, 300) : "",
     lastThreadsDate: typeof v.lastThreadsDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v.lastThreadsDate) ? v.lastThreadsDate : null,
     threadsDoneSlots: (Array.isArray(v.threadsDoneSlots) ? v.threadsDoneSlots : []).map(Number).filter((n) => [8, 12, 18, 21].includes(n)),
     threadsSharedStories: (Array.isArray(v.threadsSharedStories) ? v.threadsSharedStories : []).map(String).slice(-300),

@@ -12,36 +12,36 @@ import { getSupabaseServiceClient } from "./supabase";
 import { getAutoSettings, saveAutoSettings, todayKst, THREADS_SLOTS, type BlogAutoSettings } from "./blog-auto";
 import { getThreadsConnection, refreshThreadsTokenIfNeeded, nextBlogForThreads, postBlogToThreads, publishToThreads } from "./threads";
 import { aiMeter } from "./ai-runs";
+import { threadsRules, type ThreadsVoiceKey } from "./threads-voice";
+
+type Voice = { voice: ThreadsVoiceKey; custom: string };
+const voiceOf = (s: BlogAutoSettings): Voice => ({ voice: s.threadsVoice, custom: s.threadsVoiceCustom });
 
 const SITE = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://pothostravel.com").replace(/\/$/, "");
 const MODEL = "claude-haiku-5-5";
 
-const VOICE = `스레드(Threads)용 짧은 글을 써 주세요 (공백 포함 350자 이내).
-- 회사 홍보 말투가 아니라 '여행 좋아하는 크리에이터가 친구에게 꿀팁 알려 주는' 친근한 반말·구어체
-- 첫 줄은 스크롤을 멈추게 하는 한 줄 (질문, 의외의 사실, "이거 모르면 손해" 같은 후킹). 광고 문구 금지
-- 이어서 핵심 2~4줄 (줄바꿈 넉넉히, 이모지는 1~3개만)
-- 직접 다녀온 척하는 경험담(예: "내가 가 봤는데") 금지 — 정리한 정보를 나누는 말투로
-- 아래 [자료]에 있는 내용만 쓰고, 숫자·날짜·가격을 새로 지어내지 말 것
-- 마지막에 댓글을 부르는 짧은 질문 한 줄
-- 그다음 줄에 "{URL}" (자세한 내용은 여기 같은 짧은 안내와 함께)
-- 해시태그는 맨 끝에 주제 태그 딱 1개
-글만 출력하세요.`;
-
-async function writeThreadsText(kind: "story" | "tip", material: string, url: string): Promise<string> {
+export async function writeThreadsText(kind: "story" | "tip" | "blog", material: string, url: string, v: Voice): Promise<string> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY 없음");
   const meter = aiMeter(MODEL);
   const task =
     kind === "story"
       ? "아래 여행 스토리를 소개하는 글이에요. 스토리에서 가장 흥미로운 포인트 1~2개를 골라 주세요."
-      : "아래 블로그 글에서 실용적인 여행 팁 딱 하나만 골라, 그 팁을 중심으로 써 주세요. 글 전체 요약이 아니라 팁 하나에 집중.";
+      : kind === "blog"
+        ? "아래 블로그 글을 소개하는 글이에요. 읽고 싶어지게 핵심을 짚어 주세요."
+        : "아래 블로그 글에서 실용적인 여행 팁 딱 하나만 골라, 그 팁을 중심으로 써 주세요. 글 전체 요약이 아니라 팁 하나에 집중.";
   let ok = false;
   try {
     const msg = await new Anthropic({ apiKey }).messages.create({
       model: MODEL,
       max_tokens: 800,
       output_config: { effort: "low" },
-      messages: [{ role: "user", content: `${task}\n\n${VOICE.replace("{URL}", url)}\n\n[자료]\n${material.slice(0, 6000)}` }],
+      messages: [
+        {
+          role: "user",
+          content: `${task}\n\n아래 규칙으로 ${threadsRules(v.voice, v.custom).replaceAll("{URL}", url)}\n\n글만 출력하세요.\n\n[자료]\n${material.slice(0, 6000)}`,
+        },
+      ],
     });
     meter.add(msg.usage);
     const text = msg.content.map((b) => (b.type === "text" ? b.text : "")).join("").trim();
@@ -81,6 +81,36 @@ async function nextTipPost(tipped: Record<string, string>) {
   return candidates[0];
 }
 
+/** 기본 말투(친구 꿀팁)가 아니거나 추가 지시가 있으면, 블로그 작성 때 만든 스레드 글 대신 지금 말투로 새로 씀 */
+export async function postBlogWithVoice(postId: string, settings?: BlogAutoSettings) {
+  const s = settings ?? (await getAutoSettings());
+  if (s.threadsVoice === "friend" && !s.threadsVoiceCustom) return postBlogToThreads(postId);
+  const { data: p } = await getSupabaseServiceClient().from("blog_posts").select("slug, title, excerpt, content").eq("id", postId).maybeSingle();
+  if (!p) return postBlogToThreads(postId);
+  try {
+    const url = `${SITE}/blog/${p.slug}`;
+    const text = await writeThreadsText("blog", `제목: ${p.title}\n요약: ${p.excerpt ?? ""}\n\n${String(p.content ?? "")}`, url, voiceOf(s));
+    return postBlogToThreads(postId, text);
+  } catch {
+    return postBlogToThreads(postId);
+  }
+}
+
+/** 말투 미리보기 — 최근 공개 블로그 글로 시험 작성 (게시하지 않음) */
+export async function previewThreadsText(v: Voice): Promise<{ text: string; title: string }> {
+  const { data } = await getSupabaseServiceClient()
+    .from("blog_posts")
+    .select("slug, title, excerpt, content")
+    .eq("is_published", true)
+    .order("published_at", { ascending: false })
+    .limit(1);
+  const p = data?.[0];
+  if (!p) throw new Error("공개된 블로그 글이 있어야 미리볼 수 있어요.");
+  const url = `${SITE}/blog/${p.slug}`;
+  const text = await writeThreadsText("blog", `제목: ${p.title}\n요약: ${p.excerpt ?? ""}\n\n${String(p.content ?? "")}`, url, v);
+  return { text, title: p.title as string };
+}
+
 type SlotResult = { skipped?: string; ok?: boolean; source?: string; error?: string; threadsId?: string; token?: string };
 
 /** 한 시간대 실행 — 예약 작업에서 호출 */
@@ -102,7 +132,7 @@ export async function runThreadsSlot(slot: number): Promise<SlotResult> {
   // 1) 블로그 새 글
   const postId = await nextBlogForThreads();
   if (postId) {
-    const r = await postBlogToThreads(postId);
+    const r = await postBlogWithVoice(postId, settings);
     console.log(`[threads-cron] ${today} ${slot}시 blog ${r.ok ? r.threadsId : r.error}`);
     return { ...r, source: "blog", token };
   }
@@ -121,7 +151,7 @@ export async function runThreadsSlot(slot: number): Promise<SlotResult> {
         story.intro ?? "",
         ...sections.slice(0, 6).map((s) => `## ${s.title ?? ""}\n${String(s.content ?? "").slice(0, 700)}`),
       ].join("\n");
-      const text = await writeThreadsText("story", material, url);
+      const text = await writeThreadsText("story", material, url, voiceOf(settings));
       // 스토리 제목의 [Pothos 에디터] 같은 머리말은 링크 미리보기에 그대로 나와도 괜찮음
       const threadsId = await publishToThreads(text, url);
       await saveAutoSettings({ ...base, threadsSharedStories: [...settings.threadsSharedStories, story.id as string].slice(-300) });
@@ -133,7 +163,7 @@ export async function runThreadsSlot(slot: number): Promise<SlotResult> {
     const tip = await nextTipPost(settings.threadsTipped);
     if (tip) {
       const url = `${SITE}/blog/${tip.slug}`;
-      const text = await writeThreadsText("tip", `제목: ${tip.title}\n\n${String(tip.content ?? "")}`, url);
+      const text = await writeThreadsText("tip", `제목: ${tip.title}\n\n${String(tip.content ?? "")}`, url, voiceOf(settings));
       const threadsId = await publishToThreads(text, url);
       await saveAutoSettings({ ...base, threadsTipped: { ...settings.threadsTipped, [tip.id as string]: today } });
       console.log(`[threads-cron] ${today} ${slot}시 tip ${threadsId}`);
