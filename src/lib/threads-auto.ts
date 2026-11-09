@@ -153,7 +153,7 @@ export async function runThreadsSlot(slot: number): Promise<SlotResult> {
       ].join("\n");
       const text = await writeThreadsText("story", material, url, voiceOf(settings));
       // 스토리 제목의 [Pothos 에디터] 같은 머리말은 링크 미리보기에 그대로 나와도 괜찮음
-      const threadsId = await publishToThreads(text, url);
+      const threadsId = await publishToThreads(text, url, { linkInReply: settings.threadsLinkInReply });
       await saveAutoSettings({ ...base, threadsSharedStories: [...settings.threadsSharedStories, story.id as string].slice(-300) });
       console.log(`[threads-cron] ${today} ${slot}시 story ${threadsId}`);
       return { ok: true, source: "story", threadsId, token };
@@ -164,7 +164,7 @@ export async function runThreadsSlot(slot: number): Promise<SlotResult> {
     if (tip) {
       const url = `${SITE}/blog/${tip.slug}`;
       const text = await writeThreadsText("tip", `제목: ${tip.title}\n\n${String(tip.content ?? "")}`, url, voiceOf(settings));
-      const threadsId = await publishToThreads(text, url);
+      const threadsId = await publishToThreads(text, url, { linkInReply: settings.threadsLinkInReply });
       await saveAutoSettings({ ...base, threadsTipped: { ...settings.threadsTipped, [tip.id as string]: today } });
       console.log(`[threads-cron] ${today} ${slot}시 tip ${threadsId}`);
       return { ok: true, source: "tip", threadsId, token };
