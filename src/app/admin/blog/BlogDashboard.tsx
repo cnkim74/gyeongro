@@ -417,6 +417,36 @@ export default function BlogDashboard({
                   <p className="mt-1 text-xs text-amber-700">먼저 Supabase에서 <code>supabase/migration_threads.sql</code> 을 실행해 주세요.</p>
                 )}
 
+                {/* 링크·댓글 */}
+                <div className="mt-4 pt-4 border-t border-gray-200 space-y-2">
+                  <label className="flex items-start gap-2 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      className="mt-1"
+                      checked={settings.threadsLinkInReply}
+                      onChange={(e) => setSettings((s) => ({ ...s, threadsLinkInReply: e.target.checked }))}
+                    />
+                    <span>
+                      링크는 본문 대신 <b>첫 댓글</b>로 달기 <span className="text-xs text-gray-400">(링크 글은 노출이 줄어드는 편이라 추천 · 댓글 권한을 추가하고 스레드를 다시 연결한 뒤 켜 주세요)</span>
+                    </span>
+                  </label>
+                  <label className="flex items-start gap-2 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      className="mt-1"
+                      checked={settings.threadsAutoThanks}
+                      onChange={(e) => setSettings((s) => ({ ...s, threadsAutoThanks: e.target.checked }))}
+                    />
+                    <span>
+                      감사·칭찬 댓글엔 <b>감사 답글 자동</b>으로 달기
+                      <span className="block text-xs text-gray-400">질문·의견 댓글은 AI 초안을 확인하고 보내요 (하루 4번 확인 · 새 댓글이 오면 푸시 알림)</span>
+                    </span>
+                  </label>
+                  <Link href="/admin/threads-replies" className="inline-flex items-center gap-1 text-xs font-bold text-blue-600">
+                    💬 스레드 댓글 확인·답글 →
+                  </Link>
+                </div>
+
                 {/* 말투 */}
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <p className="text-sm font-bold text-gray-800">🗣️ 스레드 말투</p>

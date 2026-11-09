@@ -23,6 +23,7 @@ const ACTION_LABEL: Record<string, string> = {
   sherpa_curate: "셰르파 AI 큐레이션",
   medical_curate: "의료관광 AI 큐레이션",
   threads_text: "스레드 글 작성(스토리·팁)",
+  threads_reply: "스레드 댓글 답글 초안",
 };
 
 function won(usd: number) {

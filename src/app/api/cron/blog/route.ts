@@ -12,6 +12,7 @@ import { revalidatePath } from "next/cache";
 import { getAutoSettings, saveAutoSettings, isWritingDay, todayKst, type BlogAutoSettings } from "@/lib/blog-auto";
 import { writeBlogPost, saveWrittenPost } from "@/lib/blog-writer";
 import { runThreadsSlot } from "@/lib/threads-auto";
+import { checkThreadsReplies } from "@/lib/threads-replies";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,5 +51,7 @@ export async function GET(req: Request) {
   const blog = await runBlog(await getAutoSettings(), today);
   // 스레드 8시 시간대 (하루 여러 개면 12·18·21시는 /api/cron/threads/[slot])
   const threads = await runThreadsSlot(8).catch((e) => ({ error: e instanceof Error ? e.message : String(e) }));
-  return Response.json({ blog, threads });
+  // 스레드 새 댓글 확인 (답글 초안 · 감사 답글)
+  const replies = await checkThreadsReplies().catch((e) => ({ error: e instanceof Error ? e.message : String(e) }));
+  return Response.json({ blog, threads, replies });
 }

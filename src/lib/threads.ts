@@ -7,6 +7,7 @@
 // 게시: 텍스트(최대 500자) + 링크 미리보기
 
 import { getSupabaseServiceClient } from "./supabase";
+import { getAutoSettings } from "./blog-auto";
 
 const BUCKET = "private-config";
 const PATH = "threads.json";
@@ -78,7 +79,8 @@ export function threadsAuthorizeUrl(state: string): string {
   const p = new URLSearchParams({
     client_id: process.env.THREADS_APP_ID ?? "",
     redirect_uri: THREADS_REDIRECT,
-    scope: "threads_basic,threads_content_publish",
+    // 글 올리기 + 내 글 댓글 읽기·답글 (Meta 앱 '권한 및 기능'에 같은 권한이 추가돼 있어야 함)
+    scope: "threads_basic,threads_content_publish,threads_read_replies,threads_manage_replies",
     response_type: "code",
     state,
   });
@@ -140,29 +142,68 @@ export async function refreshThreadsTokenIfNeeded(): Promise<"refreshed" | "ok" 
   }
 }
 
-/** 스레드에 글 올리기 (텍스트 + 링크 미리보기). 성공하면 게시물 id */
-export async function publishToThreads(text: string, link?: string): Promise<string> {
+/** 글(또는 답글) 하나 만들고 발행 — 성공하면 게시물 id */
+async function createAndPublish(fields: Record<string, string>): Promise<string> {
   const c = await getThreadsConnection();
   if (!c) throw new Error("스레드 계정이 연결되지 않았어요.");
-  // 500자 제한 — 넘치면 링크를 남기고 앞부분을 줄임
-  let body = text.trim();
-  if (body.length > 500) {
-    const tail = link && body.includes(link) ? `\n${link}` : "";
-    body = body.replace(link ?? "\u0000", "").slice(0, 500 - tail.length - 1).trimEnd() + "…" + tail;
-  }
-  const params = new URLSearchParams({ media_type: "TEXT", text: body, access_token: c.accessToken });
-  if (link) params.set("link_attachment", link);
+  const params = new URLSearchParams({ media_type: "TEXT", ...fields, access_token: c.accessToken });
   const r1 = await fetch(`${GRAPH}/v1.0/${c.userId}/threads`, { method: "POST", body: params });
   const created = (await r1.json()) as { id?: string; error?: { message?: string } };
   if (!created.id) throw new Error(created.error?.message ?? "스레드 게시물 만들기 실패");
+  // 만든 직후엔 아직 준비 중일 수 있어 잠깐 기다렸다 다시 시도
+  let lastErr = "스레드 발행 실패";
+  for (let i = 0; i < 4; i++) {
+    const r2 = await fetch(`${GRAPH}/v1.0/${c.userId}/threads_publish`, {
+      method: "POST",
+      body: new URLSearchParams({ creation_id: created.id, access_token: c.accessToken }),
+    });
+    const published = (await r2.json()) as { id?: string; error?: { message?: string } };
+    if (published.id) return published.id;
+    lastErr = published.error?.message ?? lastErr;
+    await new Promise((res) => setTimeout(res, 2500 * (i + 1)));
+  }
+  throw new Error(lastErr);
+}
 
-  const r2 = await fetch(`${GRAPH}/v1.0/${c.userId}/threads_publish`, {
-    method: "POST",
-    body: new URLSearchParams({ creation_id: created.id, access_token: c.accessToken }),
-  });
-  const published = (await r2.json()) as { id?: string; error?: { message?: string } };
-  if (!published.id) throw new Error(published.error?.message ?? "스레드 발행 실패");
-  return published.id;
+function fit500(body: string, keep = ""): string {
+  const t = body.trim();
+  if (t.length <= 500) return t;
+  const tail = keep && t.includes(keep) ? `\n${keep}` : "";
+  return t.replace(keep || "\u0000", "").slice(0, 500 - tail.length - 1).trimEnd() + "…" + tail;
+}
+
+/** 답글 달기 (내 글의 첫 댓글 · 팔로워 댓글에 답글) */
+export async function replyOnThreads(replyToId: string, text: string): Promise<string> {
+  return createAndPublish({ text: fit500(text), reply_to_id: replyToId });
+}
+
+/**
+ * 스레드에 글 올리기. 성공하면 게시물 id
+ * - 기본: 본문 + 링크 미리보기
+ * - linkInReply: 본문에서 링크 줄을 빼고 올린 뒤, 첫 댓글로 링크를 닮 (링크 글 노출이 줄어드는 것을 피함)
+ */
+export async function publishToThreads(text: string, link?: string, opts: { linkInReply?: boolean } = {}): Promise<string> {
+  if (!link || !opts.linkInReply) {
+    const fields: Record<string, string> = { text: fit500(text, link) };
+    if (link) fields.link_attachment = link;
+    return createAndPublish(fields);
+  }
+  // 링크가 들어 있는 줄은 댓글로 옮김 (그 줄의 안내 문구도 함께)
+  const lines = text.split("\n");
+  const linkLines = lines.filter((l) => l.includes(link));
+  const main = lines
+    .filter((l) => !l.includes(link))
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  const guide = linkLines.map((l) => l.replace(link, "").replace(/[👉→:\-\s]+$/u, "").trim()).find((l) => l.length > 1);
+  const id = await createAndPublish({ text: fit500(main) });
+  try {
+    await replyOnThreads(id, `${guide || "자세한 정리는 여기"} 👉 ${link}`);
+  } catch (e) {
+    console.log(`[threads] 링크 댓글 실패: ${e instanceof Error ? e.message : e}`);
+  }
+  return id;
 }
 
 /** 블로그 글 하나를 스레드에 올리고 기록 (threads_posted_at) */
@@ -181,7 +222,8 @@ export async function postBlogToThreads(postId: string, textOverride?: string): 
   const url = `${SITE}/blog/${p.slug}`;
   const text = textOverride?.trim() || (p.threads_text as string | null)?.trim() || `${p.title}\n\n${p.excerpt ?? ""}\n\n${url}`;
   try {
-    const threadsId = await publishToThreads(text, url);
+    const { threadsLinkInReply } = await getAutoSettings();
+    const threadsId = await publishToThreads(text, url, { linkInReply: threadsLinkInReply });
     await supabase.from("blog_posts").update({ threads_posted_at: new Date().toISOString(), threads_post_id: threadsId }).eq("id", postId);
     return { ok: true, threadsId };
   } catch (e) {

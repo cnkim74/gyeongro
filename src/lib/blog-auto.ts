@@ -32,6 +32,10 @@ export interface BlogAutoSettings {
   threadsPerDay: number;
   /** 올릴 블로그 글이 없으면 스토리 공유·글 속 여행 팁으로 채우기 */
   threadsFill: boolean;
+  /** 링크는 본문 대신 첫 댓글로 */
+  threadsLinkInReply: boolean;
+  /** 단순 감사·칭찬 댓글은 확인 없이 바로 감사 답글 */
+  threadsAutoThanks: boolean;
   /** 스레드 말투 (threads-voice.ts) */
   threadsVoice: ThreadsVoiceKey;
   /** 말투 추가 지시 (자유 입력, 300자) */
@@ -63,6 +67,8 @@ export const DEFAULT_AUTO: BlogAutoSettings = {
   threadsAuto: false,
   threadsPerDay: 1,
   threadsFill: true,
+  threadsLinkInReply: false,
+  threadsAutoThanks: false,
   threadsVoice: "friend",
   threadsVoiceCustom: "",
   lastThreadsDate: null,
@@ -92,6 +98,8 @@ export function normalizeAuto(input: unknown): BlogAutoSettings {
     threadsAuto: v.threadsAuto === true,
     threadsPerDay: Math.min(4, Math.max(1, Math.round(Number(v.threadsPerDay ?? 1)) || 1)),
     threadsFill: typeof v.threadsFill === "boolean" ? v.threadsFill : true,
+    threadsLinkInReply: v.threadsLinkInReply === true,
+    threadsAutoThanks: v.threadsAutoThanks === true,
     threadsVoice: isThreadsVoice(v.threadsVoice) ? v.threadsVoice : "friend",
     threadsVoiceCustom: typeof v.threadsVoiceCustom === "string" ? v.threadsVoiceCustom.trim().slice(0, 300) : "",
     lastThreadsDate: typeof v.lastThreadsDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v.lastThreadsDate) ? v.lastThreadsDate : null,
