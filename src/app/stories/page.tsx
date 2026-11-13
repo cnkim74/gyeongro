@@ -4,7 +4,8 @@ import { getSupabaseServiceClient } from "@/lib/supabase";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import RoleBadge from "@/components/RoleBadge";
-import { BookOpen, Plus, MapPin, Heart, Eye } from "lucide-react";
+import { BookOpen, Plus, MapPin, Heart, Eye, MessageCircle } from "lucide-react";
+import { commentCounts } from "@/lib/blog-comments";
 import { parseRole, type UserRole } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +39,7 @@ export default async function StoriesPage() {
     .order("created_at", { ascending: false })
     .limit(30);
 
+  const comments = await commentCounts("story", (stories ?? []).map((s) => s.id));
   const userIds = [...new Set((stories ?? []).map((s) => s.user_id))];
   const usersMap: Record<
     string,
@@ -175,6 +177,10 @@ export default async function StoriesPage() {
                           <span className="flex items-center gap-1">
                             <Eye className="w-3 h-3" />
                             {s.view_count}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <MessageCircle className="w-3 h-3" />
+                            {comments[s.id] ?? 0}
                           </span>
                         </div>
                       </div>

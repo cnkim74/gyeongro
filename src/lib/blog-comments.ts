@@ -272,3 +272,22 @@ export async function notifyComment(kind: CommentKind, commentId: string): Promi
     console.error("[notifyComment] 실패:", e);
   }
 }
+
+/** 글마다 댓글 수 (지운 댓글 제외, 비밀 댓글은 포함) — 목록 화면용. 테이블이 없으면 빈 값 */
+export async function commentCounts(kind: CommentKind, postIds: string[]): Promise<Record<string, number>> {
+  const out: Record<string, number> = {};
+  if (postIds.length === 0) return out;
+  try {
+    const { data, error } = await getSupabaseServiceClient()
+      .from(COMMENT_TABLE[kind])
+      .select("post_id")
+      .in("post_id", postIds)
+      .eq("is_deleted", false)
+      .limit(10000);
+    if (error) return out;
+    for (const r of (data ?? []) as { post_id: string }[]) out[r.post_id] = (out[r.post_id] ?? 0) + 1;
+  } catch {
+    // 무시
+  }
+  return out;
+}

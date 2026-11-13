@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import BlogCard from "@/components/blog/BlogCard";
 import BlogCta from "@/components/blog/BlogCta";
 import { listPublishedPosts } from "@/lib/blog";
+import { commentCounts } from "@/lib/blog-comments";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ export const metadata = {
 
 export default async function BlogListPage() {
   const posts = await listPublishedPosts();
+  const comments = await commentCounts("blog", posts.map((p) => p.id));
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <Header />
@@ -34,7 +36,11 @@ export default async function BlogListPage() {
           ) : (
             <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12">
               {posts.map((p) => (
-                <BlogCard key={p.id} post={p} />
+                <BlogCard
+                  key={p.id}
+                  post={p}
+                  stats={{ views: Number((p as { view_count?: number }).view_count ?? 0), comments: comments[p.id] ?? 0 }}
+                />
               ))}
             </div>
           )}

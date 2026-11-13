@@ -15,6 +15,13 @@ export function postUrl(slug: string): string {
   return `${SITE}/blog/${slug}`;
 }
 
+/** 블로그 slug 또는 전체 주소('https://…')·경로('/stories/…') → 전체 주소 */
+export function pageUrl(slugOrUrl: string): string {
+  if (/^https?:\/\//.test(slugOrUrl)) return slugOrUrl;
+  if (slugOrUrl.startsWith("/")) return `${SITE}${slugOrUrl}`;
+  return postUrl(slugOrUrl);
+}
+
 // ── 설정 상태 (값은 노출하지 않고 있는지만) ─────────────
 /** 네이버 서치어드바이저 HTML 파일 확인용 파일 (public/ 에 있음) */
 const NAVER_VERIFY_FILE = "navercfa0af4118b061c5a9804d33effaa87f.html";
@@ -68,7 +75,7 @@ export async function checkNaver(query: string, slug: string): Promise<NaverResu
   const id = process.env.NAVER_SEARCH_CLIENT_ID;
   const secret = process.env.NAVER_SEARCH_CLIENT_SECRET;
   if (!id || !secret) return { status: "no-key" };
-  const target = `/blog/${slug}`;
+  const target = new URL(pageUrl(slug)).pathname.replace(/\/$/, "");
   const host = new URL(SITE).host.replace(/^www\./, "");
   const find = async (q: string, display: number) => {
     const r = await fetch(
@@ -148,7 +155,7 @@ export async function checkGoogle(slug: string): Promise<GoogleResult> {
     const r = await fetch("https://searchconsole.googleapis.com/v1/urlInspection/index:inspect", {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ inspectionUrl: postUrl(slug), siteUrl, languageCode: "ko" }),
+      body: JSON.stringify({ inspectionUrl: pageUrl(slug), siteUrl, languageCode: "ko" }),
       cache: "no-store",
     });
     const j = (await r.json()) as {
@@ -183,7 +190,7 @@ export async function gscTopQueries(
         startDate: day(90),
         endDate: day(0),
         dimensions: ["query"],
-        dimensionFilterGroups: [{ filters: [{ dimension: "page", operator: "equals", expression: postUrl(slug) }] }],
+        dimensionFilterGroups: [{ filters: [{ dimension: "page", operator: "equals", expression: pageUrl(slug) }] }],
         rowLimit: 10,
       }),
       cache: "no-store",
@@ -250,7 +257,7 @@ export async function gscPageRanks(focusBySlug: Record<string, string>): Promise
         startDate: day(28),
         endDate: day(0),
         dimensions: ["page", "query"],
-        dimensionFilterGroups: [{ filters: [{ dimension: "page", operator: "contains", expression: "/blog/" }] }],
+        dimensionFilterGroups: [{ filters: [{ dimension: "page", operator: "includingRegex", expression: "/(blog|stories)/" }] }],
         rowLimit: 5000,
       }),
       cache: "no-store",
@@ -260,13 +267,16 @@ export async function gscPageRanks(focusBySlug: Record<string, string>): Promise
     const compact = (s: string) => s.toLowerCase().replace(/\s+/g, "");
     const out: Record<string, PageRank> = {};
     for (const row of j.rows ?? []) {
+      // 블로그는 slug, 스토리는 'story:<id>' 를 키로
       let slug = "";
       try {
-        slug = decodeURIComponent(new URL(row.keys[0]).pathname).replace(/^\/blog\//, "").replace(/\/$/, "");
+        const path = decodeURIComponent(new URL(row.keys[0]).pathname).replace(/\/$/, "");
+        if (path.startsWith("/blog/")) slug = path.slice(6);
+        else if (path.startsWith("/stories/")) slug = `story:${path.slice(9)}`;
       } catch {
         continue;
       }
-      if (!slug || slug.includes("/")) continue;
+      if (!slug || slug.replace(/^story:/, "").includes("/")) continue;
       const query = row.keys[1];
       const focus = focusBySlug[slug];
       const isFocus = !!focus && compact(query) === compact(focus);
