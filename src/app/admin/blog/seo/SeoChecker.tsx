@@ -323,7 +323,7 @@ export default function SeoChecker({
                         <a href={`https://www.google.com/search?q=${encodeURIComponent(r.focus || p.title)}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-bold">
                           구글에서 &lsquo;{r.focus || "제목"}&rsquo; 검색
                         </a>
-                        <a href={`https://www.google.com/search?q=${encodeURIComponent(`site:${r.url}`)}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-700">
+                        <a href={`https://www.google.com/search?q=${encodeURIComponent(`site:${r.url.replace(/^https?:\/\//, "")}`)}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-700">
                           색인 확인 (site:)
                         </a>
                         <RequestButton
