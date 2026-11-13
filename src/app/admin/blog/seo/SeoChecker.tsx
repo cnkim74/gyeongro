@@ -20,7 +20,19 @@ type Result = {
   related?: RelatedCheck[];
   queries?: { query: string; clicks: number; impressions: number; position: number }[] | null;
 };
-type Post = { id: string; slug: string; title: string; published_at: string | null; focus_keyword?: string | null };
+export type SeoPost = {
+  id: string;
+  slug: string;
+  title: string;
+  published_at: string | null;
+  focus_keyword?: string | null;
+  /** 사이트 경로 (/blog/… · /stories/…) */
+  path: string;
+  /** 순위 뱃지 키 (블로그 slug · 'story:<id>') */
+  rankKey: string;
+  editHref: string;
+};
+type Post = SeoPost;
 
 function Badge({ tone, children }: { tone: "ok" | "no" | "warn" | "gray"; children: React.ReactNode }) {
   const cls = {
@@ -57,10 +69,12 @@ function GoogleCell({ r }: { r?: Result["google"] }) {
 }
 
 export default function SeoChecker({
+  kind = "blog",
   posts,
   setup,
   site,
 }: {
+  kind?: "blog" | "story";
   posts: Post[];
   setup: {
     naverApi: boolean;
@@ -81,7 +95,7 @@ export default function SeoChecker({
   const check = async (p: Post) => {
     setBusy(p.id);
     try {
-      const r = await fetch(`/api/admin/blog/seo?id=${p.id}`);
+      const r = await fetch(`/api/admin/blog/seo?id=${p.id}&kind=${kind}`);
       const j = await r.json();
       if (r.ok) setResults((m) => ({ ...m, [p.id]: j }));
     } finally {
@@ -102,7 +116,7 @@ export default function SeoChecker({
       const r = await fetch("/api/admin/blog/seo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "indexnow" }),
+        body: JSON.stringify({ action: "indexnow", kind }),
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error ?? "실패");
@@ -199,7 +213,15 @@ export default function SeoChecker({
       {/* 글별 점검 */}
       <section className="bg-white rounded-3xl border border-gray-100 p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-          <h2 className="font-bold text-gray-900">공개 글 {posts.length}개</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link href="/admin/blog/seo" className={`px-3.5 py-1.5 rounded-full text-sm font-bold ${kind === "blog" ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-600"}`}>
+              블로그
+            </Link>
+            <Link href="/admin/blog/seo?kind=story" className={`px-3.5 py-1.5 rounded-full text-sm font-bold ${kind === "story" ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-600"}`}>
+              스토리
+            </Link>
+            <h2 className="ml-1 font-bold text-gray-900">공개 {kind === "story" ? "스토리" : "글"} {posts.length}개</h2>
+          </div>
           <button type="button" onClick={checkAll} disabled={!!busy || posts.length === 0} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-bold disabled:opacity-50">
             <Search className="w-4 h-4" /> 전체 점검
           </button>
@@ -217,11 +239,13 @@ export default function SeoChecker({
                     <button type="button" onClick={() => setOpen(open === p.id ? null : p.id)} className="min-w-0 flex-1 text-left">
                       <p className="font-semibold text-gray-900 truncate">{p.title}</p>
                       <p className="text-xs text-gray-400 truncate">
-                        {p.focus_keyword ? <span className="font-semibold text-blue-600">🎯 {p.focus_keyword}</span> : <span className="text-amber-600">🎯 핵심 키워드 없음</span>} · /blog/{p.slug}
+                        {kind === "blog" &&
+                          (p.focus_keyword ? <span className="font-semibold text-blue-600">🎯 {p.focus_keyword} · </span> : <span className="text-amber-600">🎯 핵심 키워드 없음 · </span>)}
+                        {p.path}
                       </p>
                     </button>
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <RankBadges postId={p.id} slug={p.slug} keyword={p.focus_keyword || p.title} ranks={ranks} onSaveNaver={saveNaver} />
+                      <RankBadges postId={p.id} slug={p.rankKey} keyword={p.focus_keyword || p.title} ranks={ranks} onSaveNaver={saveNaver} />
                       <span className="text-[11px] text-gray-400 ml-1">네이버</span>
                       <NaverCell r={r?.naver} title={p.title} />
                       <span className="text-[11px] text-gray-400 ml-1">구글</span>
@@ -251,14 +275,15 @@ export default function SeoChecker({
                           {r.google.message && `구글: ${r.google.message}`}
                         </p>
                       )}
-                      {/* 핵심 키워드 점검 */}
+                      {/* 핵심 키워드 점검 (블로그만) */}
+                      {kind === "blog" && (
                       <div className="rounded-xl bg-white border border-blue-100 p-3">
                         {r.focus ? (
                           <>
                             <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                               <p className="text-xs font-bold text-blue-700">🎯 핵심 키워드 &lsquo;{r.focus}&rsquo; 점검</p>
                               {((r.keyword ?? []).some((b) => !b.ok) || (r.related ?? []).some((c) => c.status !== "full")) && (
-                                <a href={`/admin/blog/${p.id}`} className="text-xs font-bold text-white bg-blue-600 rounded-lg px-2.5 py-1">
+                                <a href={p.editHref} className="text-xs font-bold text-white bg-blue-600 rounded-lg px-2.5 py-1">
                                   수정에서 &lsquo;AI로 키워드 반영&rsquo; →
                                 </a>
                               )}
@@ -279,10 +304,11 @@ export default function SeoChecker({
                           </>
                         ) : (
                           <p className="text-xs text-amber-700">
-                            핵심 키워드가 없어요. <a href={`/admin/blog/${p.id}`} className="font-bold underline">수정</a>에서 &lsquo;AI 추천&rsquo;으로 정해 주세요.
+                            핵심 키워드가 없어요. <a href={p.editHref} className="font-bold underline">수정</a>에서 &lsquo;AI 추천&rsquo;으로 정해 주세요.
                           </p>
                         )}
                       </div>
+                      )}
 
                       {/* 구글 실제 검색어 */}
                       {r.queries === null || r.queries === undefined ? (

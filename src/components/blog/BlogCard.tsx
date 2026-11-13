@@ -2,8 +2,18 @@ import Link from "next/link";
 import BlogCover from "./BlogCover";
 import { formatBlogDate, readMinutes } from "@/lib/blog-utils";
 import type { BlogCard as Card } from "@/lib/blog";
+import { Eye, MessageCircle } from "lucide-react";
 
-export default function BlogCard({ post, compact = false }: { post: Card; compact?: boolean }) {
+export default function BlogCard({
+  post,
+  compact = false,
+  stats,
+}: {
+  post: Card;
+  compact?: boolean;
+  /** 목록에 읽은 수·댓글 수 표시 */
+  stats?: { views: number; comments: number };
+}) {
   return (
     <Link href={`/blog/${post.slug}`} className="group block min-w-0">
       <div className="aspect-[16/10] rounded-2xl overflow-hidden bg-slate-100 shadow-sm group-hover:shadow-lg transition-shadow">
@@ -16,6 +26,18 @@ export default function BlogCard({ post, compact = false }: { post: Card; compac
           {post.category && <span className="font-semibold text-blue-600">#{post.category}</span>}
           <span>{formatBlogDate(post.published_at ?? post.created_at)}</span>
           <span>· {readMinutes(post.content)}분</span>
+          {stats && (
+            <span className="ml-auto inline-flex items-center gap-2.5">
+              <span className="inline-flex items-center gap-1">
+                <Eye className="w-3 h-3" />
+                {stats.views.toLocaleString()}
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <MessageCircle className="w-3 h-3" />
+                {stats.comments}
+              </span>
+            </span>
+          )}
         </p>
         <h3
           className={`mt-1.5 font-bold text-slate-900 leading-snug group-hover:text-blue-600 transition-colors ${
