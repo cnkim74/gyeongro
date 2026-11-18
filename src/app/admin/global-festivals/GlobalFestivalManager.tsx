@@ -104,6 +104,35 @@ export default function GlobalFestivalManager({
         {kind === "expo" ? <>&lsquo;박람회·전시&rsquo; 탭</> : <>&lsquo;세계 대표 축제&rsquo; 탭</>}에 나와요.
       </p>
 
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          disabled={busy === "images"}
+          onClick={async () => {
+            setBusy("images");
+            setMsg(null);
+            try {
+              const r = await fetch("/api/admin/global-festivals/images", { method: "POST" });
+              const j = await r.json();
+              if (!r.ok) throw new Error(j.error ?? "실패");
+              setMsg({
+                ok: true,
+                text: `대표 사진 ${j.filled}개를 채웠어요${j.missing ? ` (못 찾은 ${j.missing}개는 이모지 카드로 보여요)` : ""}${j.remaining ? ` · 남은 ${j.remaining}개는 한 번 더 눌러 주세요` : ""}.`,
+              });
+              router.refresh();
+            } catch (e) {
+              setMsg({ ok: false, text: e instanceof Error ? e.message : "실패" });
+            } finally {
+              setBusy(null);
+            }
+          }}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-700 disabled:opacity-50"
+        >
+          {busy === "images" ? "사진 찾는 중…" : "🖼️ 사진 없는 항목에 대표 사진 채우기"}
+        </button>
+        <span className="text-xs text-gray-400">위키미디어 공용의 자유 이용 사진(출처 표기)만 써요. 새로 찾는 후보에는 자동으로 붙어요.</span>
+      </div>
+
       <div className="inline-flex gap-1 rounded-2xl bg-gray-100 p-1 mb-6">
         {(["festival", "expo"] as const).map((k) => (
           <button
