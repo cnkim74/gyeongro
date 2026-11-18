@@ -24,6 +24,10 @@ export interface GlobalFestivalRow {
   /** migration_global_expos.sql 실행 전에는 없음 → 축제로 취급 */
   kind?: "festival" | "expo";
   audience?: "public" | "trade" | "mixed" | null;
+  /** migration_global_festival_images.sql 실행 후 */
+  image_url?: string | null;
+  image_credit?: string | null;
+  image_credit_url?: string | null;
 }
 
 export type CurationKind = "festival" | "expo";
@@ -49,6 +53,9 @@ export function rowToFestival(r: GlobalFestivalRow): GlobalFestival {
     endDate: r.end_date,
     sourceUrl: r.source_url,
     audience: r.audience === "public" || r.audience === "trade" || r.audience === "mixed" ? r.audience : null,
+    image: r.image_url ?? null,
+    imageCredit: r.image_credit ?? null,
+    imageCreditUrl: r.image_credit_url ?? null,
   };
 }
 

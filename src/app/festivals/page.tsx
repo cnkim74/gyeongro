@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { CalendarDays, MapPin, PartyPopper, Sparkles, Search, Building2 } from "lucide-react";
+import { CalendarDays, MapPin, PartyPopper, Building2 } from "lucide-react";
 import {
   listFestivals,
   isTourApiEnabled,
@@ -12,6 +12,8 @@ import {
   type FestivalSummary,
 } from "@/lib/tourapi";
 import { GLOBAL_FESTIVALS, GLOBAL_EXPOS, type GlobalFestival } from "@/lib/global-festivals";
+import { withImage } from "@/lib/global-festival-images";
+import FestivalFlipCard from "@/components/FestivalFlipCard";
 import { listPublishedGlobalFestivals } from "@/lib/global-festivals-db";
 
 export const metadata = {
@@ -252,7 +254,7 @@ export default async function FestivalsPage({ searchParams }: { searchParams: Pr
               <p className="text-[15px] text-gray-500 mb-4">주최측 공식 정보로 개최일을 확인한 박람회예요</p>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {krExpos.map((f) => (
-                  <GlobalCard key={f.id} f={f} cta="이 박람회로 일정 만들기" />
+                  <FestivalFlipCard key={f.id} f={withImage(f)} cta="이 박람회로 일정 만들기" dateLabel={dateLabelOf(f)} />
                 ))}
               </div>
             </section>
@@ -273,7 +275,7 @@ export default async function FestivalsPage({ searchParams }: { searchParams: Pr
               ) : (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
                   {expos.map((f) => (
-                    <GlobalCard key={f.id} f={f} cta="이 박람회로 일정 만들기" />
+                    <FestivalFlipCard key={f.id} f={withImage(f)} cta="이 박람회로 일정 만들기" dateLabel={dateLabelOf(f)} />
                   ))}
                 </div>
               )}
@@ -292,7 +294,7 @@ export default async function FestivalsPage({ searchParams }: { searchParams: Pr
               ) : (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
                   {globals.map((f) => (
-                    <GlobalCard key={f.id} f={f} cta="이 축제로 일정 만들기" />
+                    <FestivalFlipCard key={f.id} f={withImage(f)} cta="이 축제로 일정 만들기" dateLabel={dateLabelOf(f)} />
                   ))}
                 </div>
               )}
@@ -356,62 +358,9 @@ function KrCard({ f, today }: { f: FestivalSummary; today: string }) {
   );
 }
 
-function GlobalCard({ f, cta }: { f: GlobalFestival; cta: string }) {
-  return (
-    <div
-      className="rounded-3xl border border-orange-100 p-6 flex flex-col bg-gradient-to-br from-amber-50 via-white to-rose-50 shadow-[0_10px_30px_-14px_rgba(249,115,22,0.4)]"
-    >
-      <div className="text-5xl mb-3">{f.emoji}</div>
-      <p className="text-sm font-semibold text-gray-500 mb-1">
-        {f.flag} {f.country} · {f.city}
-      </p>
-      <h2 className="text-lg font-bold text-gray-900 leading-snug">{f.name}</h2>
-      <p className="text-sm text-gray-400 mb-2">{f.nameEn}</p>
-      {f.audience && (
-        <span
-          className={`self-start mb-2 px-2.5 py-0.5 rounded-full text-xs font-bold ${
-            f.audience === "trade" ? "bg-gray-100 text-gray-600" : f.audience === "mixed" ? "bg-violet-50 text-violet-700" : "bg-blue-50 text-blue-700"
-          }`}
-        >
-          {f.audience === "trade" ? "업계 관계자 전용" : f.audience === "mixed" ? "일부 일반 공개" : "일반 관람 가능"}
-        </span>
-      )}
-      <p className="flex items-center gap-1.5 text-[15px] text-rose-600 font-semibold mb-2">
-        <CalendarDays className="w-4 h-4" />{" "}
-        {f.startDate
-          ? `${formatYmd(f.startDate.replace(/-/g, ""))}${f.endDate && f.endDate !== f.startDate ? ` ~ ${formatYmd(f.endDate.replace(/-/g, ""))}` : ""}`
-          : f.period}
-      </p>
-      <p className="text-[15px] text-gray-700 leading-relaxed flex-1">{f.summary}</p>
-      <div className="flex gap-2 mt-4">
-        <Link
-          href={`/planner?gfest=${f.id}`}
-          className="flex-1 inline-flex items-center justify-center gap-1.5 py-3 rounded-2xl bg-gradient-to-r from-rose-500 to-orange-500 text-white text-[15px] font-bold"
-        >
-          <Sparkles className="w-4 h-4" /> {cta}
-        </Link>
-        {f.sourceUrl ? (
-          <a
-            href={f.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center px-4 rounded-2xl border border-gray-200 text-sm font-semibold text-gray-700"
-            title="개최일 출처"
-          >
-            출처
-          </a>
-        ) : (
-          <a
-            href={`https://www.google.com/search?q=${encodeURIComponent(`${f.nameEn} ${new Date().getFullYear()} dates`)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center px-4 rounded-2xl border border-gray-200 text-gray-700"
-            title="올해 개최일 검색"
-          >
-            <Search className="w-5 h-5" />
-          </a>
-        )}
-      </div>
-    </div>
-  );
+/** 카드에 보일 날짜: 확인된 개최일(큐레이션) 또는 대표 시기 */
+function dateLabelOf(f: GlobalFestival): string {
+  if (!f.startDate) return f.period;
+  const a = formatYmd(f.startDate.replace(/-/g, ""));
+  return f.endDate && f.endDate !== f.startDate ? `${a} ~ ${formatYmd(f.endDate.replace(/-/g, ""))}` : a;
 }

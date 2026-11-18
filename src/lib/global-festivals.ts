@@ -23,6 +23,10 @@ export interface GlobalFestival {
   sourceUrl?: string | null;
   /** 박람회 큐레이션: 관람 대상 (public 일반 관람 / trade 업계 전용 / mixed 일부 일반 공개) */
   audience?: "public" | "trade" | "mixed" | null;
+  /** 대표 사진 (위키미디어 공용 자유 이용 사진) + 출처 */
+  image?: string | null;
+  imageCredit?: string | null;
+  imageCreditUrl?: string | null;
 }
 
 export const GLOBAL_FESTIVALS: GlobalFestival[] = [

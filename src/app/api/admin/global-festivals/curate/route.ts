@@ -8,6 +8,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { requireAdmin } from "@/lib/admin";
 import { aiMeter } from "@/lib/ai-runs";
+import { findFreeImage } from "@/lib/commons-image";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 
 export const runtime = "nodejs";
@@ -173,6 +174,8 @@ export async function POST(req: Request) {
       skipped++;
       continue;
     }
+    // 대표 사진 (위키미디어 공용 자유 이용 사진) — 못 찾으면 카드에 이모지 배경
+    const img = await findFreeImage(c.name_en?.trim() || "", c.city).catch(() => null);
     const { error } = await supabase.from("global_festivals").insert({
       name: c.name.trim().slice(0, 100),
       name_en: c.name_en?.trim().slice(0, 120) || null,
@@ -187,6 +190,7 @@ export async function POST(req: Request) {
       summary: c.summary?.slice(0, 300) || null,
       emoji: c.emoji?.slice(0, 8) || (kind === "expo" ? "🏛️" : "🎉"),
       source_url: c.source_url!.slice(0, 500),
+      ...(img ? { image_url: img.url, image_credit: img.credit, image_credit_url: img.creditUrl } : {}),
       status: "pending",
       created_by: session.user.id,
       // 박람회는 종류·관람 대상 함께 저장 (축제는 예전 표 구조 그대로도 동작)
@@ -197,6 +201,31 @@ export async function POST(req: Request) {
           }
         : {}),
     });
+    if (error && img && /image_/.test(error.message)) {
+      // 사진 칸(migration_global_festival_images.sql) 실행 전 — 사진 없이 다시 저장
+      const retry = await supabase.from("global_festivals").insert({
+        name: c.name.trim().slice(0, 100),
+        name_en: c.name_en?.trim().slice(0, 120) || null,
+        country: (c.country || country).slice(0, 30),
+        flag: c.flag?.slice(0, 8) || null,
+        city: c.city.trim().slice(0, 60),
+        destination: (c.destination || c.city).trim().slice(0, 60),
+        start_date: start,
+        end_date: end,
+        months: monthsBetween(start, end),
+        period: c.period?.slice(0, 60) || null,
+        summary: c.summary?.slice(0, 300) || null,
+        emoji: c.emoji?.slice(0, 8) || (kind === "expo" ? "🏛️" : "🎉"),
+        source_url: c.source_url!.slice(0, 500),
+        status: "pending",
+        created_by: session.user.id,
+        ...(kind === "expo" ? { kind: "expo", audience: c.audience === "public" || c.audience === "trade" || c.audience === "mixed" ? c.audience : null } : {}),
+      });
+      if (!retry.error) {
+        inserted++;
+        continue;
+      }
+    }
     if (error) {
       if (kind === "expo" && /kind|audience/.test(error.message)) {
         return Response.json(
