@@ -6,8 +6,12 @@
 // - 응답은 공공데이터라 서버에서 캐시 (축제 목록 6시간, 상세 1일)
 // - 화면에는 "출처: 한국관광공사" 표시
 // - 키가 없거나 API 오류면 빈 결과 → 화면은 '준비 중' 안내
+// - 하루 요청 한도 초과·장애 대비: 정상 응답을 Supabase 비공개 저장소(private-config/tourapi/)에 보관해 두고,
+//   API 가 실패하면 마지막으로 받은 응답을 대신 보여줌. 한도 초과가 나면 15분 동안은 API 를 부르지 않음
 
+import crypto from "node:crypto";
 import { unstable_cache } from "next/cache";
+import { getSupabaseServiceClient } from "./supabase";
 
 const BASE = "https://apis.data.go.kr/B551011/KorService2";
 
@@ -80,10 +84,51 @@ export function serviceKey(): string {
   return tokens.sort((a, b) => b.length - a.length)[0] ?? raw;
 }
 
+// ── 마지막 정상 응답 보관 (한도 초과·장애 때 대신 사용) ──
+const SNAP_BUCKET = "private-config";
+const snapPath = (op: string, paramsJson: string) =>
+  `tourapi/${op}-${crypto.createHash("sha1").update(paramsJson).digest("hex").slice(0, 16)}.json`;
+/** 목록(축제 검색)은 날짜가 매일 바뀌어 같은 키가 없을 수 있어 '가장 최근' 것도 함께 보관 */
+const LATEST_OPS = new Set(["searchFestival2"]);
+
+async function saveSnapshot(op: string, paramsJson: string, text: string) {
+  try {
+    const storage = getSupabaseServiceClient().storage.from(SNAP_BUCKET);
+    const blob = () => new Blob([text], { type: "application/json" });
+    await storage.upload(snapPath(op, paramsJson), blob(), { upsert: true, contentType: "application/json" });
+    // 첫 페이지만 '최근 목록'으로 (여러 페이지면 첫 페이지 기준)
+    if (LATEST_OPS.has(op) && (JSON.parse(paramsJson) as { pageNo?: string }).pageNo === "1") {
+      await storage.upload(`tourapi/${op}-latest.json`, blob(), { upsert: true, contentType: "application/json" });
+    }
+  } catch {
+    // 보관 실패는 무시
+  }
+}
+
+async function loadSnapshot(op: string, paramsJson: string): Promise<string | null> {
+  const storage = getSupabaseServiceClient().storage.from(SNAP_BUCKET);
+  const tryGet = async (path: string) => {
+    try {
+      const { data, error } = await storage.download(path);
+      return error || !data ? null : await data.text();
+    } catch {
+      return null;
+    }
+  };
+  const exact = await tryGet(snapPath(op, paramsJson));
+  if (exact) return exact;
+  if (LATEST_OPS.has(op) && (JSON.parse(paramsJson) as { pageNo?: string }).pageNo === "1") return tryGet(`tourapi/${op}-latest.json`);
+  return null;
+}
+
+/** 한도 초과 직후엔 잠시 API 를 부르지 않음 (계속 부르면 실패만 쌓임) */
+let blockedUntil = 0;
+
 /** 정상 응답만 캐시 — 오류(인증키 미등록 등)는 throw 해서 캐시되지 않게 */
 async function fetchTourText(op: string, paramsJson: string): Promise<string> {
   const key = serviceKey();
   if (!key) throw new Error("no key");
+  if (Date.now() < blockedUntil) throw new Error("daily-limit (cool-down)");
   const qs = new URLSearchParams({
     MobileOS: "ETC",
     MobileApp: "Pothos",
@@ -100,6 +145,11 @@ async function fetchTourText(op: string, paramsJson: string): Promise<string> {
     ok = res.ok && j.response?.header?.resultCode === "0000";
   } catch {
     ok = false;
+  }
+  if (ok) {
+    await saveSnapshot(op, paramsJson, text);
+  } else if (res.status === 429 || /LIMITED_NUMBER_OF_SERVICE_REQUESTS/.test(text)) {
+    blockedUntil = Date.now() + 15 * 60 * 1000;
   }
   if (!ok) {
     // 키 미등록·트래픽 초과 등 — 원본 일부를 남겨 원인 확인 (키는 포함되지 않음)
@@ -125,7 +175,17 @@ async function tourGetPage(
   if (!(process.env.TOURAPI_SERVICE_KEY ?? "").trim()) return empty;
   try {
     const getter = revalidate >= 24 * 3600 ? cachedTour1d : cachedTour6h;
-    const text = await getter(op, JSON.stringify(params));
+    const paramsJson = JSON.stringify(params);
+    let text: string;
+    try {
+      text = await getter(op, paramsJson);
+    } catch (e) {
+      // 한도 초과·장애 → 마지막으로 받은 정상 응답으로 대신
+      const snap = await loadSnapshot(op, paramsJson);
+      if (!snap) throw e;
+      console.log(`[tourapi] ${op} failed → 보관된 응답 사용 (${e instanceof Error ? e.message.slice(0, 80) : e})`);
+      text = snap;
+    }
     const body = (JSON.parse(text) as {
       response?: { body?: { items?: { item?: Item | Item[] } | ""; totalCount?: number } };
     }).response?.body;
