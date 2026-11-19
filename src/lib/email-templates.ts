@@ -522,3 +522,25 @@ export function blogCommentEmail(opts: {
     `),
   };
 }
+
+// ========== Email verification ==========
+
+export function verifyCodeEmail(opts: { name: string | null; code: string }): { subject: string; html: string } {
+  return {
+    subject: `[Pothos] 이메일 인증 코드 ${opts.code}`,
+    html: layout(`
+      <h1 style="margin:8px 0 12px;font-size:22px;font-weight:700;color:#0f172a;letter-spacing:-.02em;">
+        ${opts.name ? `${escapeHtml(opts.name)} 님, ` : ""}이메일 인증 코드예요
+      </h1>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;">
+        Pothos AI 여행 플래너를 쓰려면 아래 6자리 코드를 입력해 주세요. 코드는 10분 동안 유효해요.
+      </p>
+      <div style="margin:16px 0;padding:18px;background:#eff6ff;border-radius:16px;text-align:center;">
+        <span style="font-size:32px;font-weight:800;letter-spacing:10px;color:#1d4ed8;">${escapeHtml(opts.code)}</span>
+      </div>
+      <p style="margin:0;font-size:13px;line-height:1.6;color:#64748b;">
+        직접 요청하지 않았다면 이 메일은 무시해 주세요. 코드는 누구에게도 알려 주지 마세요.
+      </p>
+    `),
+  };
+}

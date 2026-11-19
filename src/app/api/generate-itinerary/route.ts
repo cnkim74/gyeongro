@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { consumePlanner, PlannerQuotaError, type PlannerTier } from "@/lib/planner-quota";
 import { resolvePlaces, type PlaceQuery } from "@/lib/places";
 import { recordAiRun } from "@/lib/ai-runs";
+import { needsEmailVerify } from "@/lib/email-verify";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -82,6 +83,14 @@ export async function POST(req: NextRequest) {
     return Response.json(
       { error: "AI 플래너는 로그인 후 사용 가능합니다.", needsLogin: true },
       { status: 401 }
+    );
+  }
+
+  // 2. 이메일 가입 회원은 이메일 인증 후 사용 (소셜 가입·관리자는 바로 사용)
+  if (await needsEmailVerify(session.user.id)) {
+    return Response.json(
+      { error: "AI 여행 설계는 이메일 인증을 마친 회원만 쓸 수 있어요.", needsVerify: true },
+      { status: 403 }
     );
   }
 
