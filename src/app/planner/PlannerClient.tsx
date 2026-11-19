@@ -28,6 +28,8 @@ import {
   X,
 } from "lucide-react";
 import { PLANNER_THEMES } from "@/lib/planner-options";
+import PlannerLocked from "./PlannerLocked";
+import EmailVerifyBox from "./EmailVerifyBox";
 
 const themes = PLANNER_THEMES;
 
@@ -92,6 +94,15 @@ function PlannerContent() {
   useEffect(() => {
     if (status === "authenticated") loadQuota();
   }, [status, loadQuota]);
+  // 이메일 가입 회원 — 인증 전이면 AI 설계 대신 인증 안내
+  const [verifyNeeded, setVerifyNeeded] = useState(false);
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    fetch("/api/auth/verify-email")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((v: { required?: boolean; verified?: boolean } | null) => v && setVerifyNeeded(!!v.required && !v.verified))
+      .catch(() => null);
+  }, [status]);
   // 사용자가 고르지 않았으면: 이용권이 있거나 관리자면 고급, 아니면 기본
   const effectiveTier: "basic" | "premium" = tier ?? (quota && (quota.isAdmin || quota.credits > 0) ? "premium" : "basic");
   const [needsAuth, setNeedsAuth] = useState(false);
@@ -272,7 +283,12 @@ function PlannerContent() {
         let msg = "서버 오류가 발생했습니다.";
         try {
           const data = await res.json();
-          if (res.status === 401 && data.needsLogin) {
+          if (res.status === 403 && data.needsVerify) {
+            // 이메일 인증 전 — 입력 화면으로 돌아가 인증 안내
+            setVerifyNeeded(true);
+            setStep(1);
+            return;
+          } else if (res.status === 401 && data.needsLogin) {
             setNeedsAuth(true);
             msg = "AI 여행 설계는 회원 전용이에요. 회원가입 후 바로 이용할 수 있어요.";
           } else if (res.status === 409 && data.reload) {
@@ -402,8 +418,11 @@ function PlannerContent() {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-gray-50/50 to-gray-50" />
         </div>
-        {/* Step 1: Input Form */}
-        {step === 1 && (
+        {/* 비회원: 입력 폼 대신 소개·가입 안내 */}
+        {step === 1 && status === "unauthenticated" && <PlannerLocked />}
+
+        {/* Step 1: Input Form (회원) */}
+        {step === 1 && status !== "unauthenticated" && (
           <div className="max-w-3xl mx-auto px-4 py-12">
             <div className="text-center mb-10">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 text-blue-600 text-sm font-medium mb-4">
@@ -796,6 +815,9 @@ function PlannerContent() {
                 </p>
               )}
 
+              {verifyNeeded ? (
+                <EmailVerifyBox onVerified={() => setVerifyNeeded(false)} />
+              ) : (
               <button
                 onClick={handleSubmit}
                 disabled={
@@ -805,25 +827,11 @@ function PlannerContent() {
                 className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-lg flex items-center justify-center gap-2 hover:shadow-xl hover:shadow-blue-500/25 hover:-translate-y-0.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
               >
                 <Sparkles className="w-5 h-5" />
-                {status === "unauthenticated"
-                  ? "회원가입하고 AI 여행 설계 받기"
-                  : "AI로 여행 일정 만들기"}
+                AI로 여행 일정 만들기
                 <ArrowRight className="w-5 h-5" />
               </button>
-
-              {status === "unauthenticated" && (
-                <p className="text-center text-sm text-gray-400 mt-3">
-                  AI 여행 설계는 회원 전용이에요. 가입은 10초면 끝나요.
-                  <br />
-                  이미 회원이신가요?{" "}
-                  <button
-                    onClick={() => goAuth("/login")}
-                    className="text-blue-500 font-semibold hover:underline"
-                  >
-                    로그인
-                  </button>
-                </p>
               )}
+
             </div>
           </div>
         )}
